@@ -1,0 +1,121 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using NUnit.Framework;
+using UnitTest.Util;
+using Nana.Delegates;
+using Nana.Syntaxes;
+using Nana.Infr;
+using Nana;
+
+namespace UnitTest.Syntaxes
+{
+    [TestFixture]
+    public class SentenceDefFxt
+    {
+        public string Inp;
+        public string Epc;
+
+        [SetUp]
+        public void SetUp()
+        {
+            string asm = GetType().Name;
+
+            Inp = "";
+            Epc = "";
+        }
+
+        static public string GetDef(string key)
+        {
+            return SFList.FromText(PrefixAnalyzer.DefsText).Find(delegate(string ln) { return ln.Trim().StartsWith(key); }).Trim();
+        }
+
+        [Test]
+        public void T101_Source()
+        {
+            Inp = GetDef(@"0Source");
+            Epc = @"0Source:ValueClause:1:Source:(Expr:Expr:*:(0End), 0End:Value:1)";
+            Test();
+        }
+        [Test]
+        public void T102_IdDotDecDef()
+        {
+            Inp = GetDef(@"0iddotdec");
+            Epc = @"0iddotdec:ValueClause:1:(Id:GroupClause:1:(.:ValueClause:*:(Id:Group:1)))";
+            Test();
+        }
+
+        [Test]
+        public void T103_UsingDef()
+        {
+            Inp = GetDef(@"using");
+            Epc = @"using:ValueClause:1:Using:(0iddotdec:Refer:1)";
+            Test();
+        }
+
+        [Test]
+        public void T104_TypeDecDef()
+        {
+            Inp = GetDef(@"0typedec");
+            Epc = @"0typedec:ValueClause:1:(\::ValueClause:?:TypeSpec:(0type:Refer:1))";
+            Test();
+        }
+
+        [Test]
+        public void T105_PrmDecDef()
+        {
+            Inp = GetDef(@"0prmdec");
+            Epc = @"0prmdec:ValueClause:1:(Id:GroupClause:?:Prm:(0typedec:Refer:1, ,:ValueClause:*:Separator:(Id:GroupClause:1:Prm:(0typedec:Refer:1))))";
+
+            Test();
+        }
+
+        [Test]
+        public void T106_AttrDecDef()
+        {
+            Inp = GetDef(@"0attrdec");
+            Epc = @"0attrdec:ValueClause:1:(@:ValueClause:*:Attr:(Expr:Expr:1))";
+            Test();
+        }
+
+        [Test]
+        public void T107_BodyDecDef()
+        {
+            Inp = GetDef(@"0bodydec");
+            Epc = @"0bodydec:ValueClause:1:(Bgn:GroupClause:1:Body:(Expr:Expr:*:(End.g)), End:Group:1)";
+
+            Test();
+        }
+
+        [Test]
+        public void T108_FuncDecDef()
+        {
+            Inp = GetDef(@"0funcdec");
+            Epc = @"0funcdec:ValueClause:1:(\(:ValueClause:1:PrmDef:(0prmdec:Refer:1), \):Value:1, 0typedec:Refer:1, 0attrdec:Refer:1, 0bodydec:Refer:1)";
+            Test();
+        }
+
+        [Test]
+        public void T109_FncDef()
+        {
+            Inp = GetDef(@"Fnc");
+            Epc = @"Fnc:GroupClause:1:Func:(Id:Group:1, 0funcdec:Refer:1)";
+            Test();
+        }
+
+        public void Test()
+        {
+            Func<TestCase, string> f = delegate(TestCase c)
+            {
+                PrefixDef p;
+                string s;
+                p = PrefixDef.FromInline(Inp);
+                s = p.ToString();
+                return s;
+            };
+
+            new TestCase("", Inp, Epc, f).Run();
+        }
+
+    }
+}
