@@ -47,7 +47,6 @@ namespace Nana
             Token t;
             t = new Token();
             t.Value = opt;
-            //t.Sentence = Sentence.CompileOption;
             t.Group = "CompileOption";
             t.First = new Token();
             t.First.Value = val;
@@ -58,7 +57,6 @@ namespace Nana
         {
             Token t = new Token();
             t.Group = "SourcePath";
-            //t.Sentence = Sentence.SourcePath;
             t.Value = arg;
             return t;
         }
@@ -113,12 +111,10 @@ namespace Nana
             Token srct;
             srct = new Token();
             srct.Group = "Sources";
-            //srct.Sentence = Sentence.Sources;
             srct.Follows = srcs.ToArray();
 
             Token optt;
             optt = new Token();
-            //optt.Sentence = Sentence.SemanticRoot;
             optt.Group = "SemanticRoot";
             optt.Follows = opts.ToArray();
 

@@ -210,12 +210,11 @@ namespace Nana
         [CommandUsage("parse")]
         static public void Parse(string[] args, Box<bool> quit, LineEditMode lem)
         {
-            //Ctrl ctrl = genCtrl();
             Ctrl ctrl = new Ctrl();
             string src;
             Token t;
             src = Cty.ToText(lem.Lines);
-            t = ctrl.Parse(src);
+            t = ctrl.AnalyzeSyntax(src);
 
             lem.CW.W(TokenEx.ToTree(t));
         }

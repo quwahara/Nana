@@ -35,6 +35,7 @@
   <ItemGroup>
     <Compile Include="Codes\CodeGenerator.cs" />
     <Compile Include="Delegates\Delegates.cs" />
+    <Compile Include="ILASM\ILASMRunner.cs" />
     <Compile Include="IMRs\IMRGenerator.cs" />
     <Compile Include="Infr\Box.cs" />
     <Compile Include="Infr\CollectionUtil.cs" />

@@ -12,6 +12,8 @@ using Nana.IMRs;
 using Nana.Semantics;
 using Nana.Syntaxes;
 
+
+
 //  単項演算子を実装する
 //  SyntaxAnalyzer の単体テストを、各Analyzerクラスのメソッド単位で実施できるようにする
 //  Tokenの簡単な生成方法を模索する。各Analyzerクラスのメソッド単位で実施できるようにするための助け
@@ -24,13 +26,6 @@ namespace Nana
 {
     public class Ctrl
     {
-        public Token Parse(string src)
-        {
-            SyntaxAnalyzer p = new SyntaxAnalyzer();
-            p.Init(src);
-            return p.Analyze();
-        }
-
         public void Compile(Token args, Action<string> outWriteAct)
         {
             Token opt;
@@ -58,7 +53,7 @@ namespace Nana
                         }
                 }
 
-                t = Parse(src);
+                t = AnalyzeSyntax(src);
 
                 srcs.Add(t);
             }
@@ -70,16 +65,14 @@ namespace Nana
 
             string name = Path.GetFileNameWithoutExtension(outfn);
 
-            Token roottk, mdl;
-            mdl = new Token(outfn, "Sources");
-            mdl.Follows = srcs.ToArray();
+            Token srcstkn;
+            srcstkn = new Token(outfn, "Sources");
+            srcstkn.Follows = srcs.ToArray();
 
-            roottk = new Token(name, "SemanticRoot");
-            roottk.FlwsAdd(mdl);
+            Token roottk = new Token(name, "SemanticRoot");
+            roottk.FlwsAdd(srcstkn);
 
-            EnvAnalyzer azr = new EnvAnalyzer(roottk);
-            azr.Analyze();
-            Env env = azr.Env;
+            Env env = AnalyzeSemantic(roottk);
             
             IMRGenerator imrgen = new IMRGenerator();
             imrgen.GenerateIMR(env.FindInTypeOf<App>());
@@ -87,6 +80,21 @@ namespace Nana
             CodeGenerator codegen = new CodeGenerator();
             outWriteAct(codegen.GenerateCode(env));
         }
+
+        public Token AnalyzeSyntax(string src)
+        {
+            SyntaxAnalyzer p = new SyntaxAnalyzer();
+            p.Init(src);
+            return p.Analyze();
+        }
+
+        public static Env AnalyzeSemantic(Token roottk)
+        {
+            EnvAnalyzer azr = new EnvAnalyzer(roottk);
+            azr.Analyze();
+            return azr.Env;
+        }
+
     }
 
 }
