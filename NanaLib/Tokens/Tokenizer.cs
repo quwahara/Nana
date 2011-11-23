@@ -281,7 +281,35 @@ namespace Nana.Tokens
 
     public class ScriptTokenizer : TokenizerBase
     {
+        #region InlineRxPattern
+
+        static public string InlineRxPattern = @"(?<Cmt>(//.*))
+|(?<Ope>(==|!=|\<=|\>=))
+|(?<Expr>(\::|\<\-|\-\>))
+|(?<Ope>(\+|\-|\*|/|%|\<|\>|{|}))
+|(?<Eol>;)
+|(?<Bgn>(\.\.+|do|begin))
+|(?<End>(end))
+|(?<Fnc>[snv]?func)
+|(?<Typ>\:)
+|(?<_End_Cma_>,+)
+|(?<Expr>(=|\(|\)|\[|\]|\.|@))
+|(?<Num>(\d+)(\.(\d)+)?)
+|(?<Ope>(and|xor|or))
+|(?<Bol>(true|false))
+|(?<Id>`?[_a-zA-Z][_a-zA-Z0-9]*)
+|(?<Unk>[^\s$]+)
+";
+        static public RegexOptions InlineRxOptions = RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture;
+
+        #endregion
+
         public TokenizerBase[] Tokenizers = null;
+
+        public ScriptTokenizer()
+            : this(new Regex(InlineRxPattern, InlineRxOptions))
+        {
+        }
 
         public ScriptTokenizer(Regex inlineRx)
             : base(null)

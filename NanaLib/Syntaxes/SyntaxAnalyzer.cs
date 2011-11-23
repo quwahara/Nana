@@ -12,27 +12,6 @@ namespace Nana.Syntaxes
 {
     public class SyntaxAnalyzer
     {
-        #region InlineRxPattern
-
-        static public string InlineRxPattern = @"(?<Cmt>(//.*))
-|(?<Ope>(==|!=|\<=|\>=))
-|(?<Expr>(\::|\<\-|\-\>))
-|(?<Ope>(\+|\-|\*|/|%|\<|\>|{|}))
-|(?<Eol>;)
-|(?<Bgn>(\.\.+|do|begin))
-|(?<End>(end))
-|(?<Fnc>[snv]?func)
-|(?<Typ>\:)
-|(?<_End_Cma_>,+)
-|(?<Expr>(=|\(|\)|\[|\]|\.|@))
-|(?<Num>(\d+)(\.(\d)+)?)
-|(?<Ope>(and|xor|or))
-|(?<Bol>(true|false))
-|(?<Id>`?[_a-zA-Z][_a-zA-Z0-9]*)
-|(?<Unk>[^\s$]+)
-";
-        #endregion
-
         public ITokenEnumerator Tokens;
         public InfixAnalyzer InfixAzr;
         public PrefixAnalyzer PrefixAzr;
@@ -51,8 +30,7 @@ namespace Nana.Syntaxes
         }
 
         public void Init(string src){
-            Regex inlineRx = new Regex(InlineRxPattern, RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture);
-            TokenizerBase tkz = new ScriptTokenizer(inlineRx);
+            TokenizerBase tkz = new ScriptTokenizer();
             LineBufferedReader r = LineBufferedReader.GetInstanceWithText(src);
             tkz.Init(r);
             Init(tkz);

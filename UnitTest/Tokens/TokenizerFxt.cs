@@ -401,9 +401,7 @@ end
 
         public string TestNext(TestCase c)
         {
-            Regex inlineRx = new Regex(SyntaxAnalyzer.InlineRxPattern, RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture);
-            //Regex inlineRx = new Regex(Ctrl.InlineRxDef, RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture);
-            TokenizerBase tkz = new ScriptTokenizer(inlineRx);
+            TokenizerBase tkz = new ScriptTokenizer();
             Token t;
             StringBuilder b = new StringBuilder();
             using (LineBufferedReader r = LineBufferedReader.GetInstanceWithText(c.Input))
