@@ -2696,6 +2696,31 @@ System.Console.WriteLine(i)
     }
 }
 
+namespace UnitTest.Semantics.Tutorial
+{
+    public class TutorialFxt : UnitTest.Semantics.Root.RootFxt
+    {
+        [Test]
+        public void T_HelloWorld()
+        {
+            Inp = @"`p(""Hello, world!"")
+";
+            Epc +=
+@".method static public void .cctor() {
+    ldstr ""Hello, world!""
+    call void [mscorlib]System.Console::WriteLine(string)
+    ret
+}
+.method static public void '0'() {
+    .entrypoint
+    ret
+}
+";
+            Test();
+        }
+    }
+}
+
 namespace UnitTest.Semantics.Root
 {
     public class RootFxt
