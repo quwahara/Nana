@@ -78,7 +78,7 @@ val[System.Windows.Forms.dll]
             Token act = CmdLnArgs.PickOpt(c.Input);
             return act == null
                 ? "(null)"
-                : string.Format("opt[{0}]\r\nval[{1}]\r\n", act.Value, act.First.Value)
+                : string.Format("opt[{0}]\r\nval[{1}]\r\n", act.Group, act.Value)
                 ;
         }
     }
@@ -156,34 +156,32 @@ val[System.Windows.Forms.dll]
             string[] args = c.Input.Split(new char[] { ' ' });
             Token act = CmdLnArgs.GetCmdLnArgs(args);
             if (act == null)                    /**/ return "(act == null)";
-            if (act.Follows == null)            /**/ return "(act.Follows == null)";
-            if (act.Follows.Length != 2)        /**/ return "(act.Follows.Length != 2)";
-            if (act.Follows[0] == null)         /**/ return "(act.Follows[0] == null)";
-            if (act.Follows[1] == null)         /**/ return "(act.Follows[1] == null)";
-            if (act.Follows[0].Group != "SemanticRoot")  /**/ return "(act.Follows[0].Sentence != Sentence.CompileOption)";
-            //if (act.Follows[0].Sentence != Sentence.SemanticRoot)  /**/ return "(act.Follows[0].Sentence != Sentence.CompileOption)";
-            if (act.Follows[1].Group != "Sources")     /**/ return "(act.Follows[1].Sentence != Sentence.SourceFile)";
-            //if (act.Follows[1].Sentence != Sentence.Sources)     /**/ return "(act.Follows[1].Sentence != Sentence.SourceFile)";
-            if (act.Follows[0].Follows == null) /**/ return "(act.Follows[0].Follows == null)";
-            if (act.Follows[1].Follows == null) /**/ return "(act.Follows[1].Follows == null)";
+
+            Token[] cmpopts = act.Find("@Arguments/@CompileOptions");
+            if (cmpopts == null || cmpopts.Length == 0) { return "(No CompileOptions token)"; }
+            if (cmpopts.Length > 1) { return "(Too many CompileOptions tokens)"; }
+
+            Token[] srcpaths = act.Find("@Arguments/@SourcePaths");
+            if (srcpaths == null || srcpaths.Length == 0) { return "(No SourcePaths token)"; }
+            if (srcpaths.Length > 1) { return "(Too many SourcePaths tokens)"; }
 
             StringBuilder b = new StringBuilder();
             string spl;
 
             // opts
             spl = "";
-            foreach (Token t in act.Follows[0].Follows)
+            foreach (Token t in  cmpopts[0].Follows)
             {
                 b.Append(spl);
                 b.Append("/");
-                b.Append(t.Value);
+                b.Append(t.Group);
                 b.Append(":");
-                if (t.First == null) b.Append("(null)"); else b.Append(t.First.Value);
+                b.Append(t.Value);
                 spl = " ";
             }
 
             // srcs
-            foreach (Token t in act.Follows[1].Follows)
+            foreach (Token t in srcpaths[0].Follows)
             {
                 b.Append(spl);
                 b.Append(t.Value);
@@ -209,17 +207,17 @@ val[System.Windows.Forms.dll]
             Run(label, inp, epc);
         }
 
-        [Test]
-        public void T002()
-        {
-            string label, inp, epc;
+        //[Test]
+        //public void T002()
+        //{
+        //    string label, inp, epc;
 
-            label = "";
-            inp = "";
-            epc = "No source file specified: ";
+        //    label = "";
+        //    inp = "";
+        //    epc = "No source file specified: ";
 
-            Run(label, inp, epc);
-        }
+        //    Run(label, inp, epc);
+        //}
 
         [Test]
         public void T003()

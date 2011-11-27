@@ -179,17 +179,31 @@ namespace Nana.Semantics
             Debug.Assert(actualao != null);
             ao.Members.AddRange(actualao.Members);
         }
-        
-        public void AnalyzeCompileOption(Token t)
+
+        public void AnalyzeCompileOptions(Token t)
         {
-            Debug.Assert(t != null && t.Group == "CompileOption");
-            switch (t.Value.ToLower())
+            Debug.Assert(t != null && t.Group == "CompileOptions");
+            foreach (Token opt in t.Follows)
             {
-                case "include":     /**/ Env.TypeLdr.InAssembly.Includes.Add(t.First.Value); break;
-                case "reference":   /**/ Env.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(t.First.Value); break;
-                default: throw new InternalError("The compile option is not supported: " + t.Value, t);
+                switch (opt.Group.ToLower())
+                {
+                    case "include":     /**/ Env.TypeLdr.InAssembly.Includes.Add(opt.Value); break;
+                    case "reference":   /**/ Env.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(opt.Value); break;
+                    default: throw new InternalError("The compile option is not supported: " + opt.Value, t);
+                }
             }
         }
+
+        //public void AnalyzeCompileOption(Token t)
+        //{
+        //    Debug.Assert(t != null && t.Group == "CompileOption");
+        //    switch (t.Value.ToLower())
+        //    {
+        //        case "include":     /**/ Env.TypeLdr.InAssembly.Includes.Add(t.First.Value); break;
+        //        case "reference":   /**/ Env.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(t.First.Value); break;
+        //        default: throw new InternalError("The compile option is not supported: " + t.Value, t);
+        //    }
+        //}
 
         public void AnalyzeSources(Token t)
         {
@@ -487,7 +501,7 @@ namespace Nana.Semantics
 
         public void AnalyzeTypToken(Token t)
         {
-            Token name = t.Find("Name");
+            Token name = t.FindGroupOf("Name");
             if (name == null || string.IsNullOrEmpty(name.Value))
             { throw new SyntaxError("Specify name to the class", t); }
 
@@ -499,7 +513,7 @@ namespace Nana.Semantics
 
             Typu = app.NewTyp(name);
 
-            Token baseTypeDef = t.Find("BaseTypeDef");
+            Token baseTypeDef = t.FindGroupOf("BaseTypeDef");
             if (baseTypeDef == null)
             {
                 baseTypeDef = new Token();
@@ -507,7 +521,7 @@ namespace Nana.Semantics
             }
             RegisterAnalyzer(new TypBaseAnalyzer(baseTypeDef, this));
 
-            Token body = t.Find("TypeBody");
+            Token body = t.FindGroupOf("TypeBody");
             if (body == null || body.Follows == null)
             { throw new SyntaxError("Specify the class body", t); }
             RegisterAnalyzer(new TypBodyAnalyzer(body, this));
@@ -661,19 +675,19 @@ namespace Nana.Semantics
             ActnOvld ovld = typazr2.Typu.FindOrNewActnOvld(nameasm);
 
             List<Token> prms = new List<Token>();
-            Token prmpre = t.Find("PrmDef");
+            Token prmpre = t.FindGroupOf("PrmDef");
             Token prm;
-            while (prmpre != null && (prm = prmpre.Find("Prm")) != null)
+            while (prmpre != null && (prm = prmpre.FindGroupOf("Prm")) != null)
             {
                 prms.Add(prm);
-                prmpre = prm.Find("Separator");
+                prmpre = prm.FindGroupOf("Separator");
             }
 
             List<Variable> prmls = new List<Variable>();
             Token ty;
             foreach (Token p in prms)
             {
-                ty = p.Find("TypeSpec2");
+                ty = p.FindGroupOf("TypeSpec2");
                 Typ typ = Above.RequireTyp(ty);
                 Debug.Assert(typ != null);
                 Debug.Assert(string.IsNullOrEmpty(p.Value) == false);
@@ -693,7 +707,7 @@ namespace Nana.Semantics
 
             Actn.MthdAttrs = attrs;
 
-            Token body = t.Find("Body");
+            Token body = t.FindGroupOf("Body");
             Debug.Assert(body != null && body.Follows != null);
             foreach (Token exe in body.Follows)
             { RegisterAnalyzer(new ExeAnalyzer(exe, this)); }

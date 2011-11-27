@@ -100,12 +100,39 @@ namespace Nana.Tokens
             }
         }
 
-        public Token Find(string group)
+        public Token[] Find(string path)
+        {
+            path = path + "";
+
+            List<Token> ts = new List<Token>();
+            string[] pathspl = path.Split(new char[] { '/' }, 2);
+            
+            if (pathspl.Length < 1) { return ts.ToArray(); }
+
+            string p = pathspl[0];
+            bool valmatches = p.StartsWith("@") == false && Value == p;
+            bool grpmatches = p.StartsWith("@") == true && Group == p.Substring(1);
+
+            if (pathspl.Length == 1 && (valmatches || grpmatches))
+            {
+                ts.Add(this);
+            }
+            else if (pathspl.Length > 1 && (valmatches || grpmatches))
+            {
+                foreach (Token t in Follows)
+                {
+                    ts.AddRange(t.Find(pathspl[1]));
+                }
+            }
+            return ts.ToArray();
+        }
+
+        public Token FindGroupOf(string group)
         {
             if (this.Group == group) /**/ { return this; }
             if (Follows == null)    /**/ { return null; }
             Token tt_;
-            foreach (Token t in Follows) { if ((tt_ = t.Find(group)) != null) { return tt_; } }
+            foreach (Token t in Follows) { if ((tt_ = t.FindGroupOf(group)) != null) { return tt_; } }
             return null;
         }
 
@@ -166,31 +193,36 @@ namespace Nana.Tokens
 
         public static string ToTree(Token t)
         {
-            return ToTree(t, "");
+            return ToTree(t, delegate(Token _t) { return _t.Value; });
         }
 
-        public static string ToTree(Token t, string indent)
+        public static string ToTree(Token t, Func<Token, string> toString)
+        {
+            return ToTree(t, "", toString);
+        }
+
+        public static string ToTree(Token t, string indent, Func<Token, string> toString)
         {
             string vrt = "|   ";
             string bra = "+---";
             string bla = "    ";
             string ind = "";
             StringBuilder b = new StringBuilder();
-            b.Append(t.Value).AppendLine();
+            b.Append(toString(t)).AppendLine();
             if (t.First != null)
             {
                 if (t.Second == null && t.Third == null) ind = indent + bla;
                 else ind = indent + vrt;
-                b.Append(indent).Append(bra).Append("[F]").Append(TokenEx.ToTree(t.First, ind));
+                b.Append(indent).Append(bra).Append("[F]").Append(TokenEx.ToTree(t.First, ind, toString));
                 if (t.Second != null)
                 {
                     if (t.Third == null) ind = indent + bla;
                     else ind = indent + vrt;
-                    b.Append(indent).Append(bra).Append("[S]").Append(TokenEx.ToTree(t.Second, ind));
+                    b.Append(indent).Append(bra).Append("[S]").Append(TokenEx.ToTree(t.Second, ind, toString));
                 }
                 if (t.Third != null)
                 {
-                    b.Append(indent).Append(bra).Append("[T]").Append(TokenEx.ToTree(t.Third, indent + bla));
+                    b.Append(indent).Append(bra).Append("[T]").Append(TokenEx.ToTree(t.Third, indent + bla, toString));
                 }
             }
             if (t.Follows != null)
@@ -199,7 +231,7 @@ namespace Nana.Tokens
                 {
                     if (i == (t.Follows.Length - 1)) ind = indent + bla;
                     else ind = indent + vrt;
-                    b.Append(indent).Append(bra).Append("[" + i.ToString() + "]").Append(TokenEx.ToTree(t.Follows[i], ind));
+                    b.Append(indent).Append(bra).Append("[" + i.ToString() + "]").Append(TokenEx.ToTree(t.Follows[i], ind, toString));
                 }
             }
             return b.ToString();

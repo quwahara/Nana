@@ -33,10 +33,19 @@ namespace Nana
             try
             {
                 a = CmdLnArgs.GetCmdLnArgs(args);
+                
+                if (0 == a.Find("@Arguments/@SourcePaths")[0].Follows.Length)
+                { throw new ArgumentException(string.Format("No source file was specified")); }
+                Ctrl.Check(a);
+
+                Console.Write(TokenEx.ToTree(a, delegate(Token t){
+                    return t.Value + (t.Group != "" ? "@" + t.Group : "");
+                }));
+
                 c = new Ctrl();
                 c.Compile(a, write);
 
-                ilpath = new List<Token>(a.Find(@"SemanticRoot").Follows).Find(delegate(Token t) { return t.Value == @"out"; }).First.Value;
+                ilpath = a.Find("@Arguments/@CompileOptions/@out")[0].Value;
                 ilpath = Path.ChangeExtension(ilpath, ".il");
                 File.WriteAllText(ilpath, b.ToString(), utf8);
 

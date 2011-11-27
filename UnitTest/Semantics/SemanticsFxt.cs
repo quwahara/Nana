@@ -218,15 +218,23 @@ end
             Assembly exeasmb;
             string name = GetType().Name;
 
-            mdl = new Token(name + ".exe", "Sources");
-            mdl.Follows = new Token[1];
-            mdl.Follows[0] = srctoken;
+            //mdl = new Token(name + ".exe", "Sources");
+            //mdl.Follows = new Token[1];
+            //mdl.Follows[0] = srctoken;
 
-            roottk = new Token(name, "SemanticRoot");
+            //roottk = new Token(name, "SemanticRoot");
             exeasmb = Assembly.GetExecutingAssembly();
-            roottk.FlwsAdd(CmdLnArgs.NewOpt("include", Path.GetDirectoryName(exeasmb.Location)));
-            roottk.FlwsAdd(CmdLnArgs.NewOpt("reference", Path.GetFileNameWithoutExtension(exeasmb.Location)));
-            roottk.FlwsAdd(mdl);
+            //roottk.FlwsAdd(CmdLnArgs.NewOpt("include", Path.GetDirectoryName(exeasmb.Location)));
+            //roottk.FlwsAdd(CmdLnArgs.NewOpt("reference", Path.GetFileNameWithoutExtension(exeasmb.Location)));
+            //roottk.FlwsAdd(mdl);
+
+            roottk = new Token("Arguments");
+            Token cmpopts = roottk.FlwsAdd("", "CompileOptions").FlwsTail;
+            cmpopts.FlwsAdd(CmdLnArgs.NewOpt("include", Path.GetDirectoryName(exeasmb.Location)));
+            cmpopts.FlwsAdd(CmdLnArgs.NewOpt("reference", Path.GetFileNameWithoutExtension(exeasmb.Location)));
+
+            roottk.FlwsAdd(name + ".exe", "Sources").FlwsTail.FlwsAdd(srctoken);
+
 
             StringBuilder b = new StringBuilder();
             Action<string> trace = delegate(string s_) { b.Append(s_); };
@@ -2756,17 +2764,25 @@ namespace UnitTest.Semantics.Root
                 Assembly exeasmb;
                 string name = GetType().Name;
 
-                //mdl = new Token(name + ".exe", Sentence.Sources);
-                mdl = new Token(name + ".exe", "Sources");
-                mdl.Follows = new Token[1];
-                mdl.Follows[0] = srctoken;
+                ////mdl = new Token(name + ".exe", Sentence.Sources);
+                //mdl = new Token(name + ".exe", "Sources");
+                //mdl.Follows = new Token[1];
+                //mdl.Follows[0] = srctoken;
 
-                roottk = new Token(name, "SemanticRoot");
-                //roottk = new Token(name, Sentence.SemanticRoot);
+                //roottk = new Token(name, "SemanticRoot");
+                ////roottk = new Token(name, Sentence.SemanticRoot);
                 exeasmb = Assembly.GetExecutingAssembly();
-                roottk.FlwsAdd(CmdLnArgs.NewOpt("include", Path.GetDirectoryName(exeasmb.Location)));
-                roottk.FlwsAdd(CmdLnArgs.NewOpt("reference", Path.GetFileNameWithoutExtension(exeasmb.Location)));
-                roottk.FlwsAdd(mdl);
+                //roottk.FlwsAdd(CmdLnArgs.NewOpt("include", Path.GetDirectoryName(exeasmb.Location)));
+                //roottk.FlwsAdd(CmdLnArgs.NewOpt("reference", Path.GetFileNameWithoutExtension(exeasmb.Location)));
+                //roottk.FlwsAdd(mdl);
+
+                roottk = new Token("Arguments");
+                Token cmpopts = roottk.FlwsAdd("", "CompileOptions").FlwsTail;
+                cmpopts.FlwsAdd(CmdLnArgs.NewOpt("include", Path.GetDirectoryName(exeasmb.Location)));
+                cmpopts.FlwsAdd(CmdLnArgs.NewOpt("reference", Path.GetFileNameWithoutExtension(exeasmb.Location)));
+
+                roottk.FlwsAdd(name + ".exe", "Sources").FlwsTail.FlwsAdd(srctoken);
+
 
                 StringBuilder b = new StringBuilder();
                 Action<string> trace = delegate(string s_) { b.Append(s_); };

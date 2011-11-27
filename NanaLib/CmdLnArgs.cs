@@ -44,21 +44,12 @@ namespace Nana
 
         static public Token NewOpt(string opt, string val)
         {
-            Token t;
-            t = new Token();
-            t.Value = opt;
-            t.Group = "CompileOption";
-            t.First = new Token();
-            t.First.Value = val;
-            return t;
+            return new Token(val, opt);
         }
 
         static public Token PickSrc(string arg)
         {
-            Token t = new Token();
-            t.Group = "SourcePath";
-            t.Value = arg;
-            return t;
+            return new Token(arg, "SourcePath");
         }
 
         static public Token GetCmdLnArgs(string[] args)
@@ -68,7 +59,6 @@ namespace Nana
 
             List<Token> opts = new List<Token>();
             List<Token> srcs = new List<Token>();
-
 
             Action<string> Pick = delegate(string arg)
             {
@@ -96,32 +86,26 @@ namespace Nana
                 Pick(arg);
             }
 
-            string a = string.Join(" ", args);
-            if (srcs.Count <= 0)
-                throw new Exception(string.Format("No source file specified: {0}", a));
+            //string a = string.Join(" ", args);
+            //if (srcs.Count <= 0)
+            //    throw new Exception(string.Format("No source file specified: {0}", a));
 
-            if (opts.Exists(delegate(Token t) { return t.Value == "out"; }) == false)
+            Token srct = new Token("", "SourcePaths");
+            srct.Follows = srcs.ToArray();
+
+            Token optt = new Token("", "CompileOptions");
+            optt.Follows = opts.ToArray();
+
+            if (0 == optt.Find("@CompileOptions/@out").Length)
             {
                 string v = srcs[0].Value;
                 string dir = System.IO.Path.GetDirectoryName(v);
                 string fn = System.IO.Path.GetFileNameWithoutExtension(v) + ".exe";
-                opts.Add(NewOpt("out", System.IO.Path.Combine(dir, fn)));
+                optt.FlwsAdd(NewOpt("out", System.IO.Path.Combine(dir, fn)));
             }
 
-            Token srct;
-            srct = new Token();
-            srct.Group = "Sources";
-            srct.Follows = srcs.ToArray();
-
-            Token optt;
-            optt = new Token();
-            optt.Group = "SemanticRoot";
-            optt.Follows = opts.ToArray();
-
-            Token ret;
-            ret = new Token();
+            Token ret = new Token("", "Arguments");
             ret.Follows = new Token[] { optt, srct };
-
 
             return ret;
         }

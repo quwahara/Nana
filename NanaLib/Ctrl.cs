@@ -26,6 +26,43 @@ namespace Nana
 {
     public class Ctrl
     {
+        public static void Check(Token args)
+        {
+            if (args == null) { throw new ArgumentNullException("args"); }
+            if (0 == args.Find("@Arguments").Length) { throw new ArgumentException("No @Arguments Token"); }
+            if (1 < args.Find("@Arguments").Length) { throw new ArgumentException("Too many @Arguments Token"); }
+
+            if (0 == args.Find("@Arguments/@CompileOptions").Length) { throw new ArgumentException("No @CompileOptions Token"); }
+            if (1 < args.Find("@Arguments/@CompileOptions").Length) { throw new ArgumentException("Too many @CompileOptions Token"); }
+
+            if ((0 == args.Find("@Arguments/@SourcePaths").Length || 0 == args.Find("@Arguments/@SourcePaths")[0].Follows.Length)
+                && (0 == args.Find("@Arguments/@SourceTexts").Length || 0 == args.Find("@Arguments/@SourceTexts")[0].Follows.Length))
+            { throw new ArgumentException("No @SourcePaths nor @SourceTexts Token"); }
+
+            if (1 < args.Find("@Arguments/@SourcePaths").Length) { throw new ArgumentException("Too many @SourcePaths Token"); }
+            if (1 < args.Find("@Arguments/@SourceTexts").Length) { throw new ArgumentException("Too many @SourceTexts Token"); }
+
+            if (0 == args.Find("@Arguments/@CompileOptions/@out").Length)
+            {
+                if (0 == args.Find("@Arguments/@SourcePaths").Length
+                    || 0 == args.Find("@Arguments/@SourcePaths")[0].Follows.Length)
+                {
+                    throw new ArgumentException("Cannot omit source path when out option was omitted");
+                }
+            }
+
+            if (1 < args.Find("@Arguments/@CompileOptions/@out").Length) { throw new ArgumentException("Too many out option"); }
+
+            if (1 == args.Find("@Arguments/@SourcePaths").Length)
+            {
+                foreach (Token p in args.Find("@Arguments/@SourcePaths")[0].Follows)
+                {
+                    if (false == File.Exists(p.Value)) { throw new FileNotFoundException("Source file was not found", p.Value); }
+                }
+            }
+
+        }
+
         public void Compile(Token args, Action<string> outWriteAct)
         {
             Token opt;
