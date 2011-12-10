@@ -161,9 +161,9 @@ val[System.Windows.Forms.dll]
             if (cmpopts == null || cmpopts.Length == 0) { return "(No CompileOptions token)"; }
             if (cmpopts.Length > 1) { return "(Too many CompileOptions tokens)"; }
 
-            Token[] srcpaths = act.Find("@Arguments/@SourcePaths");
-            if (srcpaths == null || srcpaths.Length == 0) { return "(No SourcePaths token)"; }
-            if (srcpaths.Length > 1) { return "(Too many SourcePaths tokens)"; }
+            Token[] srcs = act.Find("@Arguments/@Sources");
+            if (srcs == null || srcs.Length == 0) { return "(No Sources token)"; }
+            if (srcs.Length > 1) { return "(Too many Sources tokens)"; }
 
             StringBuilder b = new StringBuilder();
             string spl;
@@ -181,7 +181,7 @@ val[System.Windows.Forms.dll]
             }
 
             // srcs
-            foreach (Token t in srcpaths[0].Follows)
+            foreach (Token t in srcs[0].Follows)
             {
                 b.Append(spl);
                 b.Append(t.Value);

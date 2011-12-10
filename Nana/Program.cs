@@ -25,29 +25,21 @@ namespace Nana
 
         public static void StartCompile(string[] args)
         {
-            Token a; Ctrl c;
-            StringBuilder b = new StringBuilder();
-            Action<string> write = delegate(string s) { b.Append(s); };
             UTF8Encoding utf8 = new UTF8Encoding(false /* no byte order mark */);
             string ilpath;
+            string code;
             try
             {
-                a = CmdLnArgs.GetCmdLnArgs(args);
-                
-                if (0 == a.Find("@Arguments/@SourcePaths")[0].Follows.Length)
-                { throw new ArgumentException(string.Format("No source file was specified")); }
-                Ctrl.Check(a);
+                Token root = CmdLnArgs.GetCmdLnArgs(args);
+                root.Group = "Root";
+                Ctrl.Check(root);
+                Ctrl c = new Ctrl();
+                c.Compile(root);
 
-                Console.Write(TokenEx.ToTree(a, delegate(Token t){
-                    return t.Value + (t.Group != "" ? "@" + t.Group : "");
-                }));
-
-                c = new Ctrl();
-                c.Compile(a, write);
-
-                ilpath = a.Find("@Arguments/@CompileOptions/@out")[0].Value;
+                ilpath = root.Find("@Root/@CompileOptions/@out")[0].Value;
                 ilpath = Path.ChangeExtension(ilpath, ".il");
-                File.WriteAllText(ilpath, b.ToString(), utf8);
+                code = root.Find("@Root/@Code")[0].Value;
+                File.WriteAllText(ilpath, code, utf8);
 
                 ILASMRunner r = new ILASMRunner();
                 r.DetectILASM();

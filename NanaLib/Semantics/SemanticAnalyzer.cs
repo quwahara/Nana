@@ -189,6 +189,7 @@ namespace Nana.Semantics
                 {
                     case "include":     /**/ Env.TypeLdr.InAssembly.Includes.Add(opt.Value); break;
                     case "reference":   /**/ Env.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(opt.Value); break;
+                    case "out":         /**/ break;   // ignore
                     default: throw new InternalError("The compile option is not supported: " + opt.Value, t);
                 }
             }
@@ -211,6 +212,18 @@ namespace Nana.Semantics
             AppAzr = new AppAnalyzer(t, this);
             RegisterAnalyzer(AppAzr);
         }
+
+        public void AnalyzeSyntax(Token t)
+        {
+            if (AppAzr != null) { throw new InternalError(@"Cannot speficy two or more ""sources"".", t); }
+            AppAzr = new AppAnalyzer(t, this);
+            RegisterAnalyzer(AppAzr);
+        }
+
+        public void AnalyzeIgnore(Token t)
+        {
+        }
+
     }
 
     abstract public class NspAnalyzer : SemanticAnalyzer

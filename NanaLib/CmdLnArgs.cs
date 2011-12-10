@@ -90,7 +90,7 @@ namespace Nana
             //if (srcs.Count <= 0)
             //    throw new Exception(string.Format("No source file specified: {0}", a));
 
-            Token srct = new Token("", "SourcePaths");
+            Token srct = new Token("", "Sources");
             srct.Follows = srcs.ToArray();
 
             Token optt = new Token("", "CompileOptions");

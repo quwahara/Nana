@@ -26,41 +26,90 @@ namespace Nana
 {
     public class Ctrl
     {
-        public static void Check(Token args)
+        public static void Check(Token root)
         {
-            if (args == null) { throw new ArgumentNullException("args"); }
-            if (0 == args.Find("@Arguments").Length) { throw new ArgumentException("No @Arguments Token"); }
-            if (1 < args.Find("@Arguments").Length) { throw new ArgumentException("Too many @Arguments Token"); }
+            if (root == null) { throw new ArgumentNullException("args"); }
+            if (0 == root.Find("@Root").Length) { throw new ArgumentException("No @Root Token"); }
+            if (1 < root.Find("@Root").Length) { throw new ArgumentException("Too many @Root Token"); }
 
-            if (0 == args.Find("@Arguments/@CompileOptions").Length) { throw new ArgumentException("No @CompileOptions Token"); }
-            if (1 < args.Find("@Arguments/@CompileOptions").Length) { throw new ArgumentException("Too many @CompileOptions Token"); }
+            if (0 == root.Find("@Root/@CompileOptions").Length) { throw new ArgumentException("No @CompileOptions Token"); }
+            if (1 < root.Find("@Root/@CompileOptions").Length) { throw new ArgumentException("Too many @CompileOptions Token"); }
 
-            if ((0 == args.Find("@Arguments/@SourcePaths").Length || 0 == args.Find("@Arguments/@SourcePaths")[0].Follows.Length)
-                && (0 == args.Find("@Arguments/@SourceTexts").Length || 0 == args.Find("@Arguments/@SourceTexts")[0].Follows.Length))
-            { throw new ArgumentException("No @SourcePaths nor @SourceTexts Token"); }
+            if (0 == root.Find("@Root/@Sources").Length || 0 == root.Find("@Root/@Sources")[0].Follows.Length)
+            { throw new ArgumentException("No @Sources Token"); }
 
-            if (1 < args.Find("@Arguments/@SourcePaths").Length) { throw new ArgumentException("Too many @SourcePaths Token"); }
-            if (1 < args.Find("@Arguments/@SourceTexts").Length) { throw new ArgumentException("Too many @SourceTexts Token"); }
+            if (1 < root.Find("@Root/@Sources").Length) { throw new ArgumentException("Too many @Sources Token"); }
 
-            if (0 == args.Find("@Arguments/@CompileOptions/@out").Length)
+            if (0 == root.Find("@Root/@CompileOptions/@out").Length)
             {
-                if (0 == args.Find("@Arguments/@SourcePaths").Length
-                    || 0 == args.Find("@Arguments/@SourcePaths")[0].Follows.Length)
+                if (0 == root.Find("@Root/@Sources").Length
+                    || 0 == root.Find("@Root/@Sources")[0].Follows.Length)
                 {
                     throw new ArgumentException("Cannot omit source path when out option was omitted");
                 }
             }
 
-            if (1 < args.Find("@Arguments/@CompileOptions/@out").Length) { throw new ArgumentException("Too many out option"); }
+            if (1 < root.Find("@Root/@CompileOptions/@out").Length) { throw new ArgumentException("Too many out option"); }
 
-            if (1 == args.Find("@Arguments/@SourcePaths").Length)
+            if (1 == root.Find("@Root/@Sources").Length)
             {
-                foreach (Token p in args.Find("@Arguments/@SourcePaths")[0].Follows)
+                foreach (Token p in root.Find("@Root/@Sources")[0].Follows)
                 {
                     if (false == File.Exists(p.Value)) { throw new FileNotFoundException("Source file was not found", p.Value); }
                 }
             }
 
+        }
+
+        public void Compile(Token root)
+        {
+            //  append SourceText if it's SourcePath
+            Token srcs = root.Find("@Root/@Sources")[0];
+            {
+                UTF8Encoding utf8 = new UTF8Encoding(false /* no byte order mark */);
+                List<Token> srcsflw = new List<Token>();
+                foreach (Token f in srcs.Follows)
+                {
+                    srcsflw.Add(f);
+                    if (f.Group == "SourceText") { continue; }
+                    if (f.Group == "SourcePath")
+                    {
+                        string text = File.ReadAllText(f.Value, utf8);
+                        srcsflw.Add(new Token(text, "SourceText"));
+                    }
+                }
+                srcs.Follows = srcsflw.ToArray();
+            }
+
+            {
+                if (false == root.Contains("@Root/@Syntax"))
+                { root.FlwsAdd(new Token("", "Syntax")); }
+
+                Token syntax = root.Find("@Root/@Syntax")[0];
+                List<Token> synflw = new List<Token>();
+                foreach (Token f in srcs.Follows)
+                {
+                    if (f.Group == "SourcePath") { continue; }
+                    if (f.Group == "SourceText") { synflw.Add(AnalyzeSyntax(f.Value)); }
+                }
+                syntax.Follows = synflw.ToArray();
+            }
+
+            //TODO
+            srcs.Group = "Ignore";
+
+            Env env = AnalyzeSemantic(root);
+
+            IMRGenerator imrgen = new IMRGenerator();
+            imrgen.GenerateIMR(env.FindInTypeOf<App>());
+
+
+            if (false == root.Contains("@Root/@Code"))
+            { root.FlwsAdd(new Token("", "Code")); }
+
+            Token code = root.Find("@Root/@Code")[0];
+            CodeGenerator codegen = new CodeGenerator();
+            code.Value = codegen.GenerateCode(env);
         }
 
         public void Compile(Token args, Action<string> outWriteAct)

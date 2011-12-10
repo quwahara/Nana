@@ -127,6 +127,11 @@ namespace Nana.Tokens
             return ts.ToArray();
         }
 
+        public bool Contains(string path)
+        {
+            return 0 != Find(path).Length;
+        }
+
         public Token FindGroupOf(string group)
         {
             if (this.Group == group) /**/ { return this; }
