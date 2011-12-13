@@ -367,7 +367,7 @@ hij,/ G:Cmt B:0 T:/Pos=5";
             inp = @"
 class Nana    
 begin
-	sfunc Main():void
+	sfun Main():void
     begin
         //comment
         ""string literal"" -> a
@@ -377,7 +377,7 @@ end
             epc = @"class
 Nana
 begin
-sfunc
+sfun
 Main
 (
 )

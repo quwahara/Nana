@@ -137,7 +137,7 @@ end
             Inp = @"
 class T102_Class1Func1P0
 begin
-    sfunc Main():void
+    sfun Main():void
     begin
     end
 end
@@ -274,7 +274,7 @@ namespace UnitTest.Semantics.Call
             Inp = @"
 class CallRefFuncP0
 begin
-    sfunc Main():void
+    sfun Main():void
     begin
         System.Console.WriteLine()
     end
@@ -303,7 +303,7 @@ end
             Inp = @"
 class CallRefFuncP1
 begin
-    sfunc Main():void
+    sfun Main():void
     begin
         System.Console.WriteLine(""P1"")
     end
@@ -333,11 +333,11 @@ end
             Inp = @"
 class CallDecFuncP0
 begin
-    sfunc Main():void
+    sfun Main():void
     begin
         Sub()
     end
-    sfunc Sub():void
+    sfun Sub():void
     begin
     end
 end
@@ -368,11 +368,11 @@ end
             Inp = @"
 class CallDecFuncP1
 begin
-    sfunc Main():void
+    sfun Main():void
     begin
         Sub(""st"")
     end
-    sfunc Sub(s:string):void
+    sfun Sub(s:string):void
     begin
         System.Console.WriteLine(s)
     end
@@ -407,11 +407,11 @@ end
             Inp = @"
 class CallDecFuncP2
 begin
-    sfunc Main():void
+    sfun Main():void
     begin
         Sub(""st"", ""ring"")
     end
-    sfunc Sub(s:string, t:string):void
+    sfun Sub(s:string, t:string):void
     begin
         System.Console.WriteLine(t)
     end
@@ -550,7 +550,7 @@ a:int <- 10
             Inp = @"
 class CallRefFuncP0
 begin
-    sfunc Main():void
+    sfun Main():void
     begin
         333 -> n
         n.ToString()    -> s
@@ -622,7 +622,7 @@ end
             Inp = @"
 class T102_Class1Func1P0
 begin
-    sfunc Main():void
+    sfun Main():void
     begin
     end
 end
@@ -649,10 +649,10 @@ end
             Inp = @"
 class Class1Func2P0
 begin
-    sfunc Main():void
+    sfun Main():void
     begin
     end
-    sfunc Sub():void
+    sfun Sub():void
     begin
     end
 end
@@ -682,7 +682,7 @@ end
             Inp = @"
 class Class1Func1P1
 begin
-    sfunc Main(s:string):void
+    sfun Main(s:string):void
     begin
     end
 end
@@ -709,7 +709,7 @@ end
             Inp = @"
 class Class1Func1P2
 begin
-    sfunc Main(s:string, t:string):void
+    sfun Main(s:string, t:string):void
     begin
     end
 end
@@ -2065,7 +2065,7 @@ System.Console.WriteLine(b)
         public void T108()
         {
             Inp = @"
-func Main(args:string[]):void
+fun Main(args:string[]):void
 ..
     i:int[,,]
     int[15, 13, 11] -> i
@@ -2561,7 +2561,7 @@ begin
         base()
     begin
     end
-    sfunc Main():void
+    sfun Main():void
     begin
         A() -> a
         a.Pub0()

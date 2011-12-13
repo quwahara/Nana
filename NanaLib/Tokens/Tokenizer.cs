@@ -290,7 +290,7 @@ namespace Nana.Tokens
 |(?<Eol>;)
 |(?<Bgn>(\.\.+|do|begin))
 |(?<End>(end))
-|(?<Fnc>[snv]?func)
+|(?<Fnc>[snv]?fun)
 |(?<Typ>\:)
 |(?<_End_Cma_>,+)
 |(?<Expr>(=|\(|\)|\[|\]|\.|@))
@@ -300,6 +300,7 @@ namespace Nana.Tokens
 |(?<Id>`?[_a-zA-Z][_a-zA-Z0-9]*)
 |(?<Unk>[^\s$]+)
 ";
+
         static public RegexOptions InlineRxOptions = RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture;
 
         #endregion

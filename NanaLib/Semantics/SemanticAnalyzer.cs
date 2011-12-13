@@ -763,17 +763,17 @@ namespace Nana.Semantics
 
         public string ResolveFuncType(string func, bool isInTypDecl)
         {
-            if (func != "func") return func;
-            if (isInTypDecl) { return "vfunc"; }
-            return "sfunc";
+            if (func != "fun") return func;
+            if (isInTypDecl) { return "vfun"; }
+            return "sfun";
         }
 
         static public MethodAttributes AnalyzeAttrs(string ftyp)
         {
             MethodAttributes attrs;
             attrs = MethodAttributes.Public;
-            if (ftyp == "sfunc" || ftyp == "scons") { attrs |= MethodAttributes.Static; }
-            if (ftyp == "vfunc") { attrs |= MethodAttributes.Virtual; }
+            if (ftyp == "sfun" || ftyp == "scons") { attrs |= MethodAttributes.Static; }
+            if (ftyp == "vfun") { attrs |= MethodAttributes.Virtual; }
             return attrs;
         }
 
@@ -782,7 +782,7 @@ namespace Nana.Semantics
             string nameasm = null;
             if (ftyp == "cons") { nameasm = Nana.IMRs.IMRGenerator.InstCons; }
             if (ftyp == "scons") { nameasm = Nana.IMRs.IMRGenerator.StatCons; }
-            if (ftyp == "sfunc" || ftyp == "nfunc" || ftyp == "vfunc") { nameasm = seed.Follows[0].Value; }
+            if (ftyp == "sfun" || ftyp == "nfun" || ftyp == "vfun") { nameasm = seed.Follows[0].Value; }
             return nameasm;
         }
 
@@ -851,7 +851,7 @@ namespace Nana.Semantics
             if (founds.Count == 1)
             { return; }
 
-            Token t = ActnAnalyzer.GenFuncToken("sfunc", Actn.EntryPointNameImplicit, "void");
+            Token t = ActnAnalyzer.GenFuncToken("sfun", Actn.EntryPointNameImplicit, "void");
             (new ActnAnalyzer(t, Above)).Analyze();
         }
 

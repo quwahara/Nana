@@ -309,9 +309,14 @@ namespace Nana.Syntaxes
             0Source.@0      Expr.s* 0End                --  Source
 
 
+            _#  meta-infomation
+
             using.@0        0iddotdec.r                 --  Using
 
             namespace.@0    0iddotdec2.r    0bodydec.r  --  Namespace
+
+
+
 
             class.@0    Id.g@2 _( ->.?@3    0type.r    _(  ,.* 0type.r _)  _) _( Bgn.g@1    Expr.s* _)  End.g -- TypeDef    TypeBody   Name  BaseTypeDef
 
