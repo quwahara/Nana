@@ -523,9 +523,7 @@ namespace UnitTest.Syntaxes.PrefixAnalyzerFxts
 
         public PrefixAnalyzerFxt()
         {
-            List<PrefixDef> defs = SFList.FromText(PrefixAnalyzer.DefsText)
-                .Map(Sty.Trim).FindAll(Sty.NotNullOrEmpty).Map<PrefixDef>(PrefixDef.FromInline);
-            Analyzer = new PrefixAnalyzer(defs);
+            Analyzer = new PrefixAnalyzer();
         }
 
         public void Test()
@@ -535,7 +533,7 @@ namespace UnitTest.Syntaxes.PrefixAnalyzerFxts
                 try
                 {
                     IEnumerator<Token> tks; ITokenEnumerator tkz; Token t;
-                    tks = SFList.FromText(c.Input).Map<Token>(Token.FromVG).NotNulls().GetEnumerator();
+                    tks = Sty.ToStringListAndClean(c.Input).ConvertAll<Token>(Token.FromVG).GetEnumerator();
                     tkz = new Append(new EnumeratorAdapter(tks), Token.ZEnd);
                     Analyzer.Init(tkz);
                     t = Analyzer.Analyze();
