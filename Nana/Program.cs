@@ -28,9 +28,10 @@ namespace Nana
             UTF8Encoding utf8 = new UTF8Encoding(false /* no byte order mark */);
             string ilpath;
             string code;
+            Token root = null;
             try
             {
-                Token root = CmdLnArgs.GetCmdLnArgs(args);
+                root = CmdLnArgs.GetCmdLnArgs(args);
                 root.Group = "Root";
                 Ctrl.Check(root);
                 Ctrl c = new Ctrl();
@@ -48,6 +49,8 @@ namespace Nana
             catch (Exception e)
             {
                 Console.Error.WriteLine(e.Message);
+                if (null != root && root.Contains("@Root/@CompileOptions/@xxxtrace"))
+                { Console.Error.Write(e.StackTrace); }
             }
         }
 

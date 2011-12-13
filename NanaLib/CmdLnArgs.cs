@@ -15,6 +15,7 @@ namespace Nana
         static public readonly string[] Options = {
             "out"
             , "reference"
+            , "xxxtrace"
             };
 
         static public Token PickOpt(string arg)
@@ -24,9 +25,12 @@ namespace Nana
             Func<bool> split = delegate()
             {
                 Match m;
-                m = Regex.Match(arg, string.Format(@"{0}{1}:", OptHead, opt));
+                m = Regex.Match(arg, string.Format(@"{0}{1}:?", OptHead, opt));
                 if (m.Success == false) return false;
-                val = arg.Substring(m.Length);
+                if (arg.Substring(1).StartsWith(opt + ":"))
+                {
+                    val = arg.Substring(m.Length);
+                }
                 return true;
             };
 

@@ -190,7 +190,9 @@ namespace Nana.Semantics
                     case "include":     /**/ Env.TypeLdr.InAssembly.Includes.Add(opt.Value); break;
                     case "reference":   /**/ Env.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(opt.Value); break;
                     case "out":         /**/ break;   // ignore
-                    default: throw new InternalError("The compile option is not supported: " + opt.Value, t);
+                    default:
+                        if (opt.Group.ToLower().StartsWith("xxx")) { break; }
+                        throw new InternalError("The compile option is not supported: " + opt.Value, t);
                 }
             }
         }

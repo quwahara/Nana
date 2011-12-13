@@ -2757,13 +2757,13 @@ namespace UnitTest.Semantics.Root
                 Token root = Ctrl.CreateRootTemplate();
 
                 Assembly exeasmb = Assembly.GetExecutingAssembly();
+                string name = GetType().Name;
                 root.Find("@Root/@CompileOptions")[0]
                     .FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
                     .FlwsAdd(Path.GetFileNameWithoutExtension(exeasmb.Location), "reference")
+                    .FlwsAdd(name + ".exe", "out")
                     ;
                 root.Find("@Root/@Sources")[0].FlwsAdd(c.Input, "SourceText");
-                
-                string name = GetType().Name;
                 root.Find("@Root/@Syntax")[0].Value = name + ".exe";
 
                 Ctrl.Check(root);

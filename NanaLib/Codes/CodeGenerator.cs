@@ -114,19 +114,30 @@ namespace Nana.CodeGeneration
             return b.ToString();
         }
 
-        public string BeginApp(App d)
+        public string BeginApp(App ap)
         {
+            string name = "";
+            if (ap.Env.Seed.Contains("@Root/@CompileOptions/@out"))
+            {
+                name = ap.Env.Seed.Find("@Root/@CompileOptions/@out")[0].Value;
+            }
+            else
+            {
+                name = ap.Name;
+            }
+
             StringBuilder b = new StringBuilder();
             b.Append(".assembly ")
-                .Append(Path.GetFileNameWithoutExtension(d.Name))
+                .Append(Path.GetFileNameWithoutExtension(name))
+                //.Append(Path.GetFileNameWithoutExtension(d.Name))
                 .Append(" { }")
                 .AppendLine()
                 .Append(".module ")
-                .Append(d.Name)
+                .Append(name)
                 .AppendLine();
             //return ".assembly " + Path.GetFileNameWithoutExtension(d.Name) + " { }" + Environment.NewLine
             //    + ".module " + d.Name + Environment.NewLine;
-            d.FindAllTypeOf<Variable>()
+            ap.FindAllTypeOf<Variable>()
                 .FindAll(delegate(Variable v) { return v.VarKind == Variable.VariableKind.StaticField; })
                 .ConvertAll<StringBuilder>(delegate(Variable v) { return b.Append(DeclareField(v)); })
                 ;
