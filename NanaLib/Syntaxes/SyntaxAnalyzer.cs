@@ -316,6 +316,11 @@ namespace Nana.Syntaxes
             namespace.@0    0iddotdec2.r    0bodydec.r  --  Namespace
 
 
+            _#  fundamental elements
+
+            0bodydec    _(  Bgn.g@0 Expr.s* _)  End.g   -- Block
+
+
 
 
             class.@0    Id.g@2 _( ->.?@3    0type.r    _(  ,.* 0type.r _)  _) _( Bgn.g@1    Expr.s* _)  End.g -- TypeDef    TypeBody   Name  BaseTypeDef
@@ -331,7 +336,6 @@ namespace Nana.Syntaxes
             scons.@0    0conscall.r 0attrdec.r  0bodydec.r      -- Func PrmDef
 
                 0conscall   _(  base.?@0    _(  (.@1    Expr.s* _)  )   _)  -- ConsCall Expr
-                0bodydec    _(  Bgn.g@0 Expr.s* _)  End.g                   -- Body
 
 
             cons.@0     _(  (.@1    0prmdec.r   _)  )   0conscall.r 0attrdec.r  0bodydec.r      -- Func PrmDef

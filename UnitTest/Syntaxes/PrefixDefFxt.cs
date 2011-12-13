@@ -82,7 +82,7 @@ namespace UnitTest.Syntaxes
         public void T107_BodyDecDef()
         {
             Inp = GetDef(@"0bodydec");
-            Epc = @"0bodydec:ValueClause:1:(Bgn:GroupClause:1:Body:(Expr:Expr:*:(End.g)), End:Group:1)";
+            Epc = @"0bodydec:ValueClause:1:(Bgn:GroupClause:1:Block:(Expr:Expr:*:(End.g)), End:Group:1)";
 
             Test();
         }

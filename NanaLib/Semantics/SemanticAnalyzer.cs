@@ -635,7 +635,7 @@ namespace Nana.Semantics
                 f.FlwsTail.FlwsAdd(returnType, "Id");
             }
 
-            f.FlwsAdd("..", "Body");
+            f.FlwsAdd("..", "Block");
             f.FlwsTail.Follows = new Token[0];
 
             return f;
@@ -727,7 +727,7 @@ namespace Nana.Semantics
 
             Actn.MthdAttrs = attrs;
 
-            Token body = t.FindGroupOf("Body");
+            Token body = t.FindGroupOf("Block");
             Debug.Assert(body != null && body.Follows != null);
             foreach (Token exe in body.Follows)
             { RegisterAnalyzer(new ExeAnalyzer(exe, this)); }
@@ -805,7 +805,7 @@ namespace Nana.Semantics
                 f.FlwsTail.FlwsAdd(returnType, "Id");
             }
 
-            f.FlwsAdd("..", "Body");
+            f.FlwsAdd("..", "Block");
             f.FlwsTail.Follows = new Token[0];
 
             return f;
