@@ -14,7 +14,6 @@ namespace Nana.Syntaxes
         public string Value = "";
         public int Rbp = 0;
         public string Appearance = "";
-        //public Sentence Sentence = Sentence.None;
         public string Group = "";
         public string[] Ends = null;
         public PrefixDef Parent = null;
@@ -31,11 +30,11 @@ namespace Nana.Syntaxes
             if (s.Parent == null)           /**/ { return result.ToArray(); }
             if (s.Parent.Follows == null)   /**/ { return result.ToArray(); }
 
-            List<PrefixDef> siblings      /**/ = s.Parent.Follows;
+            List<PrefixDef> siblings        /**/ = s.Parent.Follows;
             int idx                         /**/ = siblings.IndexOf(s);
             for (int i = idx + 1; i < siblings.Count; ++i)
             {
-                PrefixDef sib             /**/ = siblings[i];
+                PrefixDef sib               /**/ = siblings[i];
                 if (sib.Kind == "Value" || sib.Kind.EndsWith("Clause") || sib.Kind == "Group")
                 {
                     result.Add(sib.Value + (sib.Kind == "Group" ? ".g" : ""));
@@ -55,27 +54,22 @@ namespace Nana.Syntaxes
          *      1 ? *   -- Appearance
          *      v g r   -- Value Group Refer
          *      s       -- Special (Expr)
-         *      @[数字] -- Sentence
-         * 行末に指定できる "--" の後ろがSentence名。スペースで区切って複数指定可能。どのSentenceかは@の後の数字がインデックスになる。0なら複数指定の1番目
+         *      @[数字] -- Group index
+         * 行末に指定できる "--" の後ろがGroup名。スペースで区切って複数指定可能。どのGroupかは@の後の数字がインデックスになる。0なら複数指定の1番目
          * グループ化は "_("と"_)"で囲む
          * 
          */
         static public PrefixDef FromInline(string v)
         {
-            // Assertion
-            if ((v = ("" + v).Trim()) == "") return null;
+            if ((v = ("" + v).Trim()) == "") { return null; }
+            if (v.StartsWith("_#")) { return null; }
 
-            // Parse line Sentence
-            //List<Sentence> ss               /**/ = new List<Sentence>();
-            List<string> gs                 /**/ = new List<string>();
+            // Parse line Group names
+            List<string> groups             /**/ = new List<string>();
             int idx                         /**/ = v.LastIndexOf("--");
             if (idx >= 0)
             {
-                foreach (string s in Regex.Split(v.Substring(idx + 2).Trim(), @"\s+"))
-                {
-                    //ss.Add((Sentence)Enum.Parse(typeof(Sentence), s, /*ignorecase:*/ true));
-                    gs.Add(s);
-                }
+                groups.AddRange(Regex.Split(v.Substring(idx + 2).Trim(), @"\s+"));
                 v = v.Substring(0, idx).TrimEnd();
             }
 
@@ -92,7 +86,6 @@ namespace Nana.Syntaxes
                 d_.Appearance               /**/ = "1";
                 d_.Kind                     /**/ = "Value";
                 d_.Rbp                      /**/ = 0;
-                //d_.Sentence                 /**/ = Sentence.None;
                 d_.Group                    /**/ = "";
 
                 idx_ = s_.LastIndexOf('.');
@@ -110,8 +103,7 @@ namespace Nana.Syntaxes
                 idx_                        /**/ = ext_.LastIndexOf('@');
                 if (idx_ >= 0)
                 {
-                    //d_.Sentence             /**/ = ss[int.Parse(ext_.Substring(idx_ + 1))];
-                    d_.Group                /**/ = gs[int.Parse(ext_.Substring(idx_ + 1))];
+                    d_.Group                /**/ = groups[int.Parse(ext_.Substring(idx_ + 1))];
                     ext_                    /**/ = ext_.Substring(0, idx_);
                 }
                 foreach (char e_ in ext_)
@@ -198,7 +190,6 @@ namespace Nana.Syntaxes
             if (Rbp > 0) b.Append(":" + Rbp.ToString());
             if (Appearance != "") b.Append(":" + Appearance);
             if (Group != "") b.Append(":" + Group);
-            //if (Sentence != Sentence.None) b.Append(":" + Sty.ToLongestString(typeof(Sentence), (int)Sentence));
             if (Ends != null)
             {
                 b.Append(":(");

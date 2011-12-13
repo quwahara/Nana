@@ -22,11 +22,7 @@ namespace UnitTest.Syntaxes.SyntaxAnalyzerFxts
 
         public SyntaxAnalyzerFxt()
         {
-            InfixAnalyzer t = new InfixAnalyzer();
-            List<PrefixDef> defs = SFList.FromText(PrefixAnalyzer.DefsText)
-                .Map(Sty.Trim).FindAll(Sty.NotNullOrEmpty).Map<PrefixDef>(PrefixDef.FromInline);
-            PrefixAnalyzer s = new PrefixAnalyzer(defs);
-            Analyzer = new SyntaxAnalyzer(t, s);
+            Analyzer = new SyntaxAnalyzer();
         }
 
         public void Test()

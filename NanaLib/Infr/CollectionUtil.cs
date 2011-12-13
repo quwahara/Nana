@@ -100,6 +100,8 @@ namespace Nana.Infr
             return ls;
         }
 
+        public static bool NotNull(object obj) { return obj != null; }
+
     }
 
     /// <summary>Funkadelic List</summary>

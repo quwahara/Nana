@@ -304,6 +304,8 @@ namespace Nana.Syntaxes
         #region Defs
         static public readonly string DefsText = @"
 
+            _#  syntax root
+
             0Source.@0      Expr.s* 0End                --  Source
 
 
@@ -368,6 +370,7 @@ namespace Nana.Syntaxes
             : this(
             Sty.ToStringListAndClean(defs)
             .ConvertAll<PrefixDef>(PrefixDef.FromInline)
+            .FindAll(Cty.NotNull)
             )
         {
         }
