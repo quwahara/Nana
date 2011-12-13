@@ -2754,47 +2754,27 @@ namespace UnitTest.Semantics.Root
         {
             Func<TestCase, string> f = delegate(TestCase c)
             {
-                SyntaxAnalyzer p = new SyntaxAnalyzer();
-                Token srctoken;
-                p.Init(c.Input);
+                Token root = Ctrl.CreateRootTemplate();
 
-                srctoken = p.Analyze();
-
-                Token roottk, mdl;
-                Assembly exeasmb;
+                Assembly exeasmb = Assembly.GetExecutingAssembly();
+                root.Find("@Root/@CompileOptions")[0]
+                    .FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
+                    .FlwsAdd(Path.GetFileNameWithoutExtension(exeasmb.Location), "reference")
+                    ;
+                root.Find("@Root/@Sources")[0].FlwsAdd(c.Input, "SourceText");
+                
                 string name = GetType().Name;
+                root.Find("@Root/@Syntax")[0].Value = name + ".exe";
 
-                ////mdl = new Token(name + ".exe", Sentence.Sources);
-                //mdl = new Token(name + ".exe", "Sources");
-                //mdl.Follows = new Token[1];
-                //mdl.Follows[0] = srctoken;
-
-                //roottk = new Token(name, "SemanticRoot");
-                ////roottk = new Token(name, Sentence.SemanticRoot);
-                exeasmb = Assembly.GetExecutingAssembly();
-                //roottk.FlwsAdd(CmdLnArgs.NewOpt("include", Path.GetDirectoryName(exeasmb.Location)));
-                //roottk.FlwsAdd(CmdLnArgs.NewOpt("reference", Path.GetFileNameWithoutExtension(exeasmb.Location)));
-                //roottk.FlwsAdd(mdl);
-
-                roottk = new Token("Arguments");
-                Token cmpopts = roottk.FlwsAdd("", "CompileOptions").FlwsTail;
-                cmpopts.FlwsAdd(CmdLnArgs.NewOpt("include", Path.GetDirectoryName(exeasmb.Location)));
-                cmpopts.FlwsAdd(CmdLnArgs.NewOpt("reference", Path.GetFileNameWithoutExtension(exeasmb.Location)));
-
-                roottk.FlwsAdd(name + ".exe", "Sources").FlwsTail.FlwsAdd(srctoken);
-
+                Ctrl.Check(root);
+                Ctrl ctrl = new Ctrl();
 
                 StringBuilder b = new StringBuilder();
                 Action<string> trace = delegate(string s_) { b.Append(s_); };
                 try
                 {
-                    EnvAnalyzer azr = new EnvAnalyzer(roottk);
-                    azr.Analyze();
-                    IMRGenerator imrgen = new IMRGenerator();
-                    Env env = azr.Env;
-                    imrgen.GenerateIMR(env.FindInTypeOf<App>());
-                    CodeGenerator codegen = new CodeGenerator();
-                    trace(codegen.GenerateCode(env));
+                    ctrl.Compile(root);
+                    trace(root.Find("@Root/@Code")[0].Value);
                 }
                 catch (Nana.Infr.Error e)
                 {

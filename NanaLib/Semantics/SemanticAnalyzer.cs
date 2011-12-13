@@ -220,6 +220,11 @@ namespace Nana.Semantics
             RegisterAnalyzer(AppAzr);
         }
 
+        public void AnalyzeCode(Token t)
+        {
+            //  do nothing, place holder for next phase
+        }
+
         public void AnalyzeIgnore(Token t)
         {
         }

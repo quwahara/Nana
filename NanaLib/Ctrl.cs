@@ -26,6 +26,16 @@ namespace Nana
 {
     public class Ctrl
     {
+        public static Token CreateRootTemplate()
+        {
+            return new Token("", "Root")
+                .FlwsAdd("", "CompileOptions")
+                .FlwsAdd("", "Sources")
+                .FlwsAdd("", "Syntax")
+                .FlwsAdd("", "Code")
+                ;
+        }
+
         public static void Check(Token root)
         {
             if (root == null) { throw new ArgumentNullException("args"); }
@@ -53,7 +63,7 @@ namespace Nana
 
             if (1 == root.Find("@Root/@Sources").Length)
             {
-                foreach (Token p in root.Find("@Root/@Sources")[0].Follows)
+                foreach (Token p in root.Find("@Root/@Sources")[0].Find("@SourcePath"))
                 {
                     if (false == File.Exists(p.Value)) { throw new FileNotFoundException("Source file was not found", p.Value); }
                 }
