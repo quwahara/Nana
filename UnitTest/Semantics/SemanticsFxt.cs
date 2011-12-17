@@ -214,7 +214,8 @@ end
 
             srctoken = p.Analyze();
 
-            Token roottk, mdl;
+            //Token roottk, mdl;
+            Token roottk;
             Assembly exeasmb;
             string name = GetType().Name;
 

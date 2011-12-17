@@ -151,21 +151,90 @@ namespace UnitTest
 
         public string Inp;
         public string EpcSyn;
+        public string EpcILHeader;
         public string EpcIL;
 
 
-
-
+        [SetUp]
+        public void SetUp()
+        {
+            string asm = GetType().Name;
+            Inp = "";
+            EpcSyn = "";
+            EpcILHeader = @".assembly extern mscorlib {.ver 2:0:0:0 .publickeytoken = (B7 7A 5C 56 19 34 E0 89)}
+.assembly extern UnitTest {.ver 1:0:0:0}
+.assembly " + asm + @" { }
+.module " + asm + @".exe
+";
+            EpcIL = "";
+        }
 
         [Test]
         public void HelloWorld()
         {
+            Inp = @"`p(""Hello, World!"")";
+            
+            EpcSyn = @"0Source
++---[0](
+    +---[F]`p
+    +---[S]
+    |   +---[0]""Hello, World!""
+    +---[T])
+";
 
+            EpcIL = @".method static public void .cctor() {
+    ldstr ""Hello, World!""
+    call void [mscorlib]System.Console::WriteLine(string)
+    ret
+}
+.method static public void '0'() {
+    .entrypoint
+    ret
+}
+";
+
+            Test();
         }
 
         public void Test()
         {
-            //Token root = Ctrl.CreateRootTemplate();
+            Func<TestCase, string> f = delegate(TestCase c)
+            {
+                Token root = Ctrl.CreateRootTemplate();
+
+                Assembly exeasmb = Assembly.GetExecutingAssembly();
+                string name = GetType().Name;
+                root.Find("@Root/@CompileOptions")[0]
+                    .FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
+                    .FlwsAdd(Path.GetFileNameWithoutExtension(exeasmb.Location), "reference")
+                    .FlwsAdd(name + ".exe", "out")
+                    ;
+                root.Find("@Root/@Sources")[0].FlwsAdd(c.Input, "SourceText");
+
+                Ctrl.Check(root);
+                Ctrl ctrl = new Ctrl();
+
+                StringBuilder b = new StringBuilder();
+                Action<string> trace = delegate(string s_) { b.Append(s_); };
+                try
+                {
+                    ctrl.Compile(root);
+                    trace(root.Find("@Root/@Code")[0].Value);
+                }
+                catch (Nana.Infr.Error e)
+                {
+                    trace(e.Message);
+                    Console.WriteLine(e.StackTrace);
+                }
+                catch (Exception ex)
+                {
+                    trace(ex.ToString());
+                }
+
+                return TokenEx.ToTree(root.Find("@Root/@Syntax")[0].Follows[0]) + b.ToString();
+            };
+
+            new TestCase("", Inp, EpcSyn + EpcILHeader + EpcIL, f).Run();
             
         }
     }
