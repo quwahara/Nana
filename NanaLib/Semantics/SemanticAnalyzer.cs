@@ -898,6 +898,7 @@ namespace Nana.Semantics
         public Env Env;
         public Actn Actn;
         public Token Seed;
+        TmpVarGenerator TmpVarGen;
 
         [DebuggerNonUserCode]
         public NspAnalyzer Above { get { return Above_ as NspAnalyzer; } }
@@ -917,6 +918,7 @@ namespace Nana.Semantics
 
             Actn = FindUpTypeIs<ActnAnalyzer>().Actn;
             Env = Actn.Env;
+            TmpVarGen = new TmpVarGenerator(Env.GetTempName, Actn.NewVar);
             Actn.Exes.Add(Require<IExecutable>(Seed));
         }
 
@@ -1497,8 +1499,7 @@ namespace Nana.Semantics
                     lens.Add(len);
                 }
 
-                ArrayInstatiation ins;
-                ins = new ArrayInstatiation(typ, lens.ToArray(), Env.GetTempName, Actn.NewVar);
+                ArrayInstatiation ins = new ArrayInstatiation(typ, lens.ToArray(), TmpVarGen);
                 return ins;
             }
 

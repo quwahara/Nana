@@ -1249,7 +1249,12 @@ namespace Nana.Semantics
 
         public void LoadInstance(IMRGenerator gen)
         {
-            if (Instance != null) { Instance.Addr(gen); }
+            if (Instance != null)
+            {
+                Instance.Addr(gen);
+                //if (Instance.Typ.IsValueType)
+                //{ gen.Box(Instance.Typ); }
+            }
         }
 
         public void LoadArgs(IMRGenerator gen)
@@ -1514,20 +1519,18 @@ namespace Nana.Semantics
     public class ArrayInstatiation : IValuable
     {
         public IValuable[] Lens;
-        public Func<string> GetTempName;
-        public Func<string, Typ, Variable> DeclareVariable;
+        public TmpVarGenerator TmpVarGen;
         // prepare for over twice referenced instatication
         public Func<string> PlaceHolder;
         public Variable TmpVar;
         public Typ Typu;
         public Typ Typ { [DebuggerNonUserCode]get { return Typu; } }
 
-        public ArrayInstatiation(Typ typu, IValuable[] lens, Func<string> getTempName, Func<string, Typ, Variable> declareVariable)
+        public ArrayInstatiation(Typ typu, IValuable[] lens, TmpVarGenerator tmpVarGen)
         {
             Typu = typu;
             Lens = lens;
-            GetTempName = getTempName;
-            DeclareVariable = declareVariable;
+            TmpVarGen = tmpVarGen;
         }
 
         public void Exec(IMRGenerator gen)
@@ -1564,28 +1567,53 @@ namespace Nana.Semantics
         public void GiveSubsequent(IMRGenerator gen)
         {
             if (TmpVar == null)
-            { InsertTmpVar(gen); }
+            { TmpVar = TmpVarGen.Insert(Typ, gen, PlaceHolder); }
             TmpVar.Give(gen);
         }
 
-        public void InsertTmpVar(IMRGenerator gen)
+    }
+
+    public class TmpVarGenerator
+    {
+        public Func<string> GetTempName;
+        public Func<string, Typ, Variable> DeclareVariable;
+
+        public TmpVarGenerator(Func<string> getTempName, Func<string, Typ, Variable> declareVariable)
+        {
+            GetTempName = getTempName;
+            DeclareVariable = declareVariable;
+        }
+
+        public Variable Generate(Typ typu, IMRGenerator gen)
+        {
+            return DeclareVariable(GetTempName(), typu);
+        }
+
+        public Variable Substitute(Typ typu, IMRGenerator gen)
+        {
+            Variable v = Generate(typu, gen);
+            v.Take(gen);
+            v.Give(gen);
+            return v;
+        }
+
+        public Variable Insert(Typ typu, IMRGenerator gen, Func<string> PlaceHolder)
         {
             Debug.Assert(PlaceHolder != null);
             Debug.Assert(GetTempName != null);
             Debug.Assert(DeclareVariable != null);
 
-            TmpVar = DeclareVariable(GetTempName(), Typ);
             IMRGenerator tmpgen = new IMRGenerator();
-            TmpVar.Take(tmpgen);
-            TmpVar.Give(tmpgen);
+            Variable v = Substitute(typu, tmpgen);
 
             int idx = gen.IndexOf(PlaceHolder);
             Debug.Assert(idx >= 0);
             idx += 1;
             if (idx < gen.Count) { gen.InsertRange(idx, tmpgen); }
             else { gen.AddRange(tmpgen); }
-        }
 
+            return v;
+        }
 
     }
 
