@@ -189,24 +189,13 @@ namespace Nana.Semantics
                 {
                     case "include":     /**/ Env.TypeLdr.InAssembly.Includes.Add(opt.Value); break;
                     case "reference":   /**/ Env.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(opt.Value); break;
-                    case "out":         /**/ break;   // ignore
+                    case "out":         /**/ Env.OutPath = opt.Value; break;
                     default:
                         if (opt.Group.ToLower().StartsWith("xxx")) { break; }
                         throw new InternalError("The compile option is not supported: " + opt.Value, t);
                 }
             }
         }
-
-        //public void AnalyzeCompileOption(Token t)
-        //{
-        //    Debug.Assert(t != null && t.Group == "CompileOption");
-        //    switch (t.Value.ToLower())
-        //    {
-        //        case "include":     /**/ Env.TypeLdr.InAssembly.Includes.Add(t.First.Value); break;
-        //        case "reference":   /**/ Env.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(t.First.Value); break;
-        //        default: throw new InternalError("The compile option is not supported: " + t.Value, t);
-        //    }
-        //}
 
         public void AnalyzeSources(Token t)
         {

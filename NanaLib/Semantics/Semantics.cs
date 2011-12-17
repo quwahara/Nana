@@ -213,6 +213,7 @@ namespace Nana.Semantics
         public TypeLoader TypeLdr = new TypeLoader();
         public int Sequence = 0;
         public string GetTempName() { ++Sequence; return "$" + Sequence.ToString("D6"); }
+        public string OutPath = "";
 
         public Env(Token seed)
             : base(seed, null)
@@ -989,7 +990,7 @@ namespace Nana.Semantics
         public App(Token seed, Env family)
             : base(seed, family)
         {
-            AssemblyName = Path.GetFileNameWithoutExtension(Name);
+            AssemblyName = Path.GetFileNameWithoutExtension(Env.OutPath);
         }
 
         public Nsp NewNsp(Token seed)

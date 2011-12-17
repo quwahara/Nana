@@ -8,6 +8,7 @@ using UnitTest.Util;
 using System.Reflection;
 using System.IO;
 using Nana;
+using Nana.Tokens;
 
 namespace UnitTest
 {
@@ -141,4 +142,31 @@ namespace UnitTest
     }
 }
 
+namespace UnitTest
+{
+    [TestFixture]
+    public class NanaFxt
+    {
+        public Token Root;
 
+        public string Inp;
+        public string EpcSyn;
+        public string EpcIL;
+
+
+
+
+
+        [Test]
+        public void HelloWorld()
+        {
+
+        }
+
+        public void Test()
+        {
+            //Token root = Ctrl.CreateRootTemplate();
+            
+        }
+    }
+}

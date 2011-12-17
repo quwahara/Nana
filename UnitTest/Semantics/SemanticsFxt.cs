@@ -2764,7 +2764,6 @@ namespace UnitTest.Semantics.Root
                     .FlwsAdd(name + ".exe", "out")
                     ;
                 root.Find("@Root/@Sources")[0].FlwsAdd(c.Input, "SourceText");
-                root.Find("@Root/@Syntax")[0].Value = name + ".exe";
 
                 Ctrl.Check(root);
                 Ctrl ctrl = new Ctrl();
