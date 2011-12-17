@@ -37,6 +37,19 @@ namespace Nana
                 Ctrl c = new Ctrl();
                 c.Compile(root);
 
+                if (root.Contains("@Root/@CompileOptions/@xxxsyntax"))
+                {
+                    foreach (Token t in root.Find("@Root/@Syntax/0Source"))
+                    {
+                        Console.Write(TokenEx.ToTree(t));
+                    }
+                }
+
+                if (root.Contains("@Root/@CompileOptions/@xxxil"))
+                {
+                    Console.Write(root.Find("@Root/@Code")[0].Value);
+                }
+
                 ilpath = root.Find("@Root/@CompileOptions/@out")[0].Value;
                 ilpath = Path.ChangeExtension(ilpath, ".il");
                 code = root.Find("@Root/@Code")[0].Value;

@@ -15,6 +15,8 @@ namespace Nana
         static public readonly string[] Options = {
             "out"
             , "reference"
+            , "xxxsyntax"
+            , "xxxil"
             , "xxxtrace"
             };
 
@@ -25,9 +27,9 @@ namespace Nana
             Func<bool> split = delegate()
             {
                 Match m;
-                m = Regex.Match(arg, string.Format(@"{0}{1}:?", OptHead, opt));
+                m = Regex.Match(arg, string.Format(@"{0}{1}(:|=)?", OptHead, opt));
                 if (m.Success == false) return false;
-                if (arg.Substring(1).StartsWith(opt + ":"))
+                if (m.Length > opt.Length)
                 {
                     val = arg.Substring(m.Length);
                 }

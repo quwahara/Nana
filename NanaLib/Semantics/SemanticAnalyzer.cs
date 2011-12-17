@@ -990,7 +990,7 @@ namespace Nana.Semantics
 
         public object Num(Token t)
         {
-            return new Literal(int.Parse(t.Value), Env.FindOrNewRefType(typeof(int)));
+            return new Literal(int.Parse(t.Value), Env.FindOrNewRefType(typeof(int)), TmpVarGen);
         }
                         
         public object Str(Token t)
@@ -1000,7 +1000,7 @@ namespace Nana.Semantics
 
         public object Bol(Token t)
         {
-            return new Literal(t.Value == "true", Env.FindOrNewRefType(typeof(bool)));
+            return new Literal(t.Value == "true", Env.FindOrNewRefType(typeof(bool)), TmpVarGen);
         }
 
         public object Id(Token t)

@@ -296,6 +296,11 @@ namespace Nana.IMRs
             return Append(delegate() { return OpCodes.Pop.ToString(); });
         }
 
+        public Func<string> Box(Typ typ)
+        {
+            return Append(delegate() { return S(OpCodes.Box, TypeLongForm(typ)); });
+        }
+
         public Func<string> LoadLiteral(Literal l)
         {
             Debug.Assert(l != null && l.Typ != null && l.Typ.IsReferencing);

@@ -1074,11 +1074,18 @@ namespace Nana.Semantics
     {
         public object Value;
         public Typ Typ_;
+        public TmpVarGenerator TmpVarGen;
 
         public Literal(object value, Typ typ)
+            : this(value, typ, null)
+        {
+        }
+
+        public Literal(object value, Typ typ, TmpVarGenerator tmpVarGen)
         {
             Value = value;
             Typ_ = typ;
+            TmpVarGen = tmpVarGen;
         }
 
         public void Give(IMRGenerator gen)
@@ -1232,7 +1239,6 @@ namespace Nana.Semantics
     }
 
     public class CallAction : IExecutable
-    //public class CallAction : Exe, IExecutable
     {
         public Actn Callee;
         public IValuable Instance;
@@ -1252,8 +1258,11 @@ namespace Nana.Semantics
             if (Instance != null)
             {
                 Instance.Addr(gen);
-                //if (Instance.Typ.IsValueType)
-                //{ gen.Box(Instance.Typ); }
+                if (Instance is Literal && Instance.Typ.IsValueType)
+                {
+                    Variable v = (Instance as Literal).TmpVarGen.Substitute(Instance.Typ, gen);
+                    v.Addr(gen);
+                }
             }
         }
 
@@ -1593,7 +1602,6 @@ namespace Nana.Semantics
         {
             Variable v = Generate(typu, gen);
             v.Take(gen);
-            v.Give(gen);
             return v;
         }
 
@@ -1605,6 +1613,7 @@ namespace Nana.Semantics
 
             IMRGenerator tmpgen = new IMRGenerator();
             Variable v = Substitute(typu, tmpgen);
+            v.Give(tmpgen);
 
             int idx = gen.IndexOf(PlaceHolder);
             Debug.Assert(idx >= 0);

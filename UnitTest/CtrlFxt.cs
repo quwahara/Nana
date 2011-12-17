@@ -196,6 +196,41 @@ namespace UnitTest
             Test();
         }
 
+        [Test]
+        public void CallMethodOfLiteral()
+        {
+            Inp = @"1.ToString() -> s";
+
+            EpcSyn = @"0Source
++---[0]->
+    +---[F](
+    |   +---[F].
+    |   |   +---[F]1
+    |   |   +---[S]ToString
+    |   +---[S]
+    |   +---[T])
+    +---[S]s
+";
+
+            EpcIL = @".field static string s
+.field static int32 $000001
+.method static public void .cctor() {
+    ldc.i4 1
+    stsfld int32 $000001
+    ldsflda int32 $000001
+    callvirt instance string int32::ToString()
+    stsfld string s
+    ret
+}
+.method static public void '0'() {
+    .entrypoint
+    ret
+}
+";
+
+            Test();
+        }
+
         public void Test()
         {
             Func<TestCase, string> f = delegate(TestCase c)
