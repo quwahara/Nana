@@ -924,6 +924,7 @@ namespace Nana.Semantics
                 case "While":    /**/ u = While(t); break;
                 case "TypeSpec2":    /**/ u = TypeSpec(t); break;
                 case "Typ":   /**/ u = DefineVariable(t); break;
+                case "Nop":   /**/ u = new DoNothing(); break;
                 default:
                     throw new SyntaxError(@"Could not process the sentence: " + t.Group, t);
             }
@@ -936,7 +937,7 @@ namespace Nana.Semantics
             switch (t.Value)
             {
                 //case ".":   /**/ u = Dot(t); break;
-                case ";":   /**/ u = new DoNothing(); break;
+                //case ";":   /**/ u = new DoNothing(); break;
                 case "+":
                 case "-":
                 case "*":

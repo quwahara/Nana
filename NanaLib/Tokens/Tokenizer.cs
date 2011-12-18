@@ -306,7 +306,7 @@ namespace Nana.Tokens
 |(?<AsgnL>\<\-)
 |(?<AsgnR>\-\>)
 |(?<Infix>(\+|\-|\*|/|%|\<|\>|{|}))
-|(?<Infix>;)
+|(?<Nop>;)
 |(?<Bgn>(\.\.+|do|begin))
 |(?<End>(end))
 |(?<Fnc>[snv]?fun)
