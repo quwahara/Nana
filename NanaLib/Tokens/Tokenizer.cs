@@ -105,15 +105,24 @@ namespace Nana.Tokens
 
     public class TokenizerBase : ITokenEnumerator
     {
+        public static readonly Token NoMore = new Token();
+
         public LineBufferedReader R;
         public Box<int> Pos = new Box<int>(0);
         public Regex StartRx = null;
         public Token _Cur;
+        public List<string> SkipGroups;
 
         public TokenizerBase(Regex startRx)
+            : this(startRx, new List<string>())
+        {
+        }
+
+        public TokenizerBase(Regex startRx, List<string> skipGroups)
         {
             _Cur = null;
             StartRx = startRx;
+            SkipGroups = skipGroups;
         }
 
         public virtual void Init(LineBufferedReader r)
@@ -146,21 +155,30 @@ namespace Nana.Tokens
 
         public void Next()
         {
-            if (R.BOF)
-            {
-                CallReadLine();
-                if (R.EOF) return;
-            }
+            _Cur = NoMore;
+            Token cur = null;
 
-            SkipSpace();
-            while (EOL)
+            do
             {
-                CallReadLine();
-                if (R.EOF) return;
+                if (R.BOF)
+                {
+                    CallReadLine();
+                    if (R.EOF) return;
+                }
+
                 SkipSpace();
-            }
+                while (EOL)
+                {
+                    CallReadLine();
+                    if (R.EOF) return;
+                    SkipSpace();
+                }
 
-            _Cur = GetToken();
+                cur = GetToken();
+
+            } while (SkipGroups.Contains(cur.Group));
+
+            _Cur = cur;
         }
 
         public void SkipSpace()
@@ -305,15 +323,17 @@ namespace Nana.Tokens
 
         #endregion
 
+        static public readonly string[] ScriptSkipGroups = new string[] { "Cmt" };
+
         public TokenizerBase[] Tokenizers = null;
 
         public ScriptTokenizer()
-            : this(new Regex(InlineRxPattern, InlineRxOptions))
+            : this(new Regex(InlineRxPattern, InlineRxOptions), new List<string>(ScriptSkipGroups))
         {
         }
 
-        public ScriptTokenizer(Regex inlineRx)
-            : base(null)
+        public ScriptTokenizer(Regex inlineRx, List<string> skipGroups)
+            : base(null, skipGroups)
         {
             Regex startRx, escRx, endRx;
 
@@ -322,9 +342,9 @@ namespace Nana.Tokens
             endRx = new Regex(@"""");
             BlockTokenizer stringLiteral = new BlockTokenizer(startRx, escRx, endRx, "Str");
 
-            startRx = new Regex(@"^/\.");
-            escRx = new Regex(@"$^");
-            endRx = new Regex(@",/");
+            startRx = new Regex(@"^/\*");
+            escRx = new Regex(@"$^");       //  no mutch with anything, not using this parameter
+            endRx = new Regex(@"\*/");
             BlockTokenizer commentBlock = new BlockTokenizer(startRx, escRx, endRx, "Cmt");
 
             startRx = inlineRx;

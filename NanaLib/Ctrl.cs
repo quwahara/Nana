@@ -14,6 +14,8 @@ using Nana.Syntaxes;
 
 
 
+//  attribute を実装する
+//  関数の戻り値を実装する
 //  単項演算子を実装する
 //  SyntaxAnalyzer の単体テストを、各Analyzerクラスのメソッド単位で実施できるようにする
 //  Tokenの簡単な生成方法を模索する。各Analyzerクラスのメソッド単位で実施できるようにするための助け

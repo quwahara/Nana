@@ -170,7 +170,8 @@ namespace UnitTest
         }
 
         [Test]
-        public void HelloWorld()
+        //  T:  20, B:  11
+        public void TB1120_HelloWorld()
         {
             Inp = @"`p(""Hello, World!"")";
             
@@ -197,7 +198,7 @@ namespace UnitTest
         }
 
         [Test]
-        public void CallMethodOfLiteral()
+        public void TB1217_CallMethodOfLiteral()
         {
             Inp = @"1.ToString() -> s";
 
@@ -220,6 +221,41 @@ namespace UnitTest
     ldsflda int32 $000001
     callvirt instance string int32::ToString()
     stsfld string s
+    ret
+}
+.method static public void '0'() {
+    .entrypoint
+    ret
+}
+";
+
+            Test();
+        }
+
+        [Test]
+        public void TB1218_Comments()
+        {
+            Inp = @"
+`p(
+//  a line comment
+""Hello, World!""
+/*  
+    a block comment
+ */
+)
+";
+
+            EpcSyn = @"0Source
++---[0](
+    +---[F]`p
+    +---[S]
+    |   +---[0]""Hello, World!""
+    +---[T])
+";
+
+            EpcIL = @".method static public void .cctor() {
+    ldstr ""Hello, World!""
+    call void [mscorlib]System.Console::WriteLine(string)
     ret
 }
 .method static public void '0'() {
@@ -254,6 +290,7 @@ namespace UnitTest
                 try
                 {
                     ctrl.Compile(root);
+                    trace(TokenEx.ToTree(root.Find("@Root/@Syntax")[0].Follows[0]));
                     trace(root.Find("@Root/@Code")[0].Value);
                 }
                 catch (Nana.Infr.Error e)
@@ -266,7 +303,7 @@ namespace UnitTest
                     trace(ex.ToString());
                 }
 
-                return TokenEx.ToTree(root.Find("@Root/@Syntax")[0].Follows[0]) + b.ToString();
+                return b.ToString();
             };
 
             new TestCase("", Inp, EpcSyn + EpcILHeader + EpcIL, f).Run();

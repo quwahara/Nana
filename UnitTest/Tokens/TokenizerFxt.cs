@@ -369,8 +369,24 @@ class Nana
 begin
 	sfun Main():void
     begin
-        //comment
+        //  a line comment
         ""string literal"" -> a
+        /*  block comment 1 */
+        factor1
+        /*  block comment 2
+        */
+        factor2
+        /*
+            block comment 3 */
+        factor3
+        /*
+            block comment 4
+        */
+        factor4
+        /*  /*  block comment 5 */
+        factor5
+        /*  block comment 6
+        //  */  factor6
     end
 end
 ";
@@ -384,10 +400,15 @@ Main
 :
 void
 begin
-//comment
 ""string literal""
 ->
 a
+factor1
+factor2
+factor3
+factor4
+factor5
+factor6
 end
 end
 ";

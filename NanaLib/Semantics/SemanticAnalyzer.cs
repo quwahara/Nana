@@ -1,27 +1,3 @@
-/*
- * ● ビルド処理順序実装戦略
- * 
- * ビルドオプションを収集する
- *      -> GlobalSpaceが実装する
- * usingを収集する                          -- FormType
- *      -> SourceSpaceが実装する            
- * タイプを収集する                         -- FormType
- *      -> SourceSpaceが実装する
- *          □ 循環参照を解決する
- *          □ 継承順序正当性を検証する
- * 関数シグニチャを収集する                 -- FormFunc
- *      -> TypeSpaceが実装する
- * 
- * (-- ここまでで型の解決が終わっていること --)
- * 
- * 関数本体を中間表現のリストにする         -- FormBody
- *      -> FuncSpaceがリストを管理する
- *      -> LineSpaceが中間表現を生成する
- */
-//TODO support array of defined type
-//TODO 複数のファイルを処理するときは各ファイルごとにusing収集、タイプ収集...と行う
-//TODO check the CSV form
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
