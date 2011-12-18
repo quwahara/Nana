@@ -332,6 +332,32 @@ namespace UnitTest
             Test();
         }
 
+        [Test]
+        public void TB1218_Keywords()
+        {
+            Inp = @"
+class sub
+....
+    sfun Main():void
+    ..
+        pop()
+    ,,
+    sfun pop():void
+    ..
+    ,,
+,,,,
+";
+
+            EpcSyn = @"0Source
+";
+
+            EpcIL = @".field static string sss
+";
+
+            //Test();
+        }
+
+
         public void Test()
         {
             Func<TestCase, string> f = delegate(TestCase c)

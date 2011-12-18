@@ -915,8 +915,8 @@ namespace Nana.Semantics
                 case "Str":         /**/ u = Str(t); break;
                 case "Bol":         /**/ u = Bol(t); break;
                 case "Id":          /**/ u = Id(t); break;
-                case "AsgnL":       /**/ u = AssignAyzr(t, t.Second, t.First); break;
-                case "AsgnR":       /**/ u = AssignAyzr(t, t.First, t.Second); break;
+                case "AsgnL":       /**/ u = Asgn(t, t.Second, t.First); break;
+                case "AsgnR":       /**/ u = Asgn(t, t.First, t.Second); break;
                 case "Ope":         /**/ u = Ope(t); break;
                 case "Expr":        /**/ u = Expression(t); break;
                 case "Dot":         /**/ u = Dot(t); break;
@@ -983,7 +983,7 @@ namespace Nana.Semantics
             return Above.FindUp(t) as object ?? new AnId(t);
         }
 
-        public object AssignAyzr(Token assign, Token give, Token take)
+        public object Asgn(Token assign, Token give, Token take)
         {
             IValuable gv2 = Require<IValuable>(give);
             object tu = Gate(take);
