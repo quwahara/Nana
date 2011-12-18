@@ -267,6 +267,71 @@ namespace UnitTest
             Test();
         }
 
+        [Test]
+        public void TB1218_StringOperations()
+        {
+            Inp = @"
+""abcde"".Substring(1, 3)   -> sss  //  sss is ""bcd""
+`p(sss)
+""abcde"".Length            -> len  //  len is 5
+`p(len)
+";
+
+            EpcSyn = @"0Source
++---[0]->
+|   +---[F](
+|   |   +---[F].
+|   |   |   +---[F]""abcde""
+|   |   |   +---[S]Substring
+|   |   +---[S]
+|   |   |   +---[0]1
+|   |   |   +---[1],
+|   |   |   +---[2]3
+|   |   +---[T])
+|   +---[S]sss
++---[1](
+|   +---[F]`p
+|   +---[S]
+|   |   +---[0]sss
+|   +---[T])
++---[2]->
+|   +---[F].
+|   |   +---[F]""abcde""
+|   |   +---[S]Length
+|   +---[S]len
++---[3](
+    +---[F]`p
+    +---[S]
+    |   +---[0]len
+    +---[T])
+";
+
+            EpcIL = @".field static string sss
+.field static int32 len
+.method static public void .cctor() {
+    ldstr ""abcde""
+    ldc.i4 1
+    ldc.i4 3
+    callvirt instance string string::Substring(int32, int32)
+    stsfld string sss
+    ldsfld string sss
+    call void [mscorlib]System.Console::WriteLine(string)
+    ldstr ""abcde""
+    callvirt instance int32 string::get_Length()
+    stsfld int32 len
+    ldsfld int32 len
+    call void [mscorlib]System.Console::WriteLine(int32)
+    ret
+}
+.method static public void '0'() {
+    .entrypoint
+    ret
+}
+";
+
+            Test();
+        }
+
         public void Test()
         {
             Func<TestCase, string> f = delegate(TestCase c)

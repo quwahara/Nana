@@ -14,6 +14,7 @@ using Nana.Syntaxes;
 
 
 
+//  support reserved words by msil as id
 //  attribute ‚ğÀ‘•‚·‚é
 //  ŠÖ”‚Ì–ß‚è’l‚ğÀ‘•‚·‚é
 //  ’P€‰‰Zq‚ğÀ‘•‚·‚é

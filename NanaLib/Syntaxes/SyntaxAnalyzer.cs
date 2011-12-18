@@ -198,12 +198,10 @@ namespace Nana.Syntaxes
                 if (InfixBps.ContainsKey(_Cur.Value))
                 {
                     _Cur.Lbp = InfixBps[_Cur.Value];
-                    _Cur.Group = "Expr";
                 }
                 else if (InfixRBps.ContainsKey(_Cur.Value))
                 {
                     _Cur.Lbp = InfixRBps[_Cur.Value];
-                    _Cur.Group = "Expr";
                 }
                 else if (CircumfixBps.ContainsKey(_Cur.Value))
                 {

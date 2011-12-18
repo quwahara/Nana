@@ -915,6 +915,7 @@ namespace Nana.Semantics
                 case "Str":   /**/ u = Str(t); break;
                 case "Bol":   /**/ u = Bol(t); break;
                 case "Id":   /**/ u = Id(t); break;
+                case "Infix":   /**/ u = Infix(t); break;
                 case "Expr":     /**/ u = Expression(t); break;
                 case "If":       /**/ u = If(t); break;
                 case "While":    /**/ u = While(t); break;
@@ -926,7 +927,7 @@ namespace Nana.Semantics
             return u;
         }
 
-        public object Expression(Token t)
+        public object Infix(Token t)
         {
             object u = null;
             switch (t.Value)
@@ -934,10 +935,6 @@ namespace Nana.Semantics
                 case "=":
                 case "<-":  /**/ u = AssignAyzr(t, t.Second, t.First); break;
                 case "->":  /**/ u = AssignAyzr(t, t.First, t.Second); break;
-                case ":":   /**/ u = DefineVariable(t); break;
-                case "(":   /**/ u = CallFunc(t); break;
-                case "[":   /**/ u = Bracket(t); break;
-                case "{":   /**/ u = Curly(t); break;
                 case ".":   /**/ u = Dot(t); break;
                 case ";":   /**/ u = new DoNothing(); break;
                 case "+":
@@ -957,6 +954,22 @@ namespace Nana.Semantics
                 case "<=":
                 case ">=":
                     u = Calc(t); break;
+
+                default:
+                    throw new InternalError(@"The operator is not supported: " + t.Value, t);
+            }
+            return u;
+        }
+
+        public object Expression(Token t)
+        {
+            object u = null;
+            switch (t.Value)
+            {
+                case ":":   /**/ u = DefineVariable(t); break;
+                case "(":   /**/ u = CallFunc(t); break;
+                case "[":   /**/ u = Bracket(t); break;
+                case "{":   /**/ u = Curly(t); break;
 
                 default:
                     throw new InternalError(@"The operator is not supported: " + t.Value, t);
