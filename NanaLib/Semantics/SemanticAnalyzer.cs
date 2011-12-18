@@ -919,6 +919,7 @@ namespace Nana.Semantics
                 case "AsgnR":   /**/ u = AssignAyzr(t, t.First, t.Second); break;
                 case "Infix":   /**/ u = Infix(t); break;
                 case "Expr":     /**/ u = Expression(t); break;
+                case "Dot":     /**/ u = Dot(t); break;
                 case "If":       /**/ u = If(t); break;
                 case "While":    /**/ u = While(t); break;
                 case "TypeSpec2":    /**/ u = TypeSpec(t); break;
@@ -934,7 +935,7 @@ namespace Nana.Semantics
             object u = null;
             switch (t.Value)
             {
-                case ".":   /**/ u = Dot(t); break;
+                //case ".":   /**/ u = Dot(t); break;
                 case ";":   /**/ u = new DoNothing(); break;
                 case "+":
                 case "-":

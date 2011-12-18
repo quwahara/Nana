@@ -312,7 +312,7 @@ namespace Nana.Tokens
 |(?<Fnc>[snv]?fun)
 |(?<Typ>\:)
 |(?<_End_Cma_>,+)
-|(?<Infix>\.)
+|(?<Dot>\.)
 |(?<AsgnL>=)
 |(?<Expr>(\(|\)|\[|\]|@))
 |(?<Num>(\d+)(\.(\d)+)?)
@@ -321,6 +321,27 @@ namespace Nana.Tokens
 |(?<Id>`?[_a-zA-Z][_a-zA-Z0-9]*)
 |(?<Unk>[^\s$]+)
 ";
+
+//        static public string InlineRxPattern = @"(?<Cmt>(//.*))
+//|(?<Infix>(==|!=|\<=|\>=|\::))
+//|(?<AsgnL>\<\-)
+//|(?<AsgnR>\-\>)
+//|(?<Infix>(\+|\-|\*|/|%|\<|\>|{|}))
+//|(?<Infix>;)
+//|(?<Bgn>(\.\.+|do|begin))
+//|(?<End>(end))
+//|(?<Fnc>[snv]?fun)
+//|(?<Typ>\:)
+//|(?<_End_Cma_>,+)
+//|(?<Infix>\.)
+//|(?<AsgnL>=)
+//|(?<Expr>(\(|\)|\[|\]|@))
+//|(?<Num>(\d+)(\.(\d)+)?)
+//|(?<Infix>(and|xor|or))
+//|(?<Bol>(true|false))
+//|(?<Id>`?[_a-zA-Z][_a-zA-Z0-9]*)
+//|(?<Unk>[^\s$]+)
+//";
 
         static public RegexOptions InlineRxOptions = RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture;
 
