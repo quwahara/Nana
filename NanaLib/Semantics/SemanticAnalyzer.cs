@@ -909,58 +909,27 @@ namespace Nana.Semantics
             object u = null;
             switch (t.Group)
             {
-                case "Prior":    /**/ u = Gate(t.Follows[0]); break;
+                case "Prior":       /**/ u = Gate(t.Follows[0]); break;
                 //case "Factor":   /**/ u = Factor(t); break;
-                case "Num":   /**/ u = Num(t); break;
-                case "Str":   /**/ u = Str(t); break;
-                case "Bol":   /**/ u = Bol(t); break;
-                case "Id":   /**/ u = Id(t); break;
-                case "AsgnL":   /**/ u = AssignAyzr(t, t.Second, t.First); break;
-                case "AsgnR":   /**/ u = AssignAyzr(t, t.First, t.Second); break;
-                case "Infix":   /**/ u = Calc(t); break;
-                case "Expr":     /**/ u = Expression(t); break;
-                case "Dot":     /**/ u = Dot(t); break;
-                case "If":       /**/ u = If(t); break;
-                case "While":    /**/ u = While(t); break;
-                case "TypeSpec2":    /**/ u = TypeSpec(t); break;
-                case "Typ":   /**/ u = DefineVariable(t); break;
-                case "Nop":   /**/ u = new DoNothing(); break;
+                case "Num":         /**/ u = Num(t); break;
+                case "Str":         /**/ u = Str(t); break;
+                case "Bol":         /**/ u = Bol(t); break;
+                case "Id":          /**/ u = Id(t); break;
+                case "AsgnL":       /**/ u = AssignAyzr(t, t.Second, t.First); break;
+                case "AsgnR":       /**/ u = AssignAyzr(t, t.First, t.Second); break;
+                case "Ope":         /**/ u = Ope(t); break;
+                case "Expr":        /**/ u = Expression(t); break;
+                case "Dot":         /**/ u = Dot(t); break;
+                case "If":          /**/ u = If(t); break;
+                case "While":       /**/ u = While(t); break;
+                case "TypeSpec2":   /**/ u = TypeSpec(t); break;
+                case "Typ":         /**/ u = DefineVariable(t); break;
+                case "Nop":         /**/ u = new DoNothing(); break;
                 default:
                     throw new SyntaxError(@"Could not process the sentence: " + t.Group, t);
             }
             return u;
         }
-
-        //public object Infix(Token t)
-        //{
-        //    object u = null;
-        //    switch (t.Value)
-        //    {
-        //        //case ".":   /**/ u = Dot(t); break;
-        //        //case ";":   /**/ u = new DoNothing(); break;
-        //        case "+":
-        //        case "-":
-        //        case "*":
-        //        case "/":
-        //        case "%":
-
-        //        case "and":
-        //        case "or":
-        //        case "xor":
-
-        //        case "==":
-        //        case "!=":
-        //        case "<":
-        //        case ">":
-        //        case "<=":
-        //        case ">=":
-        //            u = Calc(t); break;
-
-        //        default:
-        //            throw new InternalError(@"The operator is not supported: " + t.Value, t);
-        //    }
-        //    return u;
-        //}
 
         public object Expression(Token t)
         {
@@ -1057,7 +1026,7 @@ namespace Nana.Semantics
             return Actn.NewVar(id.Seed.Value, ty);
         }
 
-        public object Calc(Token t)
+        public object Ope(Token t)
         {
             IValuable lv, rv;
 

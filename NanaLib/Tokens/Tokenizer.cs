@@ -302,10 +302,10 @@ namespace Nana.Tokens
         #region InlineRxPattern
 
         static public string InlineRxPattern = @"(?<Cmt>(//.*))
-|(?<Infix>(==|!=|\<=|\>=|\::))
+|(?<Ope>(==|!=|\<=|\>=|\::))
 |(?<AsgnL>\<\-)
 |(?<AsgnR>\-\>)
-|(?<Infix>(\+|\-|\*|/|%|\<|\>|{|}))
+|(?<Ope>(\+|\-|\*|/|%|\<|\>|{|}))
 |(?<Nop>;)
 |(?<Bgn>(\.\.+|do|begin))
 |(?<End>(end))
@@ -316,7 +316,7 @@ namespace Nana.Tokens
 |(?<AsgnL>=)
 |(?<Expr>(\(|\)|\[|\]|@))
 |(?<Num>(\d+)(\.(\d)+)?)
-|(?<Infix>(and|xor|or))
+|(?<Ope>(and|xor|or))
 |(?<Bol>(true|false))
 |(?<Id>`?[_a-zA-Z][_a-zA-Z0-9]*)
 |(?<Unk>[^\s$]+)
