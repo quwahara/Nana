@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using Nana.Delegates;
 using Nana.Semantics;
+using Nana.IMRs;
 
 namespace Nana.CodeGeneration
 {
@@ -61,14 +62,34 @@ namespace Nana.CodeGeneration
         public string CallMiddle(IInstructionsHolder h)
         {
             StringBuilder b = new StringBuilder();
-            h.Instructions.ForEach(delegate(Func<string> ff)
+            h.Instructions.ForEach(delegate(object obj)
             {
-                string s = ff();
+                string s = "";
+                if (obj is Func<string>)
+                {
+                    s = (obj as Func<string>)();
+                }
+                else if (obj is IMR)
+                {
+                    s = FromIMR(obj as IMR);
+                }
+                else
+                {
+                    throw new NotSupportedException();
+                }
                 string ind = s.EndsWith(":") ? "" : GetCurrentIndent();
                 b.Append(ind)
                     .Append(s)
                     .AppendLine();
             });
+            //h.Instructions.ForEach(delegate(Func<string> ff)
+            //{
+            //    string s = ff();
+            //    string ind = s.EndsWith(":") ? "" : GetCurrentIndent();
+            //    b.Append(ind)
+            //        .Append(s)
+            //        .AppendLine();
+            //});
             return b.ToString();
         }
 
@@ -110,11 +131,42 @@ namespace Nana.CodeGeneration
             return "";
         }
 
+        static public string AssemblyExtern(Assembly a)
+        {
+            AssemblyName an = a.GetName();
+            StringBuilder b = new StringBuilder();
+            byte[] pkt;
+            b.Append(".assembly extern ").Append(an.Name).Append(" {");
+
+            if (an.Version != null)
+                b.Append(".ver ").Append(an.Version.ToString().Replace(".", ":"));
+
+            if ((pkt = an.GetPublicKeyToken()) != null && pkt.Length == 8)
+            {
+                b.Append(" .publickeytoken = (");
+
+                b.Append(
+                    string.Join(" "
+                    , new List<byte>(pkt)
+                        .ConvertAll<string>(delegate(byte by) { return by.ToString("X"); })
+                        .ToArray()));
+
+                //b.Append(SFList.Cast(FList<byte>.Parse(pkt)
+                //    .Map<string>(delegate(byte by) { return by.ToString("X"); })
+                //    ).Xsv(" "));
+                b.Append(")");
+            }
+
+            b.Append("}");
+            return b.ToString();
+        }
+
         public string BeginEnv(Env d)
         {
             StringBuilder b = new StringBuilder();
             d.TypeLdr.InAssembly.Assemblies
-                .ConvertAll<string>(Nana.IMRs.IMRGenerator.AssemblyExtern)
+                .ConvertAll<string>(AssemblyExtern)
+                //.ConvertAll<string>(Nana.IMRs.IMRGenerator.AssemblyExtern)
                 .ConvertAll<StringBuilder>(b.AppendLine);
             return b.ToString();
         }
@@ -125,7 +177,8 @@ namespace Nana.CodeGeneration
             Func<string, StringBuilder> Tr = b.Append;
             Func<StringBuilder> Nl = b.AppendLine;
             Tr(".field static ");
-            Tr(IMRs.IMRGenerator.TypeLongForm(v.Typ));
+            Tr(TypeLongForm(v.Typ));
+            //Tr(IMRs.IMRGenerator.TypeLongForm(v.Typ));
             Tr(" "); Tr(v.Name); Nl();
             return b.ToString();
         }
@@ -182,7 +235,8 @@ namespace Nana.CodeGeneration
 
             Typ bty;
             if ((bty = d.BaseTyp) != null && bty.RefType != typeof(object))
-            { b.Append(" extends ").Append(Nana.IMRs.IMRGenerator.TypeFullName(bty)); }
+            { b.Append(" extends ").Append(TypeFullName(bty)); }
+            //{ b.Append(" extends ").Append(Nana.IMRs.IMRGenerator.TypeFullName(bty)); }
 
             b.Append(" {").AppendLine();
 
@@ -221,7 +275,8 @@ namespace Nana.CodeGeneration
             b.Append(ind0);
             b.Append(".method ");
             b.Append(FromMethodAttributes(f.MthdAttrs).ToLower());
-            b.Append(" ").Append(Nana.IMRs.IMRGenerator.TypeFullName(returnType));
+            b.Append(" ").Append(TypeFullName(returnType));
+            //b.Append(" ").Append(Nana.IMRs.IMRGenerator.TypeFullName(returnType));
             b.Append(" ").Append(f.Family.Name);
             b.Append("(");
 
@@ -230,7 +285,8 @@ namespace Nana.CodeGeneration
                 , f.FindAllTypeIs<Variable>()
                 .FindAll(delegate(Variable v) { return v.VarKind == Variable.VariableKind.Param; })
                 .ConvertAll<string>(delegate(Variable v)
-                { return Nana.IMRs.IMRGenerator.TypeFullName(v.Typ) + " " + v.Name; })
+                { return TypeFullName(v.Typ) + " " + v.Name; })
+                //{ return Nana.IMRs.IMRGenerator.TypeFullName(v.Typ) + " " + v.Name; })
                 .ToArray()
                 )
                 );
@@ -245,7 +301,8 @@ namespace Nana.CodeGeneration
             {
                 b.Append(ind1).Append(".locals (").AppendLine();
                 Variable v;
-                Func<Typ, string> lf = Nana.IMRs.IMRGenerator.TypeLongForm;
+                Func<Typ, string> lf = TypeLongForm;
+                //Func<Typ, string> lf = Nana.IMRs.IMRGenerator.TypeLongForm;
                 v = locals[0];
                 b.Append(ind2).Append(lf(v.Typ)).Append(" ").Append(v.Name).AppendLine();
                 for (int i = 1; i < locals.Count; ++i)
@@ -309,6 +366,368 @@ namespace Nana.CodeGeneration
         static public string S(OpCode c) { return c.ToString(); }
         static public string S(OpCode c, object opRnd) { return S(c) + " " + opRnd.ToString(); }
 
+        static public bool IsSupportedType(Typ t)
+        {
+            return string.IsNullOrEmpty(SupportedTypeName(t)) == false;
+        }
+
+        static public string SupportedTypeName(Typ t)
+        {
+            if (t == null) { return "void"; }
+
+            string brk = "";
+            while (t.IsVectorOrArray)
+            {
+                brk = Typ.ToBracket(t.Dimension) + brk;
+                t = t.ArrayType;
+            }
+
+            string nm = null;
+
+            if (t.IsReferencing == false) { return null; }
+
+            if (t.RefType == typeof(void)) nm = "void";
+            if (t.RefType == typeof(bool)) nm = "bool";
+            if (t.RefType == typeof(int)) nm = "int32";
+            if (t.RefType == typeof(object)) nm = "object";
+            if (t.RefType == typeof(string)) nm = "string";
+
+            return nm + brk;
+        }
+
+        static public string TypeCharacter(Typ t)
+        {
+            if (IsSupportedType(t)) return "";
+            return "class";
+            //if (t.IsValueType()) return "valuetype";
+            //else if (t.IsClass()) return "class";
+            //else
+            //{
+            //    throw new InternalError("Can not specify the tyep character: " + t._Name);
+            //}
+        }
+
+        static public string TypeLongForm(Typ t)
+        {
+            if (IsSupportedType(t)) return SupportedTypeName(t);
+            return TypeCharacter(t) + " " + TypeFullName(t);
+        }
+
+        static public string TypeFullName(Typ t)
+        {
+            if (IsSupportedType(t)) return SupportedTypeName(t);
+
+            StringBuilder b = new StringBuilder();
+            b.Append("[").Append(t.AssemblyName).Append("]");
+            b.Append(t._FullName);
+            if (t.IsGeneric)
+            {
+                b.Append("<");
+                b.Append(string.Join(", "
+                    , new List<Typ>(t.GenericTypeParams)
+                    .ConvertAll<string>(TypeFullName)
+                    .ToArray()
+                    ));
+                b.Append(">");
+            }
+
+            return b.ToString();
+        }
+
+        public static string FromIMR(IMR imr)
+        {
+            switch (imr.C)
+            {
+                case C.Ret: return OpCodes.Ret.ToString();
+                case C.Pop: return OpCodes.Pop.ToString();
+                case C.LdLiteral: return LoadLiteral(imr.LiteralV);
+                case C.LdVariable: return LoadVariable2(imr.VariableV);
+                case C.NewArray: return NewArray(imr.TypV);
+                case C.LdVariableA: return LoadAVariable(imr.VariableV);
+                case C.StVariable: return StoreVariable(imr.VariableV);
+                case C.LdArrayElement: return LdArrayElement(imr);
+                case C.StArrayElement: return StArrayElement(imr);
+                case C.NewObject: return NewObject(imr.ActnV);
+                case C.CallAction: return CallAction(imr.ActnV);
+                case C.Br: return Br(imr);
+                case C.BrFalse: return BrFalse(imr);
+                case C.PutLabel: return PutLabel(imr);
+
+                case C.Add: return S(OpCodes.Add);
+                case C.Sub: return S(OpCodes.Sub);
+                case C.Mul: return S(OpCodes.Mul);
+                case C.Div: return S(OpCodes.Div);
+                case C.Rem: return S(OpCodes.Rem);
+                case C.Neg: return S(OpCodes.Neg);
+                case C.And: return S(OpCodes.And);
+                case C.Or: return S(OpCodes.Or);
+                case C.Xor: return S(OpCodes.Xor);
+                case C.Not: return S(OpCodes.Not);
+                case C.Ceq: return S(OpCodes.Ceq);
+                case C.Cgt: return S(OpCodes.Cgt);
+                case C.Clt: return S(OpCodes.Clt); 
+
+            }
+            throw new NotSupportedException();
+        }
+
+        public static string LoadLiteral(Literal l)
+        {
+            Typ t = l.Typ;
+            if (t.RefType == typeof(bool))      /**/ return ((bool)l.Value) ? S(OpCodes.Ldc_I4_1) : S(OpCodes.Ldc_I4_0);
+            if (t.RefType == typeof(string))    /**/ return S(OpCodes.Ldstr, @"""" + l.Value + @"""");
+            if (t.RefType == typeof(int))       /**/ return S(OpCodes.Ldc_I4, l.Value);
+            throw new NotSupportedException();
+        }
+
+        public static string LoadVariable2(Variable v)
+        {
+            Variable.VariableKind k = v.VarKind;
+            switch (k)
+            {
+                case Variable.VariableKind.This: return OpCodes.Ldarg_0.ToString();
+                case Variable.VariableKind.Param: return S(OpCodes.Ldarg, v.Name);
+                case Variable.VariableKind.Local: return S(OpCodes.Ldloc, v.Name);
+                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsfld, TypeLongForm(v.Typ) + " " + v.Name);
+                case Variable.VariableKind.Vector: return S(OpCodes.Ldelem, TypeLongForm(v.Typ));
+            }
+            throw new NotSupportedException();
+        }
+
+        public static string NewArray(Typ t)
+        {
+            if (t.IsVector)
+            {
+                return S(OpCodes.Newarr) + " " + TypeFullName(t.ArrayType);
+            }
+            else
+            {
+                StringBuilder b = new StringBuilder();
+                b.Append(S(OpCodes.Newobj))
+                    .Append(" instance void ").Append(TypeFullName(t))
+                    .Append("::.ctor(int32");
+                for (int i = 1; i < t.Dimension; i++)
+                { b.Append(", int32"); }
+                b.Append(")");
+                return b.ToString();
+            }
+        }
+
+        public static string LoadAVariable(Variable v)
+        {
+            Variable.VariableKind k = v.VarKind;
+            switch (k)
+            {
+                case Variable.VariableKind.Param:
+                    //TODO  check 
+                    if (v.Name == "0")
+                    {
+                        throw new NotImplementedException("cannot load callee site instance pointer");
+                    }
+                    return S(OpCodes.Ldarga, v.Name);
+                case Variable.VariableKind.Local: return S(OpCodes.Ldloca, v.Name);
+                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsflda, TypeLongForm(v.Typ) + " " + v.Name);
+            }
+            throw new NotSupportedException();
+        }
+
+        public static string StoreVariable(Variable v)
+        {
+            Nana.Semantics.Variable.VariableKind k = v.VarKind;
+            switch (k)
+            {
+                case Nana.Semantics.Variable.VariableKind.Param: return S(OpCodes.Starg, v.Name);
+                case Nana.Semantics.Variable.VariableKind.Local: return S(OpCodes.Stloc, v.Name);
+                case Nana.Semantics.Variable.VariableKind.StaticField: return S(OpCodes.Stsfld, TypeLongForm(v.Typ) + " " + v.Name);
+            }
+            throw new NotSupportedException();
+        }
+
+        public static string LdArrayElement(IMR imr)
+        {
+            Typ tp = imr.TypV;
+
+            if (tp.IsVector)
+            {
+                return S(OpCodes.Ldelem) + " " + TypeLongForm(tp.ArrayType);
+            }
+            else if (tp.IsArray)
+            {
+                //call instance int32 int32[0...,0...]::Get(int32, int32)
+                //TypeInfo tp = imr.OpRnd.ThisType;
+                Debug.Assert(tp.IsArray);
+                StringBuilder b = new StringBuilder();
+                b.Append(S(OpCodes.Call))
+                    .Append(" instance ")
+                    .Append(TypeFullName(tp.ArrayType))
+                    .Append(" ").Append(TypeFullName(tp))
+                    .Append("::Get(int32")
+                    ;
+                for (int i = 1; i < tp.Dimension; i++)
+                { b.Append(", int32"); }
+                b.Append(")");
+                return b.ToString();
+            }
+            throw new NotSupportedException();
+        }
+
+        public static string StArrayElement(IMR imr)
+        {
+            if (imr.TypV.IsVector)
+            {
+                return S(OpCodes.Stelem) + " " + TypeLongForm(imr.TypV2);
+            }
+            else if (imr.TypV.IsArray)
+            {
+                Typ tp = imr.TypV2;
+                //call instance void int32[0...,0...]::Set(int32, int32, int32)
+                //TypeInfo tp = imr.TypeArg;
+                Debug.Assert(tp.IsArray);
+                StringBuilder b = new StringBuilder();
+                b.Append(S(OpCodes.Call))
+                    .Append(" instance void ")
+                    .Append(TypeFullName(tp))
+                    .Append("::Set(int32")
+                    ;
+                for (int i = 1; i < tp.Dimension; i++)
+                { b.Append(", int32"); }
+                b.Append(", ").Append(TypeFullName(tp.ArrayType)).Append(")");
+                return b.ToString();
+            }
+            throw new NotSupportedException();
+        }
+
+        public static string NewObject(Actn t)
+        {
+            return S(OpCodes.Newobj) + " instance " + Body(t);
+        }
+
+        public static string Body(Actn fi)
+        {
+            StringBuilder b = new StringBuilder();
+            //TypeInfo retti = fi.IsConstructor ? TypeInfo.Void : fi.ThisType;
+            //Typ retti = fi is IValuable && fi.IsConstructor == false ? (fi as IValuable).Typ : null;
+            Typ retti = fi is ITyped && fi.IsConstructor == false ? (fi as ITyped).Typ : null;
+            b.Append(TypeFullName(retti));
+
+            Typ m = fi.FindUpTypeOf<Typ>();
+            //Mdl m = fi.GetActionOvrldHolder();
+            //Mdl m = fi.FindUp(Mdl.IsMdl) as Mdl;
+            if (m.GetType() == typeof(Typ))
+            {
+                Typ ti = m as Typ;
+                //if (fi.IsConstructor && fi.NmdAbove.Name == "0base")
+                //{ ti = ti.BaseTyp; }
+                if (ti.IsGeneric)
+                { b.Append(ti.IsValueType ? " value" : " class"); }
+                b.Append(" ");
+                b.Append(TypeFullName(ti));
+                b.Append("::");
+            }
+            else
+            {
+                b.Append(" ");
+            }
+
+            //b.Append(fi._Name);
+            if (MethodAttributes.SpecialName != (fi.MthdAttrs & MethodAttributes.SpecialName))
+            {
+                b.Append(fi.Family.Name);
+            }
+            else
+            {
+                b.Append(fi.SpecialName);
+            }
+            //if (fi.Family.GetType() == typeof(ActnOvld))
+            //{
+            //    b.Append(fi.Family.Name);
+            //}
+            //else if (fi.Family.GetType() == typeof(Prop2))
+            //{
+            //    b.Append(fi.SpecialName);
+            //}
+            //else
+            //{
+            //    throw new NotImplementedException();
+            //}
+            //b.Append(fi.FindUpTypeOf<ActnOvld>().Name);
+            b.Append("(");
+            Variable v;
+            string s;
+            List<Variable> Params = fi.FindAllTypeOf<Variable>();
+            Params.RemoveAll(delegate(Variable vv)
+            {
+                return vv.VarKind != Variable.VariableKind.Param
+                    && vv.VarKind != Variable.VariableKind.ParamGeneric;
+            });
+            if (Params.Count > 0)
+            {
+                v = Params[0];
+                s = v.VarKind == Variable.VariableKind.ParamGeneric
+                    ? "!" + v.GenericIndex : TypeLongForm(v.Typ);
+                //s= TypeLongForm(v.Typ);
+                b.Append(s);
+                for (int i = 1; i < Params.Count; i++)
+                {
+                    b.Append(", ");
+                    v = Params[i];
+                    s = v.VarKind == Variable.VariableKind.ParamGeneric
+                        ? "!" + v.GenericIndex : TypeLongForm(v.Typ);
+                    //s = TypeLongForm(v.Typ);
+                    b.Append(s);
+                }
+            }
+
+
+            //List<Variable> Params = fi.GetParams();
+            //if (Params.Count > 0)
+            //{
+            //    v = Params[0];
+            //    s = v.VarKind == Variable.VariableKind.ParamGeneric
+            //        ? "!" + v.GenericIndex : TypeLongForm(v.Typ);
+            //    //s= TypeLongForm(v.Typ);
+            //    b.Append(s);
+            //    for (int i = 1; i < Params.Count; i++)
+            //    {
+            //        b.Append(", ");
+            //        v = Params[i];
+            //        s = v.VarKind == Variable.VariableKind.ParamGeneric
+            //            ? "!" + v.GenericIndex : TypeLongForm(v.Typ);
+            //        //s = TypeLongForm(v.Typ);
+            //        b.Append(s);
+            //    }
+            //}
+            b.Append(")");
+
+            return b.ToString();
+        }
+
+        public static string CallAction(Actn t)
+        {
+            if (t.IsConstructor) return S(OpCodes.Call) + " instance " + Body(t); ;
+            if (t.IsStatic) return S(OpCodes.Call) + " " + Body(t);
+            return S(OpCodes.Callvirt) + " instance " + Body(t);
+        }
+
+        public static string Br(IMR imr)
+        {
+            string label = imr.StringV;
+            return S(OpCodes.Br) + " " + label;
+        }
+
+        public static string BrFalse(IMR imr)
+        {
+            string label = imr.StringV;
+            return S(OpCodes.Brfalse) + " " + label;
+        }
+
+        public static string PutLabel(IMR imr)
+        {
+            string label = imr.StringV;
+            return label + ":";
+        }
+
     }
+
 
 }

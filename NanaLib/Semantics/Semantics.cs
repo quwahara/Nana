@@ -469,7 +469,8 @@ namespace Nana.Semantics
 
     public interface IInstructionsHolder
     {
-        List<Func<string>> Instructions { get; }
+        List<object> Instructions { get; }
+        //List<Func<string>> Instructions { get; }
     }
 
     public class Actn : Nsp, IInstructionsHolder
@@ -532,14 +533,21 @@ namespace Nana.Semantics
         }
 
         public List<IExecutable> Exes = new List<IExecutable>();
-        public List<Func<string>> _Intermediates = new List<Func<string>>();
-        public List<Func<string>> Instructions
+        //public List<Func<string>> _Intermediates = new List<Func<string>>();
+        //public List<Func<string>> Instructions
+        //{
+        //    get { return _Intermediates; }
+        //    set { _Intermediates = value; ; }
+        //}
+
+        public List<object> _Intermediates = new List<object>();
+        public List<object> Instructions
         {
             get { return _Intermediates; }
             set { _Intermediates = value; ; }
         }
 
-        public Actn(Token seed, Nsp family,  List<Variable> params_)
+        public Actn(Token seed, Nsp family, List<Variable> params_)
             : base(seed, family)
         {
             StringBuilder b = new StringBuilder();
@@ -1275,7 +1283,8 @@ namespace Nana.Semantics
         {
             LoadInstance(gen);
             LoadArgs(gen);
-            gen.CallActionSig(Callee);
+            gen.CallAction(Callee);
+            //gen.CallActionSig(Callee);
         }
 
         public override string ToString()
@@ -1313,8 +1322,10 @@ namespace Nana.Semantics
         {
             LoadInstance(gen);
             LoadArgs(gen);
-            if (IsNewObj) { gen.NewObjActionSig(Callee); }
-            else { gen.CallActionSig(Callee); }
+            if (IsNewObj) { gen.NewObject(Callee); }
+            else { gen.CallAction(Callee); }
+            //if (IsNewObj) { gen.NewObjActionSig(Callee); }
+            //else { gen.CallActionSig(Callee); }
         }
 
         public void Addr(IMRGenerator gen)
@@ -1372,6 +1383,7 @@ namespace Nana.Semantics
         public IValuable Rv;
         public Typ Typ_;
 
+        //  TODO    codes2 should be string of actual sign. translation C to C is ridiculous
         public CalcInfo(C[] codes2, IValuable lv, IValuable rv, Typ typ)
         {
             Codes2 = codes2;
@@ -1530,7 +1542,8 @@ namespace Nana.Semantics
         public IValuable[] Lens;
         public TmpVarGenerator TmpVarGen;
         // prepare for over twice referenced instatication
-        public Func<string> PlaceHolder;
+        public IMR PlaceHolder;
+        //public Func<string> PlaceHolder;
         public Variable TmpVar;
         public Typ Typu;
         public Typ Typ { [DebuggerNonUserCode]get { return Typu; } }
@@ -1563,14 +1576,16 @@ namespace Nana.Semantics
             foreach (IValuable v in Lens)
             { v.Give(gen); }
 
-            if (Typ.IsVector)
-            {
-                PlaceHolder = gen.NewArrayVector(Typ.ArrayType);
-            }
-            else
-            {
-                PlaceHolder = gen.NewArrayArray(Typ);
-            }
+            PlaceHolder = gen.NewArray(Typ);
+
+            //if (Typ.IsVector)
+            //{
+            //    PlaceHolder = gen.NewArrayVector(Typ.ArrayType);
+            //}
+            //else
+            //{
+            //    PlaceHolder = gen.NewArrayArray(Typ);
+            //}
         }
 
         public void GiveSubsequent(IMRGenerator gen)
@@ -1605,7 +1620,7 @@ namespace Nana.Semantics
             return v;
         }
 
-        public Variable Insert(Typ typu, IMRGenerator gen, Func<string> PlaceHolder)
+        public Variable Insert(Typ typu, IMRGenerator gen, object PlaceHolder)
         {
             Debug.Assert(PlaceHolder != null);
             Debug.Assert(GetTempName != null);
@@ -1623,6 +1638,25 @@ namespace Nana.Semantics
 
             return v;
         }
+
+        //public Variable Insert(Typ typu, IMRGenerator gen, Func<string> PlaceHolder)
+        //{
+        //    Debug.Assert(PlaceHolder != null);
+        //    Debug.Assert(GetTempName != null);
+        //    Debug.Assert(DeclareVariable != null);
+
+        //    IMRGenerator tmpgen = new IMRGenerator();
+        //    Variable v = Substitute(typu, tmpgen);
+        //    v.Give(tmpgen);
+
+        //    int idx = gen.IndexOf(PlaceHolder);
+        //    Debug.Assert(idx >= 0);
+        //    idx += 1;
+        //    if (idx < gen.Count) { gen.InsertRange(idx, tmpgen); }
+        //    else { gen.AddRange(tmpgen); }
+
+        //    return v;
+        //}
 
     }
 
@@ -1647,14 +1681,16 @@ namespace Nana.Semantics
             Array.ForEach<IValuable>(Indices,
                 delegate(IValuable v_) { v_.Give(gen); });
 
-            if (Val.Typ.IsVector)
-            {
-                gen.LdElemTyp(Typu);
-            }
-            else if (Val.Typ.IsArray)
-            {
-                gen.LoadArrayArray(Val.Typ);
-            }
+            gen.LdArrayElement(Val.Typ);
+
+            //if (Val.Typ.IsVector)
+            //{
+            //    gen.LdElemTyp(Typu);
+            //}
+            //else if (Val.Typ.IsArray)
+            //{
+            //    gen.LoadArrayArray(Val.Typ);
+            //}
         }
         public void Addr(IMRGenerator gen)
         {
@@ -1707,18 +1743,34 @@ namespace Nana.Semantics
             GiveVal.Give(gen);
 
             Typ t = ArrayAccess.Val.Typ;
+            Typ t2;
+            //gen.StArrayElement(t);
             if (t.IsVector)
             {
-                gen.StElemTyp(Typu);
+                t2 = Typu;
             }
             else if (t.IsArray)
             {
-                gen.StoreArrayArray(ArrayAccess.Val.Typ);
+                t2 = ArrayAccess.Val.Typ;
             }
             else
             {
-                Debug.Assert(false);
+                throw new NotSupportedException();
             }
+            gen.StArrayElement(t, t2);
+
+            //if (t.IsVector)
+            //{
+            //    gen.StElemTyp(Typu);
+            //}
+            //else if (t.IsArray)
+            //{
+            //    gen.StoreArrayArray(ArrayAccess.Val.Typ);
+            //}
+            //else
+            //{
+            //    Debug.Assert(false);
+            //}
         }
     }
 
