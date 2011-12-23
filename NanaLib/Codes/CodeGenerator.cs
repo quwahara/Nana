@@ -46,6 +46,93 @@ namespace Nana.CodeGeneration
             return GetCurrentIndent(0);
         }
 
+        static public string FromMethodAttributes(MethodAttributes atrs)
+        {
+            if (atrs == MethodAttributes.PrivateScope) return "PrivateScope";
+
+            Array vs = Enum.GetValues(typeof(MethodAttributes));
+            string[] ns = Enum.GetNames(typeof(MethodAttributes));
+            MethodAttributes v = MethodAttributes.PrivateScope, vv;
+            List<string> ls = new List<string>();
+            for (int i = vs.Length - 1; i >= 0; i--)
+            {
+                vv = v;
+                v = (MethodAttributes)vs.GetValue(i);
+                if (v == MethodAttributes.PrivateScope || v == vv || (atrs & v) != v) continue;
+                ls.Add(ns[i]);
+                if ((int)v <= 7) break;
+            }
+            return string.Join(" ", ls.ToArray());
+        }
+
+        static public bool IsSupportedType(Typ t)
+        {
+            return string.IsNullOrEmpty(SupportedTypeName(t)) == false;
+        }
+
+        static public string SupportedTypeName(Typ t)
+        {
+            if (t == null) { return "void"; }
+
+            string brk = "";
+            while (t.IsVectorOrArray)
+            {
+                brk = Typ.ToBracket(t.Dimension) + brk;
+                t = t.ArrayType;
+            }
+
+            string nm = null;
+
+            if (t.IsReferencing == false) { return null; }
+
+            if (t.RefType == typeof(void)) nm = "void";
+            if (t.RefType == typeof(bool)) nm = "bool";
+            if (t.RefType == typeof(int)) nm = "int32";
+            if (t.RefType == typeof(object)) nm = "object";
+            if (t.RefType == typeof(string)) nm = "string";
+
+            return nm + brk;
+        }
+
+        static public string TypeLongForm(Typ t)
+        {
+            if (IsSupportedType(t)) return SupportedTypeName(t);
+            return TypeCharacter(t) + " " + TypeFullName(t);
+        }
+
+        static public string TypeCharacter(Typ t)
+        {
+            if (IsSupportedType(t)) return "";
+            return "class";
+            //if (t.IsValueType()) return "valuetype";
+            //else if (t.IsClass()) return "class";
+            //else
+            //{
+            //    throw new InternalError("Can not specify the tyep character: " + t._Name);
+            //}
+        }
+
+        static public string TypeFullName(Typ t)
+        {
+            if (IsSupportedType(t)) return SupportedTypeName(t);
+
+            StringBuilder b = new StringBuilder();
+            b.Append("[").Append(t.AssemblyName).Append("]");
+            b.Append(t._FullName);
+            if (t.IsGeneric)
+            {
+                b.Append("<");
+                b.Append(string.Join(", "
+                    , new List<Typ>(t.GenericTypeParams)
+                    .ConvertAll<string>(TypeFullName)
+                    .ToArray()
+                    ));
+                b.Append(">");
+            }
+
+            return b.ToString();
+        }
+        
         public string GenerateCode(Nsp d)
         {
             StringBuilder b = new StringBuilder();
@@ -170,18 +257,6 @@ namespace Nana.CodeGeneration
             return b.ToString();
         }
 
-        public string DeclareField(Variable v)
-        {
-            StringBuilder b = new StringBuilder();
-            Func<string, StringBuilder> Tr = b.Append;
-            Func<StringBuilder> Nl = b.AppendLine;
-            Tr(".field static ");
-            Tr(TypeLongForm(v.Typ));
-            //Tr(IMRs.IMRGenerator.TypeLongForm(v.Typ));
-            Tr(" "); Tr(v.Name); Nl();
-            return b.ToString();
-        }
-
         public string BeginApp(App ap)
         {
             string name = "";
@@ -207,6 +282,17 @@ namespace Nana.CodeGeneration
                 .ConvertAll<StringBuilder>(delegate(Variable v) { return b.Append(DeclareField(v)); })
                 ;
 
+            return b.ToString();
+        }
+
+        public string DeclareField(Variable v)
+        {
+            StringBuilder b = new StringBuilder();
+            Func<string, StringBuilder> Tr = b.Append;
+            Func<StringBuilder> Nl = b.AppendLine;
+            Tr(".field static ");
+            Tr(TypeLongForm(v.Typ));
+            Tr(" "); Tr(v.Name); Nl();
             return b.ToString();
         }
 
@@ -317,95 +403,6 @@ namespace Nana.CodeGeneration
             return EndActn(d);
         }
 
-        static public string FromMethodAttributes(MethodAttributes atrs)
-        {
-            if (atrs == MethodAttributes.PrivateScope) return "PrivateScope";
-
-            Array vs = Enum.GetValues(typeof(MethodAttributes));
-            string[] ns = Enum.GetNames(typeof(MethodAttributes));
-            MethodAttributes v = MethodAttributes.PrivateScope, vv;
-            List<string> ls = new List<string>();
-            for (int i = vs.Length - 1; i >= 0; i--)
-            {
-                vv = v;
-                v = (MethodAttributes)vs.GetValue(i);
-                if (v == MethodAttributes.PrivateScope || v == vv || (atrs & v) != v) continue;
-                ls.Add(ns[i]);
-                if ((int)v <= 7) break;
-            }
-            return string.Join(" ", ls.ToArray());
-        }
-        static public string S(OpCode c) { return c.ToString(); }
-        static public string S(OpCode c, object opRnd) { return S(c) + " " + opRnd.ToString(); }
-
-        static public bool IsSupportedType(Typ t)
-        {
-            return string.IsNullOrEmpty(SupportedTypeName(t)) == false;
-        }
-
-        static public string SupportedTypeName(Typ t)
-        {
-            if (t == null) { return "void"; }
-
-            string brk = "";
-            while (t.IsVectorOrArray)
-            {
-                brk = Typ.ToBracket(t.Dimension) + brk;
-                t = t.ArrayType;
-            }
-
-            string nm = null;
-
-            if (t.IsReferencing == false) { return null; }
-
-            if (t.RefType == typeof(void)) nm = "void";
-            if (t.RefType == typeof(bool)) nm = "bool";
-            if (t.RefType == typeof(int)) nm = "int32";
-            if (t.RefType == typeof(object)) nm = "object";
-            if (t.RefType == typeof(string)) nm = "string";
-
-            return nm + brk;
-        }
-
-        static public string TypeCharacter(Typ t)
-        {
-            if (IsSupportedType(t)) return "";
-            return "class";
-            //if (t.IsValueType()) return "valuetype";
-            //else if (t.IsClass()) return "class";
-            //else
-            //{
-            //    throw new InternalError("Can not specify the tyep character: " + t._Name);
-            //}
-        }
-
-        static public string TypeLongForm(Typ t)
-        {
-            if (IsSupportedType(t)) return SupportedTypeName(t);
-            return TypeCharacter(t) + " " + TypeFullName(t);
-        }
-
-        static public string TypeFullName(Typ t)
-        {
-            if (IsSupportedType(t)) return SupportedTypeName(t);
-
-            StringBuilder b = new StringBuilder();
-            b.Append("[").Append(t.AssemblyName).Append("]");
-            b.Append(t._FullName);
-            if (t.IsGeneric)
-            {
-                b.Append("<");
-                b.Append(string.Join(", "
-                    , new List<Typ>(t.GenericTypeParams)
-                    .ConvertAll<string>(TypeFullName)
-                    .ToArray()
-                    ));
-                b.Append(">");
-            }
-
-            return b.ToString();
-        }
-
         public static string FromIMR(IMR imr, out string[] extra)
         {
             extra = null;
@@ -429,6 +426,9 @@ namespace Nana.CodeGeneration
             }
             throw new NotSupportedException();
         }
+
+        static public string S(OpCode c) { return c.ToString(); }
+        static public string S(OpCode c, object opRnd) { return S(c) + " " + opRnd.ToString(); }
 
         public static string LoadLiteral(Literal l)
         {
@@ -561,6 +561,13 @@ namespace Nana.CodeGeneration
             return S(OpCodes.Newobj) + " instance " + Body(t);
         }
 
+        public static string CallAction(Actn t)
+        {
+            if (t.IsConstructor) return S(OpCodes.Call) + " instance " + Body(t); ;
+            if (t.IsStatic) return S(OpCodes.Call) + " " + Body(t);
+            return S(OpCodes.Callvirt) + " instance " + Body(t);
+        }
+
         public static string Body(Actn fi)
         {
             StringBuilder b = new StringBuilder();
@@ -620,13 +627,6 @@ namespace Nana.CodeGeneration
             b.Append(")");
 
             return b.ToString();
-        }
-
-        public static string CallAction(Actn t)
-        {
-            if (t.IsConstructor) return S(OpCodes.Call) + " instance " + Body(t); ;
-            if (t.IsStatic) return S(OpCodes.Call) + " " + Body(t);
-            return S(OpCodes.Callvirt) + " instance " + Body(t);
         }
 
         public static string Br(IMR imr)
