@@ -193,7 +193,7 @@ namespace Nana.Semantics
         {
             //return Name + "(" + Members_.Count + "):" + GetType().Name;
             return Bty.New().Add("{").Nv("Name", Name).Add("}").Add(":").Add(GetType().Name).ToS();
-            return Sty.Curly(Sty.Nv("Name", Name)) + ":" + GetType().Name;
+            //return Sty.Curly(Sty.Nv("Name", Name)) + ":" + GetType().Name;
         }
 
         public INmd Clone()
@@ -1284,7 +1284,6 @@ namespace Nana.Semantics
             LoadInstance(gen);
             LoadArgs(gen);
             gen.CallAction(Callee);
-            //gen.CallActionSig(Callee);
         }
 
         public override string ToString()
@@ -1577,15 +1576,6 @@ namespace Nana.Semantics
             { v.Give(gen); }
 
             PlaceHolder = gen.NewArray(Typ);
-
-            //if (Typ.IsVector)
-            //{
-            //    PlaceHolder = gen.NewArrayVector(Typ.ArrayType);
-            //}
-            //else
-            //{
-            //    PlaceHolder = gen.NewArrayArray(Typ);
-            //}
         }
 
         public void GiveSubsequent(IMRGenerator gen)
@@ -1638,26 +1628,6 @@ namespace Nana.Semantics
 
             return v;
         }
-
-        //public Variable Insert(Typ typu, IMRGenerator gen, Func<string> PlaceHolder)
-        //{
-        //    Debug.Assert(PlaceHolder != null);
-        //    Debug.Assert(GetTempName != null);
-        //    Debug.Assert(DeclareVariable != null);
-
-        //    IMRGenerator tmpgen = new IMRGenerator();
-        //    Variable v = Substitute(typu, tmpgen);
-        //    v.Give(tmpgen);
-
-        //    int idx = gen.IndexOf(PlaceHolder);
-        //    Debug.Assert(idx >= 0);
-        //    idx += 1;
-        //    if (idx < gen.Count) { gen.InsertRange(idx, tmpgen); }
-        //    else { gen.AddRange(tmpgen); }
-
-        //    return v;
-        //}
-
     }
 
     public class ArrayAccessInfo : IValuable
@@ -1682,15 +1652,6 @@ namespace Nana.Semantics
                 delegate(IValuable v_) { v_.Give(gen); });
 
             gen.LdArrayElement(Val.Typ);
-
-            //if (Val.Typ.IsVector)
-            //{
-            //    gen.LdElemTyp(Typu);
-            //}
-            //else if (Val.Typ.IsArray)
-            //{
-            //    gen.LoadArrayArray(Val.Typ);
-            //}
         }
         public void Addr(IMRGenerator gen)
         {
@@ -1744,7 +1705,7 @@ namespace Nana.Semantics
 
             Typ t = ArrayAccess.Val.Typ;
             Typ t2;
-            //gen.StArrayElement(t);
+         
             if (t.IsVector)
             {
                 t2 = Typu;
@@ -1758,19 +1719,6 @@ namespace Nana.Semantics
                 throw new NotSupportedException();
             }
             gen.StArrayElement(t, t2);
-
-            //if (t.IsVector)
-            //{
-            //    gen.StElemTyp(Typu);
-            //}
-            //else if (t.IsArray)
-            //{
-            //    gen.StoreArrayArray(ArrayAccess.Val.Typ);
-            //}
-            //else
-            //{
-            //    Debug.Assert(false);
-            //}
         }
     }
 
