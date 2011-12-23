@@ -62,36 +62,33 @@ namespace Nana.CodeGeneration
         public string CallMiddle(IInstructionsHolder h)
         {
             StringBuilder b = new StringBuilder();
-            h.Instructions.ForEach(delegate(IMR imr)
-            //h.Instructions.ForEach(delegate(object obj)
+
+            string[] extra;
+            string s;
+            foreach (IMR imr in h.Instructions)
             {
-                string s = FromIMR(imr);
-                //string s = "";
-                //if (obj is Func<string>)
-                //{
-                //    s = (obj as Func<string>)();
-                //}
-                //else if (obj is IMR)
-                //{
-                //    s = FromIMR(obj as IMR);
-                //}
-                //else
-                //{
-                //    throw new NotSupportedException();
-                //}
-                string ind = s.EndsWith(":") ? "" : GetCurrentIndent();
-                b.Append(ind)
-                    .Append(s)
-                    .AppendLine();
-            });
-            //h.Instructions.ForEach(delegate(Func<string> ff)
-            //{
-            //    string s = ff();
-            //    string ind = s.EndsWith(":") ? "" : GetCurrentIndent();
-            //    b.Append(ind)
-            //        .Append(s)
-            //        .AppendLine();
-            //});
+                s = FromIMR(imr, out extra);
+                if (false == string.IsNullOrEmpty(s))
+                {
+                    b.Append(GenLine(s));
+                }
+                if (extra != null)
+                {
+                    foreach (string t in extra)
+                    {
+                        b.Append(GenLine(t));
+                    }
+                }
+            }
+
+            return b.ToString();
+        }
+
+        public string GenLine(string s)
+        {
+            StringBuilder b = new StringBuilder();
+            string ind = s.EndsWith(":") ? "" : GetCurrentIndent();
+            b.Append(ind).Append(s).AppendLine();
             return b.ToString();
         }
 
@@ -436,8 +433,9 @@ namespace Nana.CodeGeneration
             return b.ToString();
         }
 
-        public static string FromIMR(IMR imr)
+        public static string FromIMR(IMR imr, out string[] extra)
         {
+            extra = null;
             switch (imr.C)
             {
                 case C.Ret: return OpCodes.Ret.ToString();
@@ -454,20 +452,22 @@ namespace Nana.CodeGeneration
                 case C.Br: return Br(imr);
                 case C.BrFalse: return BrFalse(imr);
                 case C.PutLabel: return PutLabel(imr);
+                case C.Ope: return Ope(imr, out extra);
 
-                case C.Add: return S(OpCodes.Add);
-                case C.Sub: return S(OpCodes.Sub);
-                case C.Mul: return S(OpCodes.Mul);
-                case C.Div: return S(OpCodes.Div);
-                case C.Rem: return S(OpCodes.Rem);
-                case C.Neg: return S(OpCodes.Neg);
-                case C.And: return S(OpCodes.And);
-                case C.Or: return S(OpCodes.Or);
-                case C.Xor: return S(OpCodes.Xor);
-                case C.Not: return S(OpCodes.Not);
-                case C.Ceq: return S(OpCodes.Ceq);
-                case C.Cgt: return S(OpCodes.Cgt);
-                case C.Clt: return S(OpCodes.Clt); 
+
+                //case C.Add: return S(OpCodes.Add);
+                //case C.Sub: return S(OpCodes.Sub);
+                //case C.Mul: return S(OpCodes.Mul);
+                //case C.Div: return S(OpCodes.Div);
+                //case C.Rem: return S(OpCodes.Rem);
+                //case C.Neg: return S(OpCodes.Neg);
+                //case C.And: return S(OpCodes.And);
+                //case C.Or: return S(OpCodes.Or);
+                //case C.Xor: return S(OpCodes.Xor);
+                //case C.Not: return S(OpCodes.Not);
+                //case C.Ceq: return S(OpCodes.Ceq);
+                //case C.Cgt: return S(OpCodes.Cgt);
+                //case C.Clt: return S(OpCodes.Clt); 
 
             }
             throw new NotSupportedException();
@@ -727,6 +727,30 @@ namespace Nana.CodeGeneration
         {
             string label = imr.StringV;
             return label + ":";
+        }
+
+        public static string Ope(IMR imr, out string[] extra)
+        {
+            extra = null;
+            switch (imr.StringV)
+            {
+                case "+": return S(OpCodes.Add);
+                case "-": return S(OpCodes.Sub);
+                case "*": return S(OpCodes.Mul);
+                case "/": return S(OpCodes.Div);
+                case "%": return S(OpCodes.Rem);
+                case "==": return S(OpCodes.Ceq);
+                case "!=": extra = new string[] { S(OpCodes.Ceq), S(OpCodes.Neg) }; return null;
+                case "<": return S(OpCodes.Clt);
+                case ">": return S(OpCodes.Cgt);
+                case "<=": extra = new string[] { S(OpCodes.Cgt), S(OpCodes.Neg) }; return null;
+                case ">=": extra = new string[] { S(OpCodes.Clt), S(OpCodes.Neg) }; return null;
+                case "and": return S(OpCodes.And);
+                case "or": return S(OpCodes.Or);
+                case "xor": return S(OpCodes.Xor);
+            }
+
+            throw new NotSupportedException();
         }
 
     }
