@@ -49,12 +49,16 @@ namespace Nana.CodeGeneration
         public string GenerateCode(Nsp d)
         {
             StringBuilder b = new StringBuilder();
+            
             b.Append(CallBegin(d));
+            
             if (d is IInstructionsHolder)
             { b.Append(CallMiddle(d as IInstructionsHolder)); }
+            
             d.FindAllTypeIs<Nsp>()
                 .ConvertAll<string>(GenerateCode)
                 .ConvertAll<StringBuilder>(b.Append);
+            
             b.Append(CallEnd(d));
             return b.ToString();
         }
@@ -150,9 +154,6 @@ namespace Nana.CodeGeneration
                         .ConvertAll<string>(delegate(byte by) { return by.ToString("X"); })
                         .ToArray()));
 
-                //b.Append(SFList.Cast(FList<byte>.Parse(pkt)
-                //    .Map<string>(delegate(byte by) { return by.ToString("X"); })
-                //    ).Xsv(" "));
                 b.Append(")");
             }
 
@@ -165,7 +166,6 @@ namespace Nana.CodeGeneration
             StringBuilder b = new StringBuilder();
             d.TypeLdr.InAssembly.Assemblies
                 .ConvertAll<string>(AssemblyExtern)
-                //.ConvertAll<string>(Nana.IMRs.IMRGenerator.AssemblyExtern)
                 .ConvertAll<StringBuilder>(b.AppendLine);
             return b.ToString();
         }
@@ -197,23 +197,15 @@ namespace Nana.CodeGeneration
             StringBuilder b = new StringBuilder();
             b.Append(".assembly ")
                 .Append(Path.GetFileNameWithoutExtension(name))
-                //.Append(Path.GetFileNameWithoutExtension(d.Name))
                 .Append(" { }")
                 .AppendLine()
                 .Append(".module ")
                 .Append(name)
                 .AppendLine();
-            //return ".assembly " + Path.GetFileNameWithoutExtension(d.Name) + " { }" + Environment.NewLine
-            //    + ".module " + d.Name + Environment.NewLine;
             ap.FindAllTypeOf<Variable>()
                 .FindAll(delegate(Variable v) { return v.VarKind == Variable.VariableKind.StaticField; })
                 .ConvertAll<StringBuilder>(delegate(Variable v) { return b.Append(DeclareField(v)); })
                 ;
-            //if (d.Instructions.Count > 0)
-            //{
-            //    b.AppendLine(".method static public void .cctor() {");
-            //    IndentDepth += 1;
-            //}
 
             return b.ToString();
         }
@@ -235,7 +227,6 @@ namespace Nana.CodeGeneration
             Typ bty;
             if ((bty = d.BaseTyp) != null && bty.RefType != typeof(object))
             { b.Append(" extends ").Append(TypeFullName(bty)); }
-            //{ b.Append(" extends ").Append(Nana.IMRs.IMRGenerator.TypeFullName(bty)); }
 
             b.Append(" {").AppendLine();
 
@@ -275,7 +266,6 @@ namespace Nana.CodeGeneration
             b.Append(".method ");
             b.Append(FromMethodAttributes(f.MthdAttrs).ToLower());
             b.Append(" ").Append(TypeFullName(returnType));
-            //b.Append(" ").Append(Nana.IMRs.IMRGenerator.TypeFullName(returnType));
             b.Append(" ").Append(f.Family.Name);
             b.Append("(");
 
@@ -285,7 +275,6 @@ namespace Nana.CodeGeneration
                 .FindAll(delegate(Variable v) { return v.VarKind == Variable.VariableKind.Param; })
                 .ConvertAll<string>(delegate(Variable v)
                 { return TypeFullName(v.Typ) + " " + v.Name; })
-                //{ return Nana.IMRs.IMRGenerator.TypeFullName(v.Typ) + " " + v.Name; })
                 .ToArray()
                 )
                 );
@@ -301,7 +290,6 @@ namespace Nana.CodeGeneration
                 b.Append(ind1).Append(".locals (").AppendLine();
                 Variable v;
                 Func<Typ, string> lf = TypeLongForm;
-                //Func<Typ, string> lf = Nana.IMRs.IMRGenerator.TypeLongForm;
                 v = locals[0];
                 b.Append(ind2).Append(lf(v.Typ)).Append(" ").Append(v.Name).AppendLine();
                 for (int i = 1; i < locals.Count; ++i)
@@ -327,21 +315,6 @@ namespace Nana.CodeGeneration
         public string EndFctn(Fctn d)
         {
             return EndActn(d);
-        }
-
-        public Func<string> LoadVariable(Variable v)
-        {
-            Variable.VariableKind k = v.VarKind;
-            switch (k)
-            {
-                case Variable.VariableKind.Param: return delegate() { return S(OpCodes.Ldarg, v.Name); };
-                case Variable.VariableKind.This: return delegate() { return OpCodes.Ldarg_0.ToString(); };
-                case Variable.VariableKind.Local: return delegate() { return S(OpCodes.Ldloc, v.Name); };
-                //case Variable2.VariableKind.StaticField: return delegate() { return S(OpCodes.Ldsfld, TypeLongForm(v.Typ) + " " + v.Name); };
-                //case Variable2.VariableKind.Vector: return delegate() { return S(OpCodes.Ldelem, TypeLongForm(v.Typ)); };
-            }
-            Debug.Fail("");
-            return null;
         }
 
         static public string FromMethodAttributes(MethodAttributes atrs)
@@ -441,7 +414,7 @@ namespace Nana.CodeGeneration
                 case C.Ret: return OpCodes.Ret.ToString();
                 case C.Pop: return OpCodes.Pop.ToString();
                 case C.LdLiteral: return LoadLiteral(imr.LiteralV);
-                case C.LdVariable: return LoadVariable2(imr.VariableV);
+                case C.LdVariable: return LoadVariable(imr.VariableV);
                 case C.NewArray: return NewArray(imr.TypV);
                 case C.LdVariableA: return LoadAVariable(imr.VariableV);
                 case C.StVariable: return StoreVariable(imr.VariableV);
@@ -466,7 +439,7 @@ namespace Nana.CodeGeneration
             throw new NotSupportedException();
         }
 
-        public static string LoadVariable2(Variable v)
+        public static string LoadVariable(Variable v)
         {
             Variable.VariableKind k = v.VarKind;
             switch (k)
@@ -591,19 +564,13 @@ namespace Nana.CodeGeneration
         public static string Body(Actn fi)
         {
             StringBuilder b = new StringBuilder();
-            //TypeInfo retti = fi.IsConstructor ? TypeInfo.Void : fi.ThisType;
-            //Typ retti = fi is IValuable && fi.IsConstructor == false ? (fi as IValuable).Typ : null;
             Typ retti = fi is ITyped && fi.IsConstructor == false ? (fi as ITyped).Typ : null;
             b.Append(TypeFullName(retti));
 
             Typ m = fi.FindUpTypeOf<Typ>();
-            //Mdl m = fi.GetActionOvrldHolder();
-            //Mdl m = fi.FindUp(Mdl.IsMdl) as Mdl;
             if (m.GetType() == typeof(Typ))
             {
                 Typ ti = m as Typ;
-                //if (fi.IsConstructor && fi.NmdAbove.Name == "0base")
-                //{ ti = ti.BaseTyp; }
                 if (ti.IsGeneric)
                 { b.Append(ti.IsValueType ? " value" : " class"); }
                 b.Append(" ");
@@ -615,7 +582,6 @@ namespace Nana.CodeGeneration
                 b.Append(" ");
             }
 
-            //b.Append(fi._Name);
             if (MethodAttributes.SpecialName != (fi.MthdAttrs & MethodAttributes.SpecialName))
             {
                 b.Append(fi.Family.Name);
@@ -624,19 +590,7 @@ namespace Nana.CodeGeneration
             {
                 b.Append(fi.SpecialName);
             }
-            //if (fi.Family.GetType() == typeof(ActnOvld))
-            //{
-            //    b.Append(fi.Family.Name);
-            //}
-            //else if (fi.Family.GetType() == typeof(Prop2))
-            //{
-            //    b.Append(fi.SpecialName);
-            //}
-            //else
-            //{
-            //    throw new NotImplementedException();
-            //}
-            //b.Append(fi.FindUpTypeOf<ActnOvld>().Name);
+
             b.Append("(");
             Variable v;
             string s;
@@ -651,7 +605,6 @@ namespace Nana.CodeGeneration
                 v = Params[0];
                 s = v.VarKind == Variable.VariableKind.ParamGeneric
                     ? "!" + v.GenericIndex : TypeLongForm(v.Typ);
-                //s= TypeLongForm(v.Typ);
                 b.Append(s);
                 for (int i = 1; i < Params.Count; i++)
                 {
@@ -664,25 +617,6 @@ namespace Nana.CodeGeneration
                 }
             }
 
-
-            //List<Variable> Params = fi.GetParams();
-            //if (Params.Count > 0)
-            //{
-            //    v = Params[0];
-            //    s = v.VarKind == Variable.VariableKind.ParamGeneric
-            //        ? "!" + v.GenericIndex : TypeLongForm(v.Typ);
-            //    //s= TypeLongForm(v.Typ);
-            //    b.Append(s);
-            //    for (int i = 1; i < Params.Count; i++)
-            //    {
-            //        b.Append(", ");
-            //        v = Params[i];
-            //        s = v.VarKind == Variable.VariableKind.ParamGeneric
-            //            ? "!" + v.GenericIndex : TypeLongForm(v.Typ);
-            //        //s = TypeLongForm(v.Typ);
-            //        b.Append(s);
-            //    }
-            //}
             b.Append(")");
 
             return b.ToString();
