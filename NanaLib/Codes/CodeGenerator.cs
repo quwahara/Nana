@@ -453,22 +453,6 @@ namespace Nana.CodeGeneration
                 case C.BrFalse: return BrFalse(imr);
                 case C.PutLabel: return PutLabel(imr);
                 case C.Ope: return Ope(imr, out extra);
-
-
-                //case C.Add: return S(OpCodes.Add);
-                //case C.Sub: return S(OpCodes.Sub);
-                //case C.Mul: return S(OpCodes.Mul);
-                //case C.Div: return S(OpCodes.Div);
-                //case C.Rem: return S(OpCodes.Rem);
-                //case C.Neg: return S(OpCodes.Neg);
-                //case C.And: return S(OpCodes.And);
-                //case C.Or: return S(OpCodes.Or);
-                //case C.Xor: return S(OpCodes.Xor);
-                //case C.Not: return S(OpCodes.Not);
-                //case C.Ceq: return S(OpCodes.Ceq);
-                //case C.Cgt: return S(OpCodes.Cgt);
-                //case C.Clt: return S(OpCodes.Clt); 
-
             }
             throw new NotSupportedException();
         }

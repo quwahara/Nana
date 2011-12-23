@@ -40,15 +40,6 @@ namespace Nana.IMRs
 
         Ope,
 
-        //// Arithmetical Operations (p270)
-        //Add, Sub, Mul, Div,    /* DivUn, */    Rem,    /* RemUn, */    Neg,
-
-        //// Bitwise Operations (p272)
-        //And, Or, Xor, Not,
-
-        //// Logical Condition Check Instructions (p275)
-        //Ceq, Cgt,    /* Cgt_Un, */   Clt,    /* Clt_Un, */   /* Ckfinite, */
-
         __SENTINEL__
     }
 
@@ -135,33 +126,6 @@ namespace Nana.IMRs
 
         public IMR Ope(string sign, Typ t) { return Append(new IMR(C.Ope, sign, t)); }
 
-        //public static readonly IMR IMR_Add = new IMR(C.Add);
-        //public static readonly IMR IMR_Sub = new IMR(C.Sub);
-        //public static readonly IMR IMR_Mul = new IMR(C.Mul);
-        //public static readonly IMR IMR_Div = new IMR(C.Div);
-        //public static readonly IMR IMR_Rem = new IMR(C.Rem);
-        //public static readonly IMR IMR_Neg = new IMR(C.Neg);
-        //public static readonly IMR IMR_And = new IMR(C.And);
-        //public static readonly IMR IMR_Or = new IMR(C.Or);
-        //public static readonly IMR IMR_Xor = new IMR(C.Xor);
-        //public static readonly IMR IMR_Not = new IMR(C.Not);
-        //public static readonly IMR IMR_Ceq = new IMR(C.Ceq);
-        //public static readonly IMR IMR_Cgt = new IMR(C.Cgt);
-        //public static readonly IMR IMR_Clt = new IMR(C.Clt);
-
-        //public IMR Add() { return Append(IMR_Add); }
-        //public IMR Sub() { return Append(IMR_Sub); }
-        //public IMR Mul() { return Append(IMR_Mul); }
-        //public IMR Div() { return Append(IMR_Div); }
-        //public IMR Rem() { return Append(IMR_Rem); }
-        //public IMR Neg() { return Append(IMR_Neg); }
-        //public IMR And() { return Append(IMR_And); }
-        //public IMR Or() { return Append(IMR_Or); }
-        //public IMR Xor() { return Append(IMR_Xor); }
-        //public IMR Not() { return Append(IMR_Not); }
-        //public IMR Ceq() { return Append(IMR_Ceq); }
-        //public IMR Cgt() { return Append(IMR_Cgt); }
-        //public IMR Clt() { return Append(IMR_Clt); }
     }
 
 }

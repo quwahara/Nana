@@ -1064,45 +1064,6 @@ namespace Nana.Semantics
                     default:
                         throw new SyntaxError("Can not use '" + ope + "'", t);
                 }
-                //switch (ope)
-                //{
-                //    case "+": c = new CalcInfo("+", lv, rv, intty); break;
-                //    case "-": c = new CalcInfo("-", lv, rv, intty); break;
-                //    case "*": c = new CalcInfo("*", lv, rv, intty); break;
-                //    case "/": c = new CalcInfo("/", lv, rv, intty); break;
-                //    case "%": c = new CalcInfo("%", lv, rv, intty); break;
-                //    case "==": c = new CalcInfo("==", lv, rv, boolty); break;
-                //    case "!=": c = new CalcInfo("!=", lv, rv, boolty); break;
-                //    case "<": c = new CalcInfo("<", lv, rv, boolty); break;
-                //    case ">": c = new CalcInfo(">", lv, rv, boolty); break;
-                //    case "<=": c = new CalcInfo("<=", lv, rv, boolty); break;
-                //    case ">=": c = new CalcInfo(">=", lv, rv, boolty); break;
-                //    case "and": c = new CalcInfo("and", lv, rv, boolty); break;
-                //    case "or": c = new CalcInfo("or", lv, rv, boolty); break;
-                //    case "xor": c = new CalcInfo("xor", lv, rv, boolty); break;
-
-                //    default:
-                //        throw new SyntaxError("Can not use '" + ope + "'", t);
-                //}
-                //switch (ope)
-                //{
-                //    case "+": c = new CalcInfo(new C[] { C.Add }, lv, rv, intty); break;
-                //    case "-": c = new CalcInfo(new C[] { C.Sub }, lv, rv, intty); break;
-                //    case "*": c = new CalcInfo(new C[] { C.Mul }, lv, rv, intty); break;
-                //    case "/": c = new CalcInfo(new C[] { C.Div }, lv, rv, intty); break;
-                //    case "%": c = new CalcInfo(new C[] { C.Rem }, lv, rv, intty); break;
-                //    case "==": c = new CalcInfo(new C[] { C.Ceq }, lv, rv, boolty); break;
-                //    case "!=": c = new CalcInfo(new C[] { C.Ceq, C.Neg }, lv, rv, boolty); break;
-                //    case "<": c = new CalcInfo(new C[] { C.Clt }, lv, rv, boolty); break;
-                //    case ">": c = new CalcInfo(new C[] { C.Cgt }, lv, rv, boolty); break;
-                //    case "<=": c = new CalcInfo(new C[] { C.Cgt, C.Neg }, lv, rv, boolty); break;
-                //    case ">=": c = new CalcInfo(new C[] { C.Clt, C.Neg }, lv, rv, boolty); break;
-                //    case "and": c = new CalcInfo(new C[] { C.And }, lv, rv, boolty); break;
-                //    case "or": c = new CalcInfo(new C[] { C.Or }, lv, rv, boolty); break;
-                //    case "xor": c = new CalcInfo(new C[] { C.Xor }, lv, rv, boolty); break;
-                //    default:
-                //        throw new SyntaxError("Can not use '" + ope + "'", t);
-                //}
                 return c;
             }
             else if (tp.IsReferencingOf(typeof(bool)))
@@ -1117,16 +1078,6 @@ namespace Nana.Semantics
                     case "xor":
                         c = new CalcInfo(ope, lv, rv, boolty); break;
                     
-                    //case "==": c = new CalcInfo("==", lv, rv, boolty); break;
-                    //case "!=": c = new CalcInfo("!=", lv, rv, boolty); break;
-                    //case "and": c = new CalcInfo("and", lv, rv, boolty); break;
-                    //case "or": c = new CalcInfo("or", lv, rv, boolty); break;
-                    //case "xor": c = new CalcInfo("xor", lv, rv, boolty); break;
-                    //case "==": c = new CalcInfo("==", new C[] { C.Ceq }, lv, rv, boolty); break;
-                    //case "!=" : c = new CalcInfo("!=" , new C[] { C.Ceq, C.Neg }, lv, rv, boolty); break;
-                    //case "and": c = new CalcInfo("and", new C[] { C.And }, lv, rv, boolty); break;
-                    //case "or" : c = new CalcInfo("or" , new C[] { C.Or }, lv, rv, boolty); break;
-                    //case "xor": c = new CalcInfo("xor", new C[] { C.Xor }, lv, rv, boolty); break;
                     default:
                         throw new SyntaxError("Can not use '" + ope + "'", t);
                 }
