@@ -17,34 +17,21 @@ namespace Nana.CodeGeneration
         public string Indent { get { return "".PadRight(IndentLength, IndentChar); } }
         public int IndentDepth;
 
-        public static List<string> ILASMKeywords = new List<FieldInfo>(typeof(OpCodes).GetFields())
-                .ConvertAll<string>(delegate(FieldInfo f) { return f.Name.ToLower(); })
-                .FindAll(delegate(string n) { return n.Contains("_") == false; })
-                ;
+        //public static List<string> ILASMKeywords = new List<FieldInfo>(typeof(OpCodes).GetFields())
+        //        .ConvertAll<string>(delegate(FieldInfo f) { return f.Name.ToLower(); })
+        //        .FindAll(delegate(string n) { return n.Contains("_") == false; })
+        //        ;
 
-        /// <summary>
-        /// Quote ILASM keyword
-        /// </summary>
-        /// <param name="n"></param>
-        /// <returns></returns>
-        public static string Qk(string n)
-        {
-            return ILASMKeywords.Contains(n)
-                ? "'" + n + "'" : n;
-        }
-
-        public static void xxx()
-        {
-            //ILASMKeywords = new List<FieldInfo>(typeof(OpCodes).GetFields())
-            //    .ConvertAll<string>(delegate(FieldInfo f) { return f.Name.ToLower(); })
-            //    .FindAll(delegate(string n) { return n.Contains("_") == false; })
-            //    ;
-
-            
-
-            string s = "aa";
-            //OpCodes
-        }
+        ///// <summary>
+        ///// Quote ILASM keyword
+        ///// </summary>
+        ///// <param name="n"></param>
+        ///// <returns></returns>
+        //public static string Qk(string n)
+        //{
+        //    return ILASMKeywords.Contains(n)
+        //        ? "'" + n + "'" : n;
+        //}
 
         public string GetCurrentIndent(int more)
         {
@@ -139,7 +126,7 @@ namespace Nana.CodeGeneration
             Func<StringBuilder> Nl = b.AppendLine;
             Tr(".field static ");
             Tr(IMRs.IMRGenerator.TypeLongForm(v.Typ));
-            Tr(" "); Tr(Qk(v.Name)); Nl();
+            Tr(" "); Tr(v.Name); Nl();
             return b.ToString();
         }
 
@@ -162,7 +149,7 @@ namespace Nana.CodeGeneration
                 .Append(" { }")
                 .AppendLine()
                 .Append(".module ")
-                .Append(Qk(name))
+                .Append(name)
                 .AppendLine();
             //return ".assembly " + Path.GetFileNameWithoutExtension(d.Name) + " { }" + Environment.NewLine
             //    + ".module " + d.Name + Environment.NewLine;
@@ -191,7 +178,7 @@ namespace Nana.CodeGeneration
             b.Append(GetCurrentIndent());
             b.Append(".class");
             b.Append(" ").Append(accessibility);
-            b.Append(" ").Append(Qk(d.Name));
+            b.Append(" ").Append(d.Name);
 
             Typ bty;
             if ((bty = d.BaseTyp) != null && bty.RefType != typeof(object))
@@ -235,7 +222,7 @@ namespace Nana.CodeGeneration
             b.Append(".method ");
             b.Append(FromMethodAttributes(f.MthdAttrs).ToLower());
             b.Append(" ").Append(Nana.IMRs.IMRGenerator.TypeFullName(returnType));
-            b.Append(" ").Append(Qk(f.Family.Name));
+            b.Append(" ").Append(f.Family.Name);
             b.Append("(");
 
             b.Append(
@@ -243,7 +230,7 @@ namespace Nana.CodeGeneration
                 , f.FindAllTypeIs<Variable>()
                 .FindAll(delegate(Variable v) { return v.VarKind == Variable.VariableKind.Param; })
                 .ConvertAll<string>(delegate(Variable v)
-                { return Nana.IMRs.IMRGenerator.TypeFullName(v.Typ) + " " + Qk(v.Name); })
+                { return Nana.IMRs.IMRGenerator.TypeFullName(v.Typ) + " " + v.Name; })
                 .ToArray()
                 )
                 );
@@ -260,11 +247,11 @@ namespace Nana.CodeGeneration
                 Variable v;
                 Func<Typ, string> lf = Nana.IMRs.IMRGenerator.TypeLongForm;
                 v = locals[0];
-                b.Append(ind2).Append(lf(v.Typ)).Append(" ").Append(Qk(v.Name)).AppendLine();
+                b.Append(ind2).Append(lf(v.Typ)).Append(" ").Append(v.Name).AppendLine();
                 for (int i = 1; i < locals.Count; ++i)
                 {
                     v = locals[i];
-                    b.Append(ind2).Append(", ").Append(lf(v.Typ)).Append(" ").Append(Qk(v.Name)).AppendLine();
+                    b.Append(ind2).Append(", ").Append(lf(v.Typ)).Append(" ").Append(v.Name).AppendLine();
                 }
                 b.Append(ind1).Append(")").AppendLine();
             }
@@ -291,9 +278,9 @@ namespace Nana.CodeGeneration
             Variable.VariableKind k = v.VarKind;
             switch (k)
             {
-                case Variable.VariableKind.Param: return delegate() { return S(OpCodes.Ldarg, Qk(v.Name)); };
+                case Variable.VariableKind.Param: return delegate() { return S(OpCodes.Ldarg, v.Name); };
                 case Variable.VariableKind.This: return delegate() { return OpCodes.Ldarg_0.ToString(); };
-                case Variable.VariableKind.Local: return delegate() { return S(OpCodes.Ldloc, Qk(v.Name)); };
+                case Variable.VariableKind.Local: return delegate() { return S(OpCodes.Ldloc, v.Name); };
                 //case Variable2.VariableKind.StaticField: return delegate() { return S(OpCodes.Ldsfld, TypeLongForm(v.Typ) + " " + v.Name); };
                 //case Variable2.VariableKind.Vector: return delegate() { return S(OpCodes.Ldelem, TypeLongForm(v.Typ)); };
             }
