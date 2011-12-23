@@ -62,21 +62,23 @@ namespace Nana.CodeGeneration
         public string CallMiddle(IInstructionsHolder h)
         {
             StringBuilder b = new StringBuilder();
-            h.Instructions.ForEach(delegate(object obj)
+            h.Instructions.ForEach(delegate(IMR imr)
+            //h.Instructions.ForEach(delegate(object obj)
             {
-                string s = "";
-                if (obj is Func<string>)
-                {
-                    s = (obj as Func<string>)();
-                }
-                else if (obj is IMR)
-                {
-                    s = FromIMR(obj as IMR);
-                }
-                else
-                {
-                    throw new NotSupportedException();
-                }
+                string s = FromIMR(imr);
+                //string s = "";
+                //if (obj is Func<string>)
+                //{
+                //    s = (obj as Func<string>)();
+                //}
+                //else if (obj is IMR)
+                //{
+                //    s = FromIMR(obj as IMR);
+                //}
+                //else
+                //{
+                //    throw new NotSupportedException();
+                //}
                 string ind = s.EndsWith(":") ? "" : GetCurrentIndent();
                 b.Append(ind)
                     .Append(s)

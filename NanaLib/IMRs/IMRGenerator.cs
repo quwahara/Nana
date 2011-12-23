@@ -73,7 +73,7 @@ namespace Nana.IMRs
         public IValuable ValuableV;
     }
 
-    public class IMRGenerator : List<object>
+    public class IMRGenerator : List<IMR>
     {
         static public readonly string InstCons = ".ctor";
         static public readonly string StatCons = ".cctor";

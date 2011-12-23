@@ -469,8 +469,7 @@ namespace Nana.Semantics
 
     public interface IInstructionsHolder
     {
-        List<object> Instructions { get; }
-        //List<Func<string>> Instructions { get; }
+        List<IMR> Instructions { get; }
     }
 
     public class Actn : Nsp, IInstructionsHolder
@@ -540,12 +539,19 @@ namespace Nana.Semantics
         //    set { _Intermediates = value; ; }
         //}
 
-        public List<object> _Intermediates = new List<object>();
-        public List<object> Instructions
+        public List<IMR> _Intermediates = new List<IMR>();
+        public List<IMR> Instructions
         {
             get { return _Intermediates; }
             set { _Intermediates = value; ; }
         }
+
+        //public List<object> _Intermediates = new List<object>();
+        //public List<object> Instructions
+        //{
+        //    get { return _Intermediates; }
+        //    set { _Intermediates = value; ; }
+        //}
 
         public Actn(Token seed, Nsp family, List<Variable> params_)
             : base(seed, family)
@@ -1542,7 +1548,6 @@ namespace Nana.Semantics
         public TmpVarGenerator TmpVarGen;
         // prepare for over twice referenced instatication
         public IMR PlaceHolder;
-        //public Func<string> PlaceHolder;
         public Variable TmpVar;
         public Typ Typu;
         public Typ Typ { [DebuggerNonUserCode]get { return Typu; } }
@@ -1610,7 +1615,7 @@ namespace Nana.Semantics
             return v;
         }
 
-        public Variable Insert(Typ typu, IMRGenerator gen, object PlaceHolder)
+        public Variable Insert(Typ typu, IMRGenerator gen, IMR PlaceHolder)
         {
             Debug.Assert(PlaceHolder != null);
             Debug.Assert(GetTempName != null);
