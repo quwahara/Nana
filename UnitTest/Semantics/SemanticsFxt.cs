@@ -2727,6 +2727,42 @@ namespace UnitTest.Semantics.Tutorial
 ";
             Test();
         }
+
+        [Test]
+        public void T_String_operation()
+        {
+            Inp = @"
+""abcde"".Substring(1,3) -> sub
+`p(sub)                      // sub is ""bcd""
+
+""abcde"".Length -> len
+`p(len)                      // len is 5
+";
+            Epc +=
+@".field static string 'sub'
+.field static int32 len
+.method static public void .cctor() {
+    ldstr ""abcde""
+    ldc.i4 1
+    ldc.i4 3
+    callvirt instance string string::Substring(int32, int32)
+    stsfld string 'sub'
+    ldsfld string 'sub'
+    call void [mscorlib]System.Console::WriteLine(string)
+    ldstr ""abcde""
+    callvirt instance int32 string::get_Length()
+    stsfld int32 len
+    ldsfld int32 len
+    call void [mscorlib]System.Console::WriteLine(int32)
+    ret
+}
+.method static public void '0'() {
+    .entrypoint
+    ret
+}
+";
+            Test();
+        }
     }
 }
 

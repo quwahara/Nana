@@ -116,7 +116,7 @@ namespace Nana.CodeGeneration
             StringBuilder b = new StringBuilder();
             
             b.Append("[").Append(t.AssemblyName).Append("]");
-            b.Append(t._FullName);
+            b.Append(Qk(t._FullName));
             if (t.IsGeneric)
             {
                 b.Append("<");
@@ -269,7 +269,7 @@ namespace Nana.CodeGeneration
 
             StringBuilder b = new StringBuilder();
             b.Append(".assembly ")
-                .Append(Path.GetFileNameWithoutExtension(name))
+                .Append(Qk(Path.GetFileNameWithoutExtension(name)))
                 .Append(" { }")
                 .AppendLine()
                 .Append(".module ")
@@ -290,7 +290,7 @@ namespace Nana.CodeGeneration
             Func<StringBuilder> Nl = b.AppendLine;
             Tr(".field static ");
             Tr(TypeNameInSig(v.Typ));
-            Tr(" "); Tr(v.Name); Nl();
+            Tr(" "); Tr(Qk(v.Name)); Nl();
             return b.ToString();
         }
 
@@ -306,7 +306,7 @@ namespace Nana.CodeGeneration
             b.Append(GetCurrentIndent());
             b.Append(".class");
             b.Append(" ").Append(accessibility);
-            b.Append(" ").Append(d.Name);
+            b.Append(" ").Append(Qk(d.Name));
 
             Typ bty;
             if ((bty = d.BaseTyp) != null && bty.RefType != typeof(object))
@@ -350,7 +350,7 @@ namespace Nana.CodeGeneration
             b.Append(".method ");
             b.Append(FromMethodAttributes(f.MthdAttrs).ToLower());
             b.Append(" ").Append(TypeFullName(returnType));
-            b.Append(" ").Append(f.Family.Name);
+            b.Append(" ").Append(Qk(f.Family.Name));
             b.Append("(");
 
             b.Append(
@@ -358,7 +358,7 @@ namespace Nana.CodeGeneration
                 , f.FindAllTypeIs<Variable>()
                 .FindAll(delegate(Variable v) { return v.VarKind == Variable.VariableKind.Param; })
                 .ConvertAll<string>(delegate(Variable v)
-                { return TypeFullName(v.Typ) + " " + v.Name; })
+                { return TypeFullName(v.Typ) + " " + Qk(v.Name); })
                 .ToArray()
                 )
                 );
@@ -443,9 +443,9 @@ namespace Nana.CodeGeneration
             switch (k)
             {
                 case Variable.VariableKind.This: return OpCodes.Ldarg_0.ToString();
-                case Variable.VariableKind.Param: return S(OpCodes.Ldarg, v.Name);
-                case Variable.VariableKind.Local: return S(OpCodes.Ldloc, v.Name);
-                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsfld, TypeNameInSig(v.Typ) + " " + v.Name);
+                case Variable.VariableKind.Param: return S(OpCodes.Ldarg, Qk(v.Name));
+                case Variable.VariableKind.Local: return S(OpCodes.Ldloc, Qk(v.Name));
+                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsfld, TypeNameInSig(v.Typ) + " " + Qk(v.Name));
                 case Variable.VariableKind.Vector: return S(OpCodes.Ldelem, TypeNameInSig(v.Typ));
             }
             throw new NotSupportedException();
@@ -481,9 +481,9 @@ namespace Nana.CodeGeneration
                     {
                         throw new NotImplementedException("cannot load callee site instance pointer");
                     }
-                    return S(OpCodes.Ldarga, v.Name);
-                case Variable.VariableKind.Local: return S(OpCodes.Ldloca, v.Name);
-                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsflda, TypeNameInSig(v.Typ) + " " + v.Name);
+                    return S(OpCodes.Ldarga, Qk(v.Name));
+                case Variable.VariableKind.Local: return S(OpCodes.Ldloca, Qk(v.Name));
+                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsflda, TypeNameInSig(v.Typ) + " " + Qk(v.Name));
             }
             throw new NotSupportedException();
         }
@@ -493,9 +493,9 @@ namespace Nana.CodeGeneration
             Nana.Semantics.Variable.VariableKind k = v.VarKind;
             switch (k)
             {
-                case Nana.Semantics.Variable.VariableKind.Param: return S(OpCodes.Starg, v.Name);
-                case Nana.Semantics.Variable.VariableKind.Local: return S(OpCodes.Stloc, v.Name);
-                case Nana.Semantics.Variable.VariableKind.StaticField: return S(OpCodes.Stsfld, TypeNameInSig(v.Typ) + " " + v.Name);
+                case Nana.Semantics.Variable.VariableKind.Param: return S(OpCodes.Starg, Qk(v.Name));
+                case Nana.Semantics.Variable.VariableKind.Local: return S(OpCodes.Stloc, Qk(v.Name));
+                case Nana.Semantics.Variable.VariableKind.StaticField: return S(OpCodes.Stsfld, TypeNameInSig(v.Typ) + " " + Qk(v.Name));
             }
             throw new NotSupportedException();
         }
@@ -587,14 +587,16 @@ namespace Nana.CodeGeneration
                 b.Append(" ");
             }
 
+            string nm;
             if (MethodAttributes.SpecialName != (fi.MthdAttrs & MethodAttributes.SpecialName))
             {
-                b.Append(fi.Family.Name);
+                nm = fi.Family.Name;
             }
             else
             {
-                b.Append(fi.SpecialName);
+                nm = fi.SpecialName;
             }
+            b.Append(Qk(nm));
 
             b.Append("(");
             Variable v;
