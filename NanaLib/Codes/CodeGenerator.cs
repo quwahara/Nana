@@ -8,6 +8,7 @@ using System.IO;
 using Nana.Delegates;
 using Nana.Semantics;
 using Nana.IMRs;
+using System.Text.RegularExpressions;
 
 namespace Nana.CodeGeneration
 {
@@ -18,21 +19,24 @@ namespace Nana.CodeGeneration
         public string Indent { get { return "".PadRight(IndentLength, IndentChar); } }
         public int IndentDepth;
 
-        //public static List<string> ILASMKeywords = new List<FieldInfo>(typeof(OpCodes).GetFields())
-        //        .ConvertAll<string>(delegate(FieldInfo f) { return f.Name.ToLower(); })
-        //        .FindAll(delegate(string n) { return n.Contains("_") == false; })
-        //        ;
+        public static List<string> ILASMKeywords = new List<FieldInfo>(typeof(OpCodes).GetFields())
+                .ConvertAll<string>(delegate(FieldInfo f) { return f.Name.ToLower(); })
+                .FindAll(delegate(string n) { return n.Contains("_") == false; })
+                ;
 
-        ///// <summary>
-        ///// Quote ILASM keyword
-        ///// </summary>
-        ///// <param name="n"></param>
-        ///// <returns></returns>
-        //public static string Qk(string n)
-        //{
-        //    return ILASMKeywords.Contains(n)
-        //        ? "'" + n + "'" : n;
-        //}
+        /// <summary>
+        /// Quote ILASM keyword
+        /// </summary>
+        /// <param name="n"></param>
+        /// <returns></returns>
+        public static string Qk(string n)
+        {
+            return ILASMKeywords.Exists(delegate(string s)
+            {
+                return Regex.IsMatch(n, @"(^|\.)" + s + @"($|\.)");
+            })
+                ? "'" + n + "'" : n;
+        }
 
         public string GetCurrentIndent(int more)
         {
@@ -65,12 +69,27 @@ namespace Nana.CodeGeneration
             return string.Join(" ", ls.ToArray());
         }
 
-        static public bool IsSupportedType(Typ t)
+        static public string TypeNameInSig(Typ t)
         {
-            return string.IsNullOrEmpty(SupportedTypeName(t)) == false;
+            return TypeNameILSupported(t)
+                ?? TypeCharacter(t) + TypeNameGeneral(t)
+                ;
         }
 
-        static public string SupportedTypeName(Typ t)
+        static public string TypeCharacter(Typ t)
+        {
+            if (t.IsValueType) { return "valuetype "; }
+            return "class ";
+        }
+
+        static public string TypeFullName(Typ t)
+        {
+            return TypeNameILSupported(t)
+                ?? TypeNameGeneral(t)
+                ;
+        }
+
+        static public string TypeNameILSupported(Typ t)
         {
             if (t == null) { return "void"; }
 
@@ -81,42 +100,21 @@ namespace Nana.CodeGeneration
                 t = t.ArrayType;
             }
 
-            string nm = null;
-
             if (t.IsReferencing == false) { return null; }
 
-            if (t.RefType == typeof(void)) nm = "void";
-            if (t.RefType == typeof(bool)) nm = "bool";
-            if (t.RefType == typeof(int)) nm = "int32";
-            if (t.RefType == typeof(object)) nm = "object";
-            if (t.RefType == typeof(string)) nm = "string";
+            if (t.RefType == typeof(void)) { return "void" + brk; }
+            if (t.RefType == typeof(bool)) { return "bool" + brk; }
+            if (t.RefType == typeof(int)) { return "int32" + brk; }
+            if (t.RefType == typeof(object)) { return "object" + brk; }
+            if (t.RefType == typeof(string)) { return "string" + brk; }
 
-            return nm + brk;
+            return null;
         }
 
-        static public string TypeLongForm(Typ t)
+        static public string TypeNameGeneral(Typ t)
         {
-            if (IsSupportedType(t)) return SupportedTypeName(t);
-            return TypeCharacter(t) + " " + TypeFullName(t);
-        }
-
-        static public string TypeCharacter(Typ t)
-        {
-            if (IsSupportedType(t)) return "";
-            return "class";
-            //if (t.IsValueType()) return "valuetype";
-            //else if (t.IsClass()) return "class";
-            //else
-            //{
-            //    throw new InternalError("Can not specify the tyep character: " + t._Name);
-            //}
-        }
-
-        static public string TypeFullName(Typ t)
-        {
-            if (IsSupportedType(t)) return SupportedTypeName(t);
-
             StringBuilder b = new StringBuilder();
+            
             b.Append("[").Append(t.AssemblyName).Append("]");
             b.Append(t._FullName);
             if (t.IsGeneric)
@@ -132,7 +130,7 @@ namespace Nana.CodeGeneration
 
             return b.ToString();
         }
-        
+
         public string GenerateCode(Nsp d)
         {
             StringBuilder b = new StringBuilder();
@@ -291,7 +289,7 @@ namespace Nana.CodeGeneration
             Func<string, StringBuilder> Tr = b.Append;
             Func<StringBuilder> Nl = b.AppendLine;
             Tr(".field static ");
-            Tr(TypeLongForm(v.Typ));
+            Tr(TypeNameInSig(v.Typ));
             Tr(" "); Tr(v.Name); Nl();
             return b.ToString();
         }
@@ -375,7 +373,7 @@ namespace Nana.CodeGeneration
             {
                 b.Append(ind1).Append(".locals (").AppendLine();
                 Variable v;
-                Func<Typ, string> lf = TypeLongForm;
+                Func<Typ, string> lf = TypeNameInSig;
                 v = locals[0];
                 b.Append(ind2).Append(lf(v.Typ)).Append(" ").Append(v.Name).AppendLine();
                 for (int i = 1; i < locals.Count; ++i)
@@ -447,8 +445,8 @@ namespace Nana.CodeGeneration
                 case Variable.VariableKind.This: return OpCodes.Ldarg_0.ToString();
                 case Variable.VariableKind.Param: return S(OpCodes.Ldarg, v.Name);
                 case Variable.VariableKind.Local: return S(OpCodes.Ldloc, v.Name);
-                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsfld, TypeLongForm(v.Typ) + " " + v.Name);
-                case Variable.VariableKind.Vector: return S(OpCodes.Ldelem, TypeLongForm(v.Typ));
+                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsfld, TypeNameInSig(v.Typ) + " " + v.Name);
+                case Variable.VariableKind.Vector: return S(OpCodes.Ldelem, TypeNameInSig(v.Typ));
             }
             throw new NotSupportedException();
         }
@@ -485,7 +483,7 @@ namespace Nana.CodeGeneration
                     }
                     return S(OpCodes.Ldarga, v.Name);
                 case Variable.VariableKind.Local: return S(OpCodes.Ldloca, v.Name);
-                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsflda, TypeLongForm(v.Typ) + " " + v.Name);
+                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsflda, TypeNameInSig(v.Typ) + " " + v.Name);
             }
             throw new NotSupportedException();
         }
@@ -497,7 +495,7 @@ namespace Nana.CodeGeneration
             {
                 case Nana.Semantics.Variable.VariableKind.Param: return S(OpCodes.Starg, v.Name);
                 case Nana.Semantics.Variable.VariableKind.Local: return S(OpCodes.Stloc, v.Name);
-                case Nana.Semantics.Variable.VariableKind.StaticField: return S(OpCodes.Stsfld, TypeLongForm(v.Typ) + " " + v.Name);
+                case Nana.Semantics.Variable.VariableKind.StaticField: return S(OpCodes.Stsfld, TypeNameInSig(v.Typ) + " " + v.Name);
             }
             throw new NotSupportedException();
         }
@@ -508,7 +506,7 @@ namespace Nana.CodeGeneration
 
             if (tp.IsVector)
             {
-                return S(OpCodes.Ldelem) + " " + TypeLongForm(tp.ArrayType);
+                return S(OpCodes.Ldelem) + " " + TypeNameInSig(tp.ArrayType);
             }
             else if (tp.IsArray)
             {
@@ -534,7 +532,7 @@ namespace Nana.CodeGeneration
         {
             if (imr.TypV.IsVector)
             {
-                return S(OpCodes.Stelem) + " " + TypeLongForm(imr.TypV2);
+                return S(OpCodes.Stelem) + " " + TypeNameInSig(imr.TypV2);
             }
             else if (imr.TypV.IsArray)
             {
@@ -611,14 +609,14 @@ namespace Nana.CodeGeneration
             {
                 v = Params[0];
                 s = v.VarKind == Variable.VariableKind.ParamGeneric
-                    ? "!" + v.GenericIndex : TypeLongForm(v.Typ);
+                    ? "!" + v.GenericIndex : TypeNameInSig(v.Typ);
                 b.Append(s);
                 for (int i = 1; i < Params.Count; i++)
                 {
                     b.Append(", ");
                     v = Params[i];
                     s = v.VarKind == Variable.VariableKind.ParamGeneric
-                        ? "!" + v.GenericIndex : TypeLongForm(v.Typ);
+                        ? "!" + v.GenericIndex : TypeNameInSig(v.Typ);
                     //s = TypeLongForm(v.Typ);
                     b.Append(s);
                 }
