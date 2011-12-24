@@ -286,11 +286,11 @@ namespace Nana.CodeGeneration
         public string DeclareField(Variable v)
         {
             StringBuilder b = new StringBuilder();
-            Func<string, StringBuilder> Tr = b.Append;
-            Func<StringBuilder> Nl = b.AppendLine;
-            Tr(".field static ");
-            Tr(TypeNameInSig(v.Typ));
-            Tr(" "); Tr(Qk(v.Name)); Nl();
+            b.Append(".field static ")
+                .Append(TypeNameInSig(v.Typ))
+                .Append(" ")
+                .Append(Qk(v.Name))
+                .AppendLine();
             return b.ToString();
         }
 
