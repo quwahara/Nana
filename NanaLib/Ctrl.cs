@@ -30,6 +30,9 @@ namespace Nana
 {
     public class Ctrl
     {
+        public Action<string> StdOut = Console.Write;
+        public Action<string> StdErr = Console.Error.Write;
+
         public static Token CreateRootTemplate()
         {
             return new Token("", "Root")
@@ -126,7 +129,7 @@ namespace Nana
             code.Value = codegen.GenerateCode(env);
         }
 
-        public static void StartCompile(string[] args)
+        public void StartCompile(string[] args)
         {
             UTF8Encoding utf8 = new UTF8Encoding(false /* no byte order mark */);
             string ilpath;
@@ -144,13 +147,13 @@ namespace Nana
                 {
                     foreach (Token t in root.Find("@Root/@Syntax/0Source"))
                     {
-                        Console.Write(TokenEx.ToTree(t));
+                        StdOut(TokenEx.ToTree(t));
                     }
                 }
 
                 if (root.Contains("@Root/@CompileOptions/@xxxil"))
                 {
-                    Console.Write(root.Find("@Root/@Code")[0].Value);
+                    StdOut(root.Find("@Root/@Code")[0].Value);
                 }
 
                 ilpath = root.Find("@Root/@CompileOptions/@out")[0].Value;
@@ -164,9 +167,9 @@ namespace Nana
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine(e.Message);
+                StdErr(e.Message);
                 if (null != root && root.Contains("@Root/@CompileOptions/@xxxtrace"))
-                { Console.Error.Write(e.StackTrace); }
+                { StdErr(e.StackTrace); }
             }
         }
         

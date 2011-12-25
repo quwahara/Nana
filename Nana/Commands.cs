@@ -230,13 +230,18 @@ namespace Nana
 
         static public string Compile(LineEditMode lem)
         {
-
-            Ctrl.StartCompile(new string[] { lem.DefaultSrcPath
-                ,"/xxxil"
-                ,"/xxxtrace"
+            Ctrl c = new Ctrl();
+            StringBuilder b = new StringBuilder();
+            Action<string> trace = delegate(string s) { b.Append(s); };
+            c.StdOut = trace;
+            c.StdErr = trace;
+            
+            c.StartCompile(new string[] { lem.DefaultSrcPath
+                , "/xxxil"
+                , "/xxxtrace"
             });
 
-            return "";
+            return b.ToString();
         }
 
         [CommandName("go", "")]

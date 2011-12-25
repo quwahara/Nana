@@ -18,7 +18,7 @@ namespace Nana
             }
             else
             {
-                Ctrl.StartCompile(args);
+                (new Ctrl()).StartCompile(args);
             }
         }
 
