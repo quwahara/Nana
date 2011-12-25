@@ -38,16 +38,13 @@ namespace Nana.CodeGeneration
                 ? "'" + n + "'" : n;
         }
 
+        public string GetCurrentIndent() { return GetCurrentIndent(0); }
+
         public string GetCurrentIndent(int more)
         {
             StringBuilder b = new StringBuilder();
             for (int i = 0; i < (IndentDepth + more); i++) b.Append(Indent);
             return b.ToString();
-        }
-
-        public string GetCurrentIndent()
-        {
-            return GetCurrentIndent(0);
         }
 
         static public string FromMethodAttributes(MethodAttributes atrs)

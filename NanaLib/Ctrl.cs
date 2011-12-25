@@ -11,6 +11,7 @@ using Nana.Tokens;
 using Nana.IMRs;
 using Nana.Semantics;
 using Nana.Syntaxes;
+using Nana.ILASM;
 
 
 
@@ -125,61 +126,50 @@ namespace Nana
             code.Value = codegen.GenerateCode(env);
         }
 
-        public void Compile(Token args, Action<string> outWriteAct)
+        public static void StartCompile(string[] args)
         {
-            Token opt;
-            opt = args.Follows[0];
-
-            string src;
-            string outfn = "";
-            Token t;
-            List<Token> srcs = new List<Token>();
-
-            foreach (Token sf in args.Follows[1].Follows)
+            UTF8Encoding utf8 = new UTF8Encoding(false /* no byte order mark */);
+            string ilpath;
+            string code;
+            Token root = null;
+            try
             {
-                switch (sf.Group)
-                {
-                    case "SourcePath":
-                        src = File.ReadAllText(sf.Value, Encoding.UTF8);
-                        if (outfn == "") { outfn = Path.ChangeExtension(sf.Value, ".exe"); }
-                        break;
-                    case "SourceText":
-                        src = sf.Value; break;
+                root = CmdLnArgs.GetCmdLnArgs(args);
+                root.Group = "Root";
+                Ctrl.Check(root);
+                Ctrl c = new Ctrl();
+                c.Compile(root);
 
-                    default:
-                        {
-                            throw new InternalError("It is not a source text: " + sf.Value);
-                        }
+                if (root.Contains("@Root/@CompileOptions/@xxxsyntax"))
+                {
+                    foreach (Token t in root.Find("@Root/@Syntax/0Source"))
+                    {
+                        Console.Write(TokenEx.ToTree(t));
+                    }
                 }
 
-                t = AnalyzeSyntax(src);
+                if (root.Contains("@Root/@CompileOptions/@xxxil"))
+                {
+                    Console.Write(root.Find("@Root/@Code")[0].Value);
+                }
 
-                srcs.Add(t);
+                ilpath = root.Find("@Root/@CompileOptions/@out")[0].Value;
+                ilpath = Path.ChangeExtension(ilpath, ".il");
+                code = root.Find("@Root/@Code")[0].Value;
+                File.WriteAllText(ilpath, code, utf8);
+
+                ILASMRunner r = new ILASMRunner();
+                r.DetectILASM();
+                r.Run(ilpath);
             }
-
-            foreach (Token co in args.Follows[0].Follows)
+            catch (Exception e)
             {
-                if (co.Value == "out") { outfn = co.First.Value; }
+                Console.Error.WriteLine(e.Message);
+                if (null != root && root.Contains("@Root/@CompileOptions/@xxxtrace"))
+                { Console.Error.Write(e.StackTrace); }
             }
-
-            string name = Path.GetFileNameWithoutExtension(outfn);
-
-            Token srcstkn;
-            srcstkn = new Token(outfn, "Sources");
-            srcstkn.Follows = srcs.ToArray();
-
-            Token roottk = new Token(name, "SemanticRoot");
-            roottk.FlwsAdd(srcstkn);
-
-            Env env = AnalyzeSemantic(roottk);
-            
-            IMRGenerator imrgen = new IMRGenerator();
-            imrgen.GenerateIMR(env.FindInTypeOf<App>());
-
-            CodeGenerator codegen = new CodeGenerator();
-            outWriteAct(codegen.GenerateCode(env));
         }
-
+        
         public Token AnalyzeSyntax(string src)
         {
             SyntaxAnalyzer p = new SyntaxAnalyzer();

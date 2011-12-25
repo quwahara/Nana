@@ -230,64 +230,13 @@ namespace Nana
 
         static public string Compile(LineEditMode lem)
         {
-            StringBuilder output = new StringBuilder();
-            output.AppendLine("--- generate il ---");
 
-            lem.SaveDefaultSrc();
-            Token ctrlargs;
-            Action<string> writeAct;
-            StringBuilder il = new StringBuilder();
+            Ctrl.StartCompile(new string[] { lem.DefaultSrcPath
+                ,"/xxxil"
+                ,"/xxxtrace"
+            });
 
-            ctrlargs = CmdLnArgs.GetCmdLnArgs(new string[] { lem.DefaultSrcPath });
-
-            writeAct = delegate(string s)
-            {
-                il.Append(s);
-            };
-
-            //Ctrl ctrl = genCtrl();
-            //ctrl.Compile(ctrlargs, writeAct);
-            Ctrl ctrl2 = new Ctrl();
-            ctrl2.Compile(ctrlargs, writeAct);
-            System.IO.File.WriteAllText(@"lem_default.il", il.ToString());
-
-            output.Append(il.ToString());
-
-            output.AppendLine("--- assemble il ---");
-
-            Process p;
-            string stdoutput;
-
-            string batscript = @"
-@Set Path=C:\Program Files\Microsoft Visual Studio 8\SDK\v2.0\Bin;C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727;C:\Program Files\Microsoft Visual Studio 8\VC\bin;C:\Program Files\Microsoft Visual Studio 8\Common7\IDE;C:\Program Files\Microsoft Visual Studio 8\VC\vcpackages;%PATH%
-@Set LIB=C:\Program Files\Microsoft Visual Studio 8\VC\lib;C:\Program Files\Microsoft Visual Studio 8\SDK\v2.0\Lib;%LIB%
-@Set INCLUDE=C:\Program Files\Microsoft Visual Studio 8\VC\include;C:\Program Files\Microsoft Visual Studio 8\SDK\v2.0\include;%INCLUDE%
-@Set NetSamplePath=C:\Program Files\Microsoft Visual Studio 8\SDK\v2.0
-@Set VCBUILD_DEFAULT_CFG=Debug^|Win32
-@Set VCBUILD_DEFAULT_OPTIONS=/useenv
-@echo Setting environment to use Microsoft .NET Framework v2.0 SDK tools.
-@echo For a list of SDK tools, see the 'StartTools.htm' file in the bin folder.
-ilasm lem_default.il
-";
-            File.WriteAllText("goilasm.bat", batscript);
-
-            // assemble
-            p = new Process();
-            p.StartInfo.FileName = @"goilasm.bat";
-            p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardOutput = true; // 標準出力をリダイレクト
-            p.StartInfo.RedirectStandardError = true; // 標準エラーをリダイレクト
-
-            p.Start(); // アプリの実行開始
-
-            stdoutput = p.StandardOutput.ReadToEnd(); // 標準出力の読み取り
-            stdoutput += p.StandardError.ReadToEnd(); // 標準エラーの読み取り
-            stdoutput = stdoutput.Replace("\r\r\n", "\n"); // 改行コードの修正
-
-            output.Append(stdoutput);
-
-            return output.ToString();
+            return "";
         }
 
         [CommandName("go", "")]

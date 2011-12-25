@@ -901,7 +901,7 @@ namespace Nana.Semantics
         public TR Require<TR>(Token t)
         {
             object s; if ((s = Gate(t)) is TR) { return (TR)s; }
-            throw new SyntaxError("Require :" + typeof(TR).Name, t);
+            throw new SyntaxError("Require :" + typeof(TR).Name + ", Token:" + t.ToString(), t);
         }
 
         public object Gate(Token t)
