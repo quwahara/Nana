@@ -33,6 +33,8 @@ namespace Nana
         public Action<string> StdOut = Console.Write;
         public Action<string> StdErr = Console.Error.Write;
 
+        SyntaxAnalyzer SyntaxAzr = new SyntaxAnalyzer();
+
         public static Token CreateRootTemplate()
         {
             return new Token("", "Root")
@@ -107,7 +109,7 @@ namespace Nana
                 foreach (Token f in srcs.Follows)
                 {
                     if (f.Group == "SourcePath") { continue; }
-                    if (f.Group == "SourceText") { synflw.Add(AnalyzeSyntax(f.Value)); }
+                    if (f.Group == "SourceText") { synflw.Add(SyntaxAzr.Run(f.Value)); }
                 }
                 syntax.Follows = synflw.ToArray();
             }
@@ -171,13 +173,6 @@ namespace Nana
                 if (null != root && root.Contains("@Root/@CompileOptions/@xxxtrace"))
                 { StdErr(e.StackTrace); }
             }
-        }
-        
-        public Token AnalyzeSyntax(string src)
-        {
-            SyntaxAnalyzer p = new SyntaxAnalyzer();
-            p.Init(src);
-            return p.Analyze();
         }
 
         public static Env AnalyzeSemantic(Token roottk)

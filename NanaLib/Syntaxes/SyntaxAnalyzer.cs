@@ -51,6 +51,12 @@ namespace Nana.Syntaxes
         {
             return PrefixAzr.Analyze();
         }
+
+        public Token Run(string src)
+        {
+            Init(src);
+            return Analyze();
+        }
     }
 
     public class InfixAnalyzer
