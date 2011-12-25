@@ -33,7 +33,7 @@ namespace Nana
         public Action<string> StdOut = Console.Write;
         public Action<string> StdErr = Console.Error.Write;
 
-        SyntaxAnalyzer SyntaxAzr = new SyntaxAnalyzer();
+        public Action<Token> AfterSyntaxAnalyze = delegate(Token root) { };     //  place holder
 
         public static Token CreateRootTemplate()
         {
@@ -82,53 +82,74 @@ namespace Nana
 
         public void Compile(Token root)
         {
-            //  append SourceText if it's SourcePath
+            Prepare(root);
+
             Token srcs = root.Find("@Root/@Sources")[0];
-            {
-                UTF8Encoding utf8 = new UTF8Encoding(false /* no byte order mark */);
-                List<Token> srcsflw = new List<Token>();
-                foreach (Token f in srcs.Follows)
-                {
-                    srcsflw.Add(f);
-                    if (f.Group == "SourceText") { continue; }
-                    if (f.Group == "SourcePath")
-                    {
-                        string text = File.ReadAllText(f.Value, utf8);
-                        srcsflw.Add(new Token(text, "SourceText"));
-                    }
-                }
-                srcs.Follows = srcsflw.ToArray();
-            }
 
-            {
-                if (false == root.Contains("@Root/@Syntax"))
-                { root.FlwsAdd(new Token("", "Syntax")); }
+            //  append SourceText if it's SourcePath
+            ReadSourceFiles(root);
 
-                Token syntax = root.Find("@Root/@Syntax")[0];
-                List<Token> synflw = new List<Token>();
-                foreach (Token f in srcs.Follows)
-                {
-                    if (f.Group == "SourcePath") { continue; }
-                    if (f.Group == "SourceText") { synflw.Add(SyntaxAzr.Run(f.Value)); }
-                }
-                syntax.Follows = synflw.ToArray();
-            }
+            AnalyzeSource(root);
+
+            AfterSyntaxAnalyze(root);
 
             //TODO
             srcs.Group = "Ignore";
 
-            Env env = AnalyzeSemantic(root);
+            Env env = (new EnvAnalyzer()).Run(root);
+
+            //Env env = AnalyzeSemantic(root);
 
             IMRGenerator imrgen = new IMRGenerator();
             imrgen.GenerateIMR(env.FindInTypeOf<App>());
 
-
-            if (false == root.Contains("@Root/@Code"))
-            { root.FlwsAdd(new Token("", "Code")); }
-
             Token code = root.Find("@Root/@Code")[0];
             CodeGenerator codegen = new CodeGenerator();
             code.Value = codegen.GenerateCode(env);
+        }
+
+        public static void Prepare(Token root)
+        {
+            if (false == root.Contains("@Root/@Syntax"))
+            { root.FlwsAdd(new Token("", "Syntax")); }
+
+            if (false == root.Contains("@Root/@Code"))
+            { root.FlwsAdd(new Token("", "Code")); }
+        }
+
+        public static void ReadSourceFiles(Token root)
+        {
+            Token srcs = root.Find("@Root/@Sources")[0];
+
+            UTF8Encoding utf8 = new UTF8Encoding(false /* no byte order mark */);
+            List<Token> srcsflw = new List<Token>();
+            foreach (Token f in srcs.Follows)
+            {
+                srcsflw.Add(f);
+                if (f.Group == "SourceText") { continue; }
+                if (f.Group == "SourcePath")
+                {
+                    string text = File.ReadAllText(f.Value, utf8);
+                    srcsflw.Add(new Token(text, "SourceText"));
+                }
+            }
+            srcs.Follows = srcsflw.ToArray();
+        }
+
+        public static void AnalyzeSource(Token root)
+        {
+            SyntaxAnalyzer analyzer = new SyntaxAnalyzer();
+
+            Token srcs = root.Find("@Root/@Sources")[0];
+
+            Token syntax = root.Find("@Root/@Syntax")[0];
+            List<Token> synflw = new List<Token>();
+            foreach (Token f in srcs.Follows)
+            {
+                if (f.Group == "SourcePath") { continue; }
+                if (f.Group == "SourceText") { synflw.Add(analyzer.Run(f.Value)); }
+            }
+            syntax.Follows = synflw.ToArray();
         }
 
         public void StartCompile(string[] args)
@@ -143,15 +164,19 @@ namespace Nana
                 root.Group = "Root";
                 Ctrl.Check(root);
                 Ctrl c = new Ctrl();
-                c.Compile(root);
 
                 if (root.Contains("@Root/@CompileOptions/@xxxsyntax"))
                 {
-                    foreach (Token t in root.Find("@Root/@Syntax/0Source"))
+                    c.AfterSyntaxAnalyze = delegate(Token root_)
                     {
-                        StdOut(TokenEx.ToTree(t));
-                    }
+                        foreach (Token t in root_.Find("@Root/@Syntax/0Source"))
+                        {
+                            StdOut(TokenEx.ToTree(t));
+                        }
+                    };
                 }
+
+                c.Compile(root);
 
                 if (root.Contains("@Root/@CompileOptions/@xxxil"))
                 {
@@ -173,13 +198,6 @@ namespace Nana
                 if (null != root && root.Contains("@Root/@CompileOptions/@xxxtrace"))
                 { StdErr(e.StackTrace); }
             }
-        }
-
-        public static Env AnalyzeSemantic(Token roottk)
-        {
-            EnvAnalyzer azr = new EnvAnalyzer(roottk);
-            azr.Analyze();
-            return azr.Env;
         }
 
     }

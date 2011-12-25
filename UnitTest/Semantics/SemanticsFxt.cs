@@ -241,11 +241,7 @@ end
             Action<string> trace = delegate(string s_) { b.Append(s_); };
             try
             {
-                EnvAnalyzer azr = new EnvAnalyzer(roottk);
-                azr.Analyze();
-                IMRGenerator imrgen = new IMRGenerator();
-                Env env = azr.Env;
-                Env = azr.Env;
+                Env = (new EnvAnalyzer()).Run(roottk);
                 App = Env.Find(ModuleFilename) as App;
                 Assert.IsNotNull(App);
             }

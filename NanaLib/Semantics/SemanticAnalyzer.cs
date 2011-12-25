@@ -106,10 +106,16 @@ namespace Nana.Semantics
 
         public Dictionary<Type, List<Action>> Subanalyzes = new Dictionary<Type, List<Action>>();
 
-        public EnvAnalyzer(Token seed)
+        //public EnvAnalyzer(Token seed)
+        //    : base(null)
+        //{
+        //    Seed = seed;
+        //    Order.ForEach(delegate(Type t) { Subanalyzes.Add(t, new List<Action>()); });
+        //}
+
+        public EnvAnalyzer()
             : base(null)
         {
-            Seed = seed;
             Order.ForEach(delegate(Type t) { Subanalyzes.Add(t, new List<Action>()); });
         }
 
@@ -124,6 +130,13 @@ namespace Nana.Semantics
                     Subanalyzes[y].Add(analyzer.Analyze);
                 }
             }
+        }
+
+        public Env Run(Token root)
+        {
+            Seed = root;
+            Analyze();
+            return Env;
         }
 
         public override void Analyze()
