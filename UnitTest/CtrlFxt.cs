@@ -349,14 +349,364 @@ class sub
 ";
 
             EpcSyn = @"0Source
++---[0]class
+    +---[0]sub
+    +---[1]....
+    |   +---[0]sfun
+    |   |   +---[0]Main
+    |   |   +---[1](
+    |   |   +---[2])
+    |   |   +---[3]:
+    |   |   |   +---[0]void
+    |   |   +---[4]..
+    |   |   |   +---[0](
+    |   |   |       +---[F]pop
+    |   |   |       +---[S]
+    |   |   |       +---[T])
+    |   |   +---[5],,
+    |   +---[1]sfun
+    |       +---[0]pop
+    |       +---[1](
+    |       +---[2])
+    |       +---[3]:
+    |       |   +---[0]void
+    |       +---[4]..
+    |       +---[5],,
+    +---[2],,,,
 ";
 
-            EpcIL = @".field static string sss
+            EpcIL = @".class public 'sub' {
+    .method static public void Main() {
+        .entrypoint
+        call void [NanaFxt]'sub'::'pop'()
+        ret
+    }
+    .method static public void 'pop'() {
+        ret
+    }
+    .method public void .ctor() {
+        ldarg.0
+        call instance void object::.ctor()
+        ret
+    }
+}
 ";
 
-            //Test();
+            Test();
         }
 
+        [Test]
+        public void TB1228_Return_Normal_1()
+        {
+            Inp = @"
+class A
+....
+    sfun Main():int
+    ..
+        return  1
+    ,,
+    sfun IfElse():bool
+    ..
+        if true then
+            return  true
+        else
+            return  false
+        end
+    ,,
+    sfun IfElifElse():bool
+    ..
+        if true then
+            return  true
+        elif true then
+            return  true
+        else
+            return  false
+        end
+    ,,
+    sfun IfElifElifElse():bool
+    ..
+        if true then
+            return  true
+        elif true then
+            return  true
+        elif true then
+            return  true
+        else
+            return  false
+        end
+    ,,
+,,,,
+";
+
+            EpcIL = @".class public A {
+    .method static public int32 Main() {
+        .entrypoint
+        ldc.i4 1
+        ret
+    }
+    .method static public bool IfElse() {
+        ldc.i4.1
+        brfalse else$000001
+        ldc.i4.1
+        ret
+        br endif$000001
+else$000001:
+        ldc.i4.0
+        ret
+endif$000001:
+    }
+    .method static public bool IfElifElse() {
+        ldc.i4.1
+        brfalse elif$000002_1
+        ldc.i4.1
+        ret
+        br endif$000002
+elif$000002_1:
+        ldc.i4.1
+        brfalse else$000002
+        ldc.i4.1
+        ret
+        br endif$000002
+else$000002:
+        ldc.i4.0
+        ret
+endif$000002:
+    }
+    .method static public bool IfElifElifElse() {
+        ldc.i4.1
+        brfalse elif$000003_1
+        ldc.i4.1
+        ret
+        br endif$000003
+elif$000003_1:
+        ldc.i4.1
+        brfalse elif$000003_2
+        ldc.i4.1
+        ret
+        br endif$000003
+elif$000003_2:
+        ldc.i4.1
+        brfalse else$000003
+        ldc.i4.1
+        ret
+        br endif$000003
+else$000003:
+        ldc.i4.0
+        ret
+endif$000003:
+    }
+    .method public void .ctor() {
+        ldarg.0
+        call instance void object::.ctor()
+        ret
+    }
+}
+";
+
+            Test();
+        }
+
+        [Test]
+        public void TB1228_Return_Normal_2_IfIf()
+        {
+            Inp = @"
+class A
+....
+    sfun Main():int
+    ..
+        if true then
+            if true then
+                return  21
+            else
+                return  22
+            end
+        else
+            if true then
+                return  31
+            else
+                return  32
+            end
+        end
+    ,,
+,,,,
+";
+
+            EpcIL = @".class public A {
+    .method static public int32 Main() {
+        .entrypoint
+        ldc.i4.1
+        brfalse else$000001
+        ldc.i4.1
+        brfalse else$000002
+        ldc.i4 21
+        ret
+        br endif$000002
+else$000002:
+        ldc.i4 22
+        ret
+endif$000002:
+        br endif$000001
+else$000001:
+        ldc.i4.1
+        brfalse else$000003
+        ldc.i4 31
+        ret
+        br endif$000003
+else$000003:
+        ldc.i4 32
+        ret
+endif$000003:
+endif$000001:
+    }
+    .method public void .ctor() {
+        ldarg.0
+        call instance void object::.ctor()
+        ret
+    }
+}
+";
+
+            Test();
+        }
+
+        [Test]
+        public void TB1228_Return_Error_1_If()
+        {
+            Inp = @"
+class A
+....
+    sfun Main():int
+    ..
+        if true then
+            return  1
+        end
+    ,,
+,,,,
+";
+            EpcIL = @"(ERROR)Function doesn't return value";
+            Test();
+        }
+
+        [Test]
+        public void TB1228_Return_Error_2_IfThenRetElse()
+        {
+            Inp = @"
+class A
+....
+    sfun Main():int
+    ..
+        if true then
+            return  1
+        else
+        end
+    ,,
+,,,,
+";
+            EpcIL = @"(ERROR)Function doesn't return value";
+            Test();
+        }
+
+        [Test]
+        public void TB1228_Return_Error_3_IfThenElseRet()
+        {
+            Inp = @"
+class A
+....
+    sfun Main():int
+    ..
+        if true then
+        else
+            return  1
+        end
+    ,,
+,,,,
+";
+            EpcIL = @"(ERROR)Function doesn't return value";
+            Test();
+        }
+
+        [Test]
+        public void TB1228_Return_Error_4_IfThenRetElifRet()
+        {
+            Inp = @"
+class A
+....
+    sfun Main():int
+    ..
+        if      true    then
+            return  1
+        elif    true    then
+            return  1
+        end
+    ,,
+,,,,
+";
+            EpcIL = @"(ERROR)Function doesn't return value";
+            Test();
+        }
+
+        [Test]
+        public void TB1228_Return_Error_5_IfThenRetElifRetElse()
+        {
+            Inp = @"
+class A
+....
+    sfun Main():int
+    ..
+        if      true    then
+            return  1
+        elif    true    then
+            return  1
+        else
+        end
+    ,,
+,,,,
+";
+            EpcIL = @"(ERROR)Function doesn't return value";
+            Test();
+        }
+
+        [Test]
+        public void TB1228_Return_Error_6_IfThenRetElifElseRet()
+        {
+            Inp = @"
+class A
+....
+    sfun Main():int
+    ..
+        if      true    then
+            return  1
+        elif    true    then
+        else
+            return  1
+        end
+    ,,
+,,,,
+";
+            EpcIL = @"(ERROR)Function doesn't return value";
+            Test();
+        }
+
+        [Test]
+        public void TB1228_Return_Error_7_IfThenElifRetElseRet()
+        {
+            Inp = @"
+class A
+....
+    sfun Main():int
+    ..
+        if      true    then
+        elif    true    then
+            return  1
+        else
+            return  1
+        end
+    ,,
+,,,,
+";
+            EpcIL = @"(ERROR)Function doesn't return value";
+            Test();
+        }
 
         public void Test()
         {
@@ -380,8 +730,14 @@ class sub
                 Action<string> trace = delegate(string s_) { b.Append(s_); };
                 try
                 {
+                    if (false == string.IsNullOrEmpty(EpcSyn))
+                    {
+                        ctrl.AfterSyntaxAnalyze = delegate(Token root_)
+                        {
+                            trace(TokenEx.ToTree(root_.Find("@Root/@Syntax")[0].Follows[0]));
+                        };
+                    }
                     ctrl.Compile(root);
-                    trace(TokenEx.ToTree(root.Find("@Root/@Syntax")[0].Follows[0]));
                     trace(root.Find("@Root/@Code")[0].Value);
                 }
                 catch (Nana.Infr.Error e)
@@ -397,7 +753,18 @@ class sub
                 return b.ToString();
             };
 
-            new TestCase("", Inp, EpcSyn + EpcILHeader + EpcIL, f).Run();
+            string epc;
+            if (false == EpcIL.StartsWith("(ERROR)"))
+            {
+                epc = EpcSyn + EpcILHeader + EpcIL;
+            }
+            else
+            {
+                epc = EpcSyn + EpcIL.Substring("(ERROR)".Length);
+            }
+
+            new TestCase("", Inp, epc, f).Run();
+            //new TestCase("", Inp, EpcSyn + EpcILHeader + EpcIL, f).Run();
             
         }
     }

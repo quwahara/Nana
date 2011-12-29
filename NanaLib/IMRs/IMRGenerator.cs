@@ -82,8 +82,25 @@ namespace Nana.IMRs
 
             foreach (Actn a in app.FindDownAll(pred))
             {
-                a.Exes.ForEach(delegate(IExecutable x) { x.Exec(this); });
-                Ret();
+                bool rds = false;
+                foreach (IExecutable x in a.Exes)
+                {
+                    x.Exec(this);
+                    if (x is IReturnDeterminacyState)
+                    { rds |= (x as IReturnDeterminacyState).RDS; }
+                }
+                if (a.IsConstructor == false && a is Fctn)
+                {
+                    if (false == rds)
+                    { throw new SyntaxError("Function doesn't return value"); }
+                }
+                else
+                {
+                    if (false == rds)
+                    { Ret(); }
+                }
+                //a.Exes.ForEach(delegate(IExecutable x) { x.Exec(this); });
+                //Ret();
                 a.Instructions.AddRange(this);
                 Clear();
             }

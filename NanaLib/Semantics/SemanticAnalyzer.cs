@@ -149,6 +149,7 @@ namespace Nana.Semantics
         static public void AddSystemTyps(Env env)
         {
             Typ y;
+            y = env.NewRefTyp(typeof(void));
             y = env.NewRefTyp(typeof(object));
             y = env.NewRefTyp(typeof(string));
         }
@@ -206,12 +207,12 @@ namespace Nana.Semantics
 
     abstract public class NspAnalyzer : SemanticAnalyzer
     {
-        [DebuggerNonUserCode]
         public NspAnalyzer Above { get { return Above_ as NspAnalyzer; } }
         abstract public Nsp Nsp { get;}
 
         public Token Seed;
 
+        public Stack<ReturnValue> RequiredReturnValue = new Stack<ReturnValue>();
 
         public NspAnalyzer(Token seed, NspAnalyzer above)
             : base(above)
@@ -623,6 +624,7 @@ namespace Nana.Semantics
         [DebuggerNonUserCode]
         override public Nsp Nsp { get { return Actn; } }
         public Token ActnToken = null;
+        public Stack<ReturnValue> RequiredReturnValues = new Stack<ReturnValue>();
 
         public ActnAnalyzer(Token seed, NspAnalyzer above)
             : base(seed, above)
@@ -685,14 +687,23 @@ namespace Nana.Semantics
                 prmls.Add(new Variable(p.Value, null, typ, Variable.VariableKind.Param));
             }
 
-            Typ returnType = null;
+            Typ voidtyp = Env.FindOrNewRefType(typeof(void));
+
+            Typ returnType = voidtyp;
+            //Typ returnType = null;
             if (isCtor)
             {
                 returnType = Above.Nsp is Typ
                     ? Above.Nsp as Typ : Above.Nsp.FindUpTypeIs<Typ>();
             }
+            else if(t.Contains("@Func/@TypeSpec"))
+            {
+                Token rty = t.Find("@Func/@TypeSpec/@TypeSpec2")[0];
+                returnType = Above.RequireTyp(rty);
+            }
 
-            Actn = returnType == null
+            Actn = returnType == voidtyp
+            //Actn = returnType == null
                 ? ovld.NewActn(new Token(nameasm), prmls)
                 : ovld.NewFctn(new Token(nameasm), prmls, returnType);
 
@@ -877,10 +888,14 @@ namespace Nana.Semantics
     {
         public Stack<Literal> Breaks;
         public Stack<Literal> Continues;
+        public Stack<Typ> RequireReturnValues;
         public Env Env;
         public Actn Actn;
+        public Fctn Fctn;
         public Token Seed;
         TmpVarGenerator TmpVarGen;
+
+        public bool IsInFctn;
 
         [DebuggerNonUserCode]
         public NspAnalyzer Above { get { return Above_ as NspAnalyzer; } }
@@ -890,6 +905,7 @@ namespace Nana.Semantics
         {
             Breaks = new Stack<Literal>();
             Continues = new Stack<Literal>();
+            RequireReturnValues = new Stack<Typ>();
             Seed = seed;
         }
 
@@ -899,9 +915,21 @@ namespace Nana.Semantics
             Continues.Clear();
 
             Actn = FindUpTypeIs<ActnAnalyzer>().Actn;
+            IsInFctn = Actn is Fctn;
+            Fctn = IsInFctn ? Actn as Fctn : null;
             Env = Actn.Env;
             TmpVarGen = new TmpVarGenerator(Env.GetTempName, Actn.NewVar);
-            Actn.Exes.Add(Require<IExecutable>(Seed));
+            //Actn.Exes.Add(Require<IExecutable>(Seed));
+            if (Above.RequiredReturnValue.Count == 0)
+            {
+                IExecutable exe = Require<IExecutable>(Seed);
+                Actn.Exes.Add(exe);
+            }
+            else
+            {
+                ReturnValue rv = Above.RequiredReturnValue.Pop();
+                rv.GiveVal = Require<IValuable>(Seed);
+            }
         }
 
         public TR Require<TR>(Token t)
@@ -930,11 +958,26 @@ namespace Nana.Semantics
                 case "While":       /**/ u = While(t); break;
                 case "TypeSpec2":   /**/ u = TypeSpec(t); break;
                 case "Typ":         /**/ u = DefineVariable(t); break;
+                case "Ret":         /**/ u = Ret(t); break;
                 case "Nop":         /**/ u = new DoNothing(); break;
                 default:
                     throw new SyntaxError(@"Could not process the sentence: " + t.Group, t);
             }
             return u;
+        }
+
+        public object Ret(Token t)
+        {
+            if (IsInFctn)
+            {
+                ReturnValue rv = new ReturnValue();
+                Above.RequiredReturnValue.Push(rv);
+                return rv;
+            }
+            else
+            {
+                return new Ret();
+            }
         }
 
         public object Expression(Token t)
@@ -1128,18 +1171,14 @@ namespace Nana.Semantics
             Breaks.Push(endlbl);
             Continues.Push(dolbl);
 
-            IValuable condv = Require<IValuable>(cond);
-            if (false == condv.Typ.IsReferencingOf(typeof(bool)))
-            {
-                throw new TypeError("condition expression was not bool type", cond);
-            }
-            List<IExecutable> lines = new List<IExecutable>();
-            Array.ForEach<Token>(do_.Follows, delegate(Token f_) { lines.Add(Require<IExecutable>(f_)); });
+            IValuable condv = RequireCondition(cond);
+            bool rds;   //  not used
+            IExecutable[] lines = CreateBlock(do_.Follows, out rds);
 
             Continues.Pop();
             Breaks.Pop();
 
-            return new WhileInfo(dolbl, endlbl, condv, lines.ToArray());
+            return new WhileInfo(dolbl, endlbl, condv, lines);
         }
 
         public object If(Token if_)
@@ -1149,6 +1188,7 @@ namespace Nana.Semantics
             IfInfo.Component ifthen;
             List<IfInfo.Component> elifthen = new List<IfInfo.Component>();
             IExecutable[] elsels = null;
+            bool rds = true, rdstmp;
 
             if (if_.Follows.Length < 2)
             {
@@ -1158,13 +1198,11 @@ namespace Nana.Semantics
 
             cond = if_.Follows[0];
             then = if_.Follows[1];
-
-            Token f;
             elifs = new List<Token>();
             else_ = null;
             for (int i = 2; i < (if_.Follows.Length - 1); i++)
             {
-                f = if_.Follows[i];
+                Token f = if_.Follows[i];
                 if (f.Group == "Elif") { elifs.Add(f); continue; }
                 if (f.Group == "Else") { else_ = f; continue; }
             }
@@ -1172,44 +1210,69 @@ namespace Nana.Semantics
             string fix = Env.GetTempName();
             List<IExecutable> lines = new List<IExecutable>();
 
-
-            IValuable v = Require<IValuable>(cond);
-            if (false == v.Typ.IsReferencingOf(typeof(bool)))
-            {
-                throw new TypeError("condition expression was not bool type", cond);
-            }
             ifthen = new IfInfo.Component();
-            ifthen.Condition = v;
-            Array.ForEach<Token>(then.Follows, delegate(Token t_) { lines.Add(Require<IExecutable>(t_)); });
-            ifthen.Lines = lines.ToArray();
+            ifthen.Condition = RequireCondition(cond);
+            ifthen.Lines = CreateBlock(then.Follows, out rdstmp);
+            rds &= rdstmp;
 
-            IValuable velif;
-            IfInfo.Component elifc;
             elifs.ForEach(delegate(Token elif)
             {
-                velif = Require<IValuable>(elif.Follows[0]);
-
-                if (false == v.Typ.IsReferencingOf(typeof(bool)))
-                {
-                    throw new TypeError("condition expression was not bool type", elif);
-                }
-                elifc = new IfInfo.Component();
-                elifc.Condition = velif;
-                lines.Clear();
-                Array.ForEach<Token>(elif.Follows[1].Follows,
-                    delegate(Token l_) { lines.Add(Require<IExecutable>(l_)); });
-                elifc.Lines = lines.ToArray();
+                IfInfo.Component elifc = new IfInfo.Component();
+                elifc.Condition = RequireCondition(elif.Follows[0]);
+                elifc.Lines = CreateBlock(elif.Follows[1].Follows, out rdstmp);
+                rds &= rdstmp;
                 elifthen.Add(elifc);
             });
 
             if (else_ != null)
             {
-                lines.Clear();
-                Array.ForEach<Token>(else_.Follows, delegate(Token l_) { lines.Add(Require<IExecutable>(l_)); });
-                elsels = lines.ToArray();
+                elsels = CreateBlock(else_.Follows, out rdstmp);
+                rds &= rdstmp;
+            }
+            else
+            {
+                rds = false;
             }
 
-            return new IfInfo(fix, ifthen, elifthen.ToArray(), elsels);
+            return new IfInfo(fix, ifthen, elifthen.ToArray(), elsels, rds);
+        }
+
+        public IValuable RequireCondition(Token cond)
+        {
+            IValuable condv = Require<IValuable>(cond);
+            if (false == condv.Typ.IsReferencingOf(typeof(bool)))
+            {
+                throw new TypeError("condition expression was not bool type", cond);
+            }
+            return condv;
+        }
+
+        public IExecutable[] CreateBlock(Token[] block, out bool rds)
+        {
+            List<IExecutable> lines = new List<IExecutable>();
+            rds = false;
+
+            int i = 0;
+            while (i < block.Length)
+            {
+                Token line = block[i];
+                IExecutable exe = Require<IExecutable>(line);
+                lines.Add(exe);
+                if (exe is IReturnDeterminacyState)
+                { rds |= (exe as IReturnDeterminacyState).RDS; }
+                ++i;
+                if (false == (exe is ReturnValue)) { continue; }
+
+                if (i >= block.Length)
+                { throw new SyntaxError("Value is not specified for the return", line); }
+                ReturnValue rv = exe as ReturnValue;
+                line = block[i];
+
+                rv.GiveVal = Require<IValuable>(line);
+                ++i;
+            }
+
+            return lines.ToArray();
         }
 
         public object CallFunc(Token t)

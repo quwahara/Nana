@@ -342,7 +342,7 @@ namespace Nana.CodeGeneration
             string ind1 = GetCurrentIndent(1);
             string ind2 = GetCurrentIndent(2);
 
-            Typ returnType = null;
+            Typ returnType = f.IsConstructor == false && f is Fctn ? (f as Fctn).Typ : null;
             b.Append(ind0);
             b.Append(".method ");
             b.Append(FromMethodAttributes(f.MthdAttrs).ToLower());
@@ -570,7 +570,7 @@ namespace Nana.CodeGeneration
             b.Append(TypeFullName(retti));
 
             Typ m = fi.FindUpTypeOf<Typ>();
-            if (m.GetType() == typeof(Typ))
+            if (m != null && m.GetType() == typeof(Typ))
             {
                 Typ ti = m as Typ;
                 if (ti.IsGeneric)

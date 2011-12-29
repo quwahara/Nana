@@ -1057,6 +1057,13 @@ namespace Nana.Semantics
         public Typ Typ { get { return Typ_; } }
     }
 
+    //  Return Determinacy State (It's doubtful to make sense in English.)
+    //  Ç±Ç±Ç≈ïKÇ∏ÉäÉ^Å[ÉìÇÕÇ≥ÇÍÇƒÇ¢ÇÈÇ±Ç∆Ç™åàíËÇµÇƒÇ¢ÇÈÇ©ÇÃèÛë‘
+    public interface IReturnDeterminacyState
+    {
+        bool RDS { get;}
+    }
+
     public interface IExecutable
     {
         void Exec(IMRGenerator gen);
@@ -1130,12 +1137,14 @@ namespace Nana.Semantics
     {
     }
 
-    public class Ret:IExecutable
+    public class Ret : IExecutable, IReturnDeterminacyState
     {
         public void Exec(IMRGenerator gen)
         {
             gen.Ret();
         }
+
+        public bool RDS { get { return true; } }
     }
 
     public class GenericArgument : INmd
@@ -1250,6 +1259,19 @@ namespace Nana.Semantics
             TakeVar.Take(gen);
         }
 
+    }
+
+    public class ReturnValue : IExecutable, IReturnDeterminacyState
+    {
+        public IValuable GiveVal = null;
+
+        public void Exec(IMRGenerator gen)
+        {
+            GiveVal.Give(gen);
+            gen.Ret();
+        }
+
+        public bool RDS { get { return true; } }
     }
 
     public class CallAction : IExecutable
@@ -1452,7 +1474,7 @@ namespace Nana.Semantics
         public Typ Typ { get { return Typ_; } }
     }
 
-    public class IfInfo : IExecutable
+    public class IfInfo : IExecutable, IReturnDeterminacyState
     {
         public class Component
         {
@@ -1464,13 +1486,16 @@ namespace Nana.Semantics
         public Component IfThen;
         public Component[] ElifThen;
         public IExecutable[] Else;
+        public bool RDS_;
+        public bool RDS { get { return RDS_; } }
 
-        public IfInfo(string uniqFix, Component ifThen, Component[] elifThen, IExecutable[] else_)
+        public IfInfo(string uniqFix, Component ifThen, Component[] elifThen, IExecutable[] else_, bool rds)
         {
             Fix = uniqFix;
             IfThen = ifThen;
             ElifThen = elifThen;
             Else = else_;
+            RDS_ = rds;
         }
 
         public void Exec(IMRGenerator gen)
@@ -1512,6 +1537,7 @@ namespace Nana.Semantics
 
             gen.PutLabel(endlbl);
         }
+
     }
 
     public class WhileInfo : IExecutable
@@ -1520,6 +1546,7 @@ namespace Nana.Semantics
         public Literal Endlbl;
         public IValuable Condition;
         public IExecutable[] Lines;
+
         public WhileInfo(Literal dolbl, Literal endlbl, IValuable condition, IExecutable[] lines)
         {
             Dolbl = dolbl;

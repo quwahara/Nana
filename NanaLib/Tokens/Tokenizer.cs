@@ -318,6 +318,7 @@ namespace Nana.Tokens
 |(?<Num>(\d+)(\.(\d)+)?)
 |(?<Ope>(and|xor|or))
 |(?<Bol>(true|false))
+|(?<Ret>return)
 |(?<Id>`?[_a-zA-Z][_a-zA-Z0-9]*)
 |(?<Unk>[^\s$]+)
 ";

@@ -74,6 +74,7 @@ namespace Nana.Syntaxes
             210 or
             110 ->
             -1  ;
+            -1  return
             ";
 
         static public readonly string InfixRBpsTxt = @"
