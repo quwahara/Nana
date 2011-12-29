@@ -11,7 +11,7 @@ namespace Nana.Infr
     {
         public static bool IsBuiltIn(string type)
         {
-            return Regex.IsMatch(type, @"^(bool|byte|sbyte|char|decimal|double|float|int|uint|long|ulong|object|short|ushort|string)$");
+            return Regex.IsMatch(type, @"^(void|bool|byte|sbyte|char|decimal|double|float|int|uint|long|ulong|object|short|ushort|string)$");
         }
 
         public static Type FromBuiltIn(string type)
