@@ -148,16 +148,15 @@ namespace Nana.Semantics
 
         static public void AddSystemTyps(Env env)
         {
-            Typ y;
-            y = env.NewRefTyp(typeof(void));
-            y = env.NewRefTyp(typeof(object));
-            y = env.NewRefTyp(typeof(string));
+            env.FindOrNewRefType(typeof(void));
+            env.FindOrNewRefType(typeof(object));
+            env.FindOrNewRefType(typeof(string));
         }
 
         static public void AddBuiltInFunction(Env env, string built_in_function_name, string actualname, Type holdertype)
         {
             ActnOvld ao = env.NewActnOvld(built_in_function_name);
-            Typ hty = env.NewRefTyp(holdertype);
+            Typ hty = env.FindOrNewRefType(holdertype);
             ActnOvld actualao = hty.FindMemeber(actualname) as ActnOvld;
             Debug.Assert(actualao != null);
             ao.Members.AddRange(actualao.Members);
@@ -312,7 +311,7 @@ namespace Nana.Semantics
             Type type;
             if ((type = Env.TypeLdr.GetTypeByName(t.ValueImplicit)) != null)
             {
-                return Env.NewRefTyp(type);
+                return Env.FindOrNewRefType(type);
             }
 
             return null;
