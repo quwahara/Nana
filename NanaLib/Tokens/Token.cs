@@ -100,6 +100,18 @@ namespace Nana.Tokens
             }
         }
 
+        public bool Contains(string path)
+        {
+            return 0 != Select(path).Length;
+        }
+
+        public Token Find(string path)
+        {
+            Token[] s = Select(path);
+            if (s.Length > 0) { return s[0]; }
+            return null;
+        }
+
         public Token[] Select(string path)
         {
             List<Token> ts = new List<Token>();
@@ -127,18 +139,6 @@ namespace Nana.Tokens
             }
 
             return ts.ToArray();
-        }
-
-        public bool Contains(string path)
-        {
-            return 0 != Select(path).Length;
-        }
-
-        public Token Find(string path)
-        {
-            Token[] s = Select(path);
-            if (s.Length > 0) { return s[0]; }
-            return null;
         }
 
         /// <summary>

@@ -497,7 +497,7 @@ namespace Nana.Semantics
 
         public void AnalyzeTypToken(Token t)
         {
-            Token name = t.Select("@Name")[0];
+            Token name = t.Find("@Name");
             if (name == null || string.IsNullOrEmpty(name.Value))
             { throw new SyntaxError("Specify name to the class", t); }
 
@@ -699,10 +699,9 @@ namespace Nana.Semantics
                 returnType = Above.Nsp is Typ
                     ? Above.Nsp as Typ : Above.Nsp.FindUpTypeIs<Typ>();
             }
-            else if(t.Contains("@TypeSpec"))
+            else if (null != (ty = t.Find("@TypeSpec/@TypeSpec2")))
             {
-                Token rty = t.Select("@TypeSpec/@TypeSpec2")[0];
-                returnType = Above.RequireTyp(rty);
+                returnType = Above.RequireTyp(ty);
             }
 
             Actn = returnType == voidtyp

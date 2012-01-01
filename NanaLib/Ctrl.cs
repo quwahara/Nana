@@ -52,7 +52,7 @@ namespace Nana
             if (0 == root.Select("@CompileOptions").Length) { throw new ArgumentException("No @CompileOptions Token"); }
             if (1 < root.Select("@CompileOptions").Length) { throw new ArgumentException("Too many @CompileOptions Token"); }
 
-            if (0 == root.Select("@Sources").Length || 0 == root.Select("@Sources")[0].Follows.Length)
+            if (0 == root.Select("@Sources").Length || 0 == root.Find("@Sources").Follows.Length)
             { throw new ArgumentException("No @Sources Token"); }
 
             if (1 < root.Select("@Sources").Length) { throw new ArgumentException("Too many @Sources Token"); }
@@ -60,7 +60,7 @@ namespace Nana
             if (0 == root.Select("@CompileOptions/@out").Length)
             {
                 if (0 == root.Select("@Sources").Length
-                    || 0 == root.Select("@Sources")[0].Follows.Length)
+                    || 0 == root.Find("@Sources").Follows.Length)
                 {
                     throw new ArgumentException("Cannot omit source path when out option was omitted");
                 }
@@ -82,7 +82,7 @@ namespace Nana
         {
             Prepare(root);
 
-            Token srcs = root.Select("@Sources")[0];
+            Token srcs = root.Find("@Sources");
 
             //  append SourceText if it's SourcePath
             ReadSourceFiles(root);
@@ -101,7 +101,7 @@ namespace Nana
             IMRGenerator imrgen = new IMRGenerator();
             imrgen.GenerateIMR(env.FindInTypeOf<App>());
 
-            Token code = root.Select("@Code")[0];
+            Token code = root.Find("@Code");
             CodeGenerator codegen = new CodeGenerator();
             code.Value = codegen.GenerateCode(env);
         }
@@ -117,7 +117,7 @@ namespace Nana
 
         public static void ReadSourceFiles(Token root)
         {
-            Token srcs = root.Select("@Sources")[0];
+            Token srcs = root.Find("@Sources");
 
             UTF8Encoding utf8 = new UTF8Encoding(false /* no byte order mark */);
             List<Token> srcsflw = new List<Token>();
@@ -138,9 +138,9 @@ namespace Nana
         {
             SyntaxAnalyzer analyzer = new SyntaxAnalyzer();
 
-            Token srcs = root.Select("@Sources")[0];
+            Token srcs = root.Find("@Sources");
 
-            Token syntax = root.Select("@Syntax")[0];
+            Token syntax = root.Find("@Syntax");
             List<Token> synflw = new List<Token>();
             foreach (Token f in srcs.Follows)
             {
@@ -178,12 +178,12 @@ namespace Nana
 
                 if (root.Contains("@CompileOptions/@xxxil"))
                 {
-                    StdOut(root.Select("@Code")[0].Value);
+                    StdOut(root.Find("@Code").Value);
                 }
 
-                ilpath = root.Select("@CompileOptions/@out")[0].Value;
+                ilpath = root.Find("@CompileOptions/@out").Value;
                 ilpath = Path.ChangeExtension(ilpath, ".il");
-                code = root.Select("@Code")[0].Value;
+                code = root.Find("@Code").Value;
                 File.WriteAllText(ilpath, code, utf8);
 
                 ILASMRunner r = new ILASMRunner();

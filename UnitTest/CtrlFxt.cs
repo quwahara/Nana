@@ -716,12 +716,12 @@ class A
 
                 Assembly exeasmb = Assembly.GetExecutingAssembly();
                 string name = GetType().Name;
-                root.Select("@CompileOptions")[0]
+                root.Find("@CompileOptions")
                     .FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
                     .FlwsAdd(Path.GetFileNameWithoutExtension(exeasmb.Location), "reference")
                     .FlwsAdd(name + ".exe", "out")
                     ;
-                root.Select("@Sources")[0].FlwsAdd(c.Input, "SourceText");
+                root.Find("@Sources").FlwsAdd(c.Input, "SourceText");
 
                 Ctrl.Check(root);
                 Ctrl ctrl = new Ctrl();
@@ -734,11 +734,11 @@ class A
                     {
                         ctrl.AfterSyntaxAnalyze = delegate(Token root_)
                         {
-                            trace(TokenEx.ToTree(root_.Select("@Syntax")[0].Follows[0]));
+                            trace(TokenEx.ToTree(root_.Find("@Syntax").Follows[0]));
                         };
                     }
                     ctrl.Compile(root);
-                    trace(root.Select("@Code")[0].Value);
+                    trace(root.Find("@Code").Value);
                 }
                 catch (Nana.Infr.Error e)
                 {
