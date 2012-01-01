@@ -101,7 +101,6 @@ namespace Nana.Semantics
             , typeof(ExeAnalyzer)
             , typeof(EnsureAppExeAnalyzer)
             , typeof(EnsureEntryPointAnalyzer)
-            , typeof(RemoveReferencingTypeAnalyzer)
         });
 
         public Dictionary<Type, List<Action>> Subanalyzes = new Dictionary<Type, List<Action>>();
@@ -137,13 +136,13 @@ namespace Nana.Semantics
             Env = new Env(Seed);
             AddSystemTyps(Env);
             AddBuiltInFunction(Env, "`p", "WriteLine", typeof(Console));
-            RegisterAnalyzer(new RemoveReferencingTypeAnalyzer(this));
             AnalyzeAll(Seed.Follows);
             Order.ForEach(delegate(Type t)
             {
                 Subanalyzes[t].ForEach
                     (delegate(Action a) { a(); });
             });
+            RemoveReferencingType(Env);
         }
 
         static public void AddSystemTyps(Env env)
@@ -200,6 +199,15 @@ namespace Nana.Semantics
 
         public void AnalyzeIgnore(Token t)
         {
+        }
+
+        public static void RemoveReferencingType(Env env)
+        {
+            env.Members.RemoveAll(delegate(INmd n)
+            {
+                return n is Typ && (n as Typ).IsReferencing == true;
+            });
+
         }
 
     }
@@ -335,7 +343,7 @@ namespace Nana.Semantics
         public SrcAnalyzer(Token seed, AppAnalyzer above)
             : base(seed, above)
         {
-            Env = above.FindUpTypeOf<EnvAnalyzer>().Env;
+            Env = above.Env;
             Usings = new List<string>();
             AnalyzeDic.Default = AnalyzeDefault;
         }
@@ -860,29 +868,6 @@ namespace Nana.Semantics
             Actn cctor = app.FindActnOvld(".cctor").GetActnOf(new Typ[] { }, app);
             cctor.Exes.AddRange(app.Exes);
             app.Exes.Clear();
-        }
-    }
-
-    public class RemoveReferencingTypeAnalyzer : SemanticAnalyzer
-    {
-        [DebuggerNonUserCode]
-        public EnvAnalyzer Above { get { return Above_ as EnvAnalyzer; } }
-
-        public RemoveReferencingTypeAnalyzer(EnvAnalyzer above)
-            : base(above)
-        {
-        }
-
-        override public void Analyze()
-        {
-            Env env = Above.Env;
-            int i = env.Members.Count;
-            env.Members.RemoveAll(delegate(INmd n)
-            {
-                return n is Typ && (n as Typ).IsReferencing == true;
-            });
-
-            i = env.Members.Count;
         }
     }
 
