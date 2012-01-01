@@ -33,7 +33,8 @@ namespace Nana
         public Action<string> StdOut = Console.Write;
         public Action<string> StdErr = Console.Error.Write;
 
-        public Action<Token> AfterSyntaxAnalyze = delegate(Token root) { };     //  place holder
+        public Action<Token> AfterSyntaxAnalyze = delegate(Token root) { };                     //  place holder
+        public Action<Token, Env> AfterSemanticAnalyze = delegate(Token root, Env env) { };     //  place holder
 
         public static Token CreateRootTemplate()
         {
@@ -87,16 +88,13 @@ namespace Nana
             //  append SourceText if it's SourcePath
             ReadSourceFiles(root);
 
-            AnalyzeSource(root);
+            AnalyzeSyntax(root);
 
             AfterSyntaxAnalyze(root);
 
-            //TODO
-            srcs.Group = "Ignore";
+            Env env = AnalyzeSemantic(root);
 
-            Env env = (new EnvAnalyzer()).Run(root);
-
-            //Env env = AnalyzeSemantic(root);
+            AfterSemanticAnalyze(root, env);
 
             IMRGenerator imrgen = new IMRGenerator();
             imrgen.GenerateIMR(env.FindInTypeOf<App>());
@@ -104,6 +102,11 @@ namespace Nana
             Token code = root.Find("@Code");
             CodeGenerator codegen = new CodeGenerator();
             code.Value = codegen.GenerateCode(env);
+        }
+
+        public static Env AnalyzeSemantic(Token root)
+        {
+            return (new EnvAnalyzer()).Run(root);
         }
 
         public static void Prepare(Token root)
@@ -134,7 +137,7 @@ namespace Nana
             srcs.Follows = srcsflw.ToArray();
         }
 
-        public static void AnalyzeSource(Token root)
+        public static void AnalyzeSyntax(Token root)
         {
             SyntaxAnalyzer analyzer = new SyntaxAnalyzer();
 

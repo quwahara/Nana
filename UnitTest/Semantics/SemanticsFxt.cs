@@ -102,7 +102,7 @@ end
             Assert.IsNotNull(Env);
             Assert.AreEqual(2, Env.Members.Count);
 
-            App app = Env.Find(ModuleFilename) as App;
+            App app = Env.Members.Find(delegate(INmd n_) { return n_ is App; }) as App;
             Assert.IsNotNull(app);
 
             Typ typ = Env.FindByNamePath(ModuleFilename + @"/Class1Func0") as Typ;
@@ -208,42 +208,32 @@ end
 
         public void Analyze()
         {
-            SyntaxAnalyzer p = new SyntaxAnalyzer();
-            Token srctoken;
-            p.Init(Inp);
+            Token root = Ctrl.CreateRootTemplate();
 
-            srctoken = p.Analyze();
-
-            //Token roottk, mdl;
-            Token roottk;
-            Assembly exeasmb;
+            Assembly exeasmb = Assembly.GetExecutingAssembly();
             string name = GetType().Name;
+            root.Find("@CompileOptions")
+                .FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
+                .FlwsAdd(Path.GetFileNameWithoutExtension(exeasmb.Location), "reference")
+                .FlwsAdd(name + ".exe", "out")
+                ;
+            root.Find("@Sources").FlwsAdd(Inp, "SourceText");
 
-            //mdl = new Token(name + ".exe", "Sources");
-            //mdl.Follows = new Token[1];
-            //mdl.Follows[0] = srctoken;
-
-            //roottk = new Token(name, "SemanticRoot");
-            exeasmb = Assembly.GetExecutingAssembly();
-            //roottk.FlwsAdd(CmdLnArgs.NewOpt("include", Path.GetDirectoryName(exeasmb.Location)));
-            //roottk.FlwsAdd(CmdLnArgs.NewOpt("reference", Path.GetFileNameWithoutExtension(exeasmb.Location)));
-            //roottk.FlwsAdd(mdl);
-
-            roottk = new Token("Arguments");
-            Token cmpopts = roottk.FlwsAdd("", "CompileOptions").FlwsTail;
-            cmpopts.FlwsAdd(CmdLnArgs.NewOpt("include", Path.GetDirectoryName(exeasmb.Location)));
-            cmpopts.FlwsAdd(CmdLnArgs.NewOpt("reference", Path.GetFileNameWithoutExtension(exeasmb.Location)));
-
-            roottk.FlwsAdd(name + ".exe", "Sources").FlwsTail.FlwsAdd(srctoken);
-
+            Ctrl.Check(root);
+            Ctrl ctrl = new Ctrl();
 
             StringBuilder b = new StringBuilder();
             Action<string> trace = delegate(string s_) { b.Append(s_); };
+            ctrl.AfterSemanticAnalyze = delegate(Token root_, Env env_)
+            {
+                Env = env_;
+                App = env_.Members.Find(delegate(INmd n_) { return n_ is App; }) as App;
+
+            };
             try
             {
-                Env = (new EnvAnalyzer()).Run(roottk);
-                App = Env.Find(ModuleFilename) as App;
-                Assert.IsNotNull(App);
+                ctrl.Compile(root);
+                trace(root.Find("@Code").Value);
             }
             catch (Nana.Infr.Error e)
             {
@@ -255,8 +245,8 @@ end
                 trace(ex.ToString());
             }
         }
-    }
 
+    }
 
 }
 

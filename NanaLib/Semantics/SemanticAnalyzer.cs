@@ -180,9 +180,7 @@ namespace Nana.Semantics
 
         public void AnalyzeSources(Token t)
         {
-            if (AppAzr != null) { throw new InternalError(@"Cannot speficy two or more ""sources"".", t); }
-            AppAzr = new AppAnalyzer(t, this);
-            RegisterAnalyzer(AppAzr);
+            //  ignore
         }
 
         public void AnalyzeSyntax(Token t)

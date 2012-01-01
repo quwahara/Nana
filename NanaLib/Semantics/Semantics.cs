@@ -1004,6 +1004,7 @@ namespace Nana.Semantics
         public App(Token seed, Env family)
             : base(seed, family)
         {
+            Name = Path.GetFileName(Env.OutPath);
             AssemblyName = Path.GetFileNameWithoutExtension(Env.OutPath);
         }
 
