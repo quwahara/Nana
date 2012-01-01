@@ -102,7 +102,7 @@ namespace Nana
             Token optt = new Token("", "CompileOptions");
             optt.Follows = opts.ToArray();
 
-            if (0 == optt.Find("@out").Length)
+            if (0 == optt.Select("@out").Length)
             {
                 string v = srcs[0].Value;
                 string dir = System.IO.Path.GetDirectoryName(v);

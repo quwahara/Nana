@@ -100,11 +100,12 @@ namespace Nana.Tokens
             }
         }
 
-        public Token[] Find(string path)
+        public Token[] Select(string path)
         {
-            path = path + "";
-
             List<Token> ts = new List<Token>();
+            if (Follows == null) { return ts.ToArray(); }
+
+            path = path + "";
             string[] pathspl = path.Split(new char[] { '/' }, 2);
             if (pathspl.Length < 1) { return ts.ToArray(); }
 
@@ -121,7 +122,7 @@ namespace Nana.Tokens
                     if (pathspl.Length == 1)
                     { ts.Add(t); }
                     else
-                    { ts.AddRange(t.Find(pathspl[1])); }
+                    { ts.AddRange(t.Select(pathspl[1])); }
                 }
             }
 
@@ -130,15 +131,13 @@ namespace Nana.Tokens
 
         public bool Contains(string path)
         {
-            return 0 != Find(path).Length;
+            return 0 != Select(path).Length;
         }
 
-        public Token FindGroupOf(string group)
+        public Token Find(string path)
         {
-            if (this.Group == group) /**/ { return this; }
-            if (Follows == null)    /**/ { return null; }
-            Token tt_;
-            foreach (Token t in Follows) { if ((tt_ = t.FindGroupOf(group)) != null) { return tt_; } }
+            Token[] s = Select(path);
+            if (s.Length > 0) { return s[0]; }
             return null;
         }
 

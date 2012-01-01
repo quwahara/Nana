@@ -157,11 +157,11 @@ val[System.Windows.Forms.dll]
             Token act = CmdLnArgs.GetCmdLnArgs(args);
             if (act == null)                    /**/ return "(act == null)";
 
-            Token[] cmpopts = act.Find("@CompileOptions");
+            Token[] cmpopts = act.Select("@CompileOptions");
             if (cmpopts == null || cmpopts.Length == 0) { return "(No CompileOptions token)"; }
             if (cmpopts.Length > 1) { return "(Too many CompileOptions tokens)"; }
 
-            Token[] srcs = act.Find("@Sources");
+            Token[] srcs = act.Select("@Sources");
             if (srcs == null || srcs.Length == 0) { return "(No Sources token)"; }
             if (srcs.Length > 1) { return "(Too many Sources tokens)"; }
 

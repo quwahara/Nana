@@ -497,7 +497,7 @@ namespace Nana.Semantics
 
         public void AnalyzeTypToken(Token t)
         {
-            Token name = t.FindGroupOf("Name");
+            Token name = t.Select("@Name")[0];
             if (name == null || string.IsNullOrEmpty(name.Value))
             { throw new SyntaxError("Specify name to the class", t); }
 
@@ -509,7 +509,7 @@ namespace Nana.Semantics
 
             Typu = app.NewTyp(name);
 
-            Token baseTypeDef = t.FindGroupOf("BaseTypeDef");
+            Token baseTypeDef = t.Find("@BaseTypeDef");
             if (baseTypeDef == null)
             {
                 baseTypeDef = new Token();
@@ -517,7 +517,7 @@ namespace Nana.Semantics
             }
             RegisterAnalyzer(new TypBaseAnalyzer(baseTypeDef, this));
 
-            Token body = t.FindGroupOf("TypeBody");
+            Token body = t.Find("@TypeBody");
             if (body == null || body.Follows == null)
             { throw new SyntaxError("Specify the class body", t); }
             RegisterAnalyzer(new TypBodyAnalyzer(body, this));
@@ -672,19 +672,19 @@ namespace Nana.Semantics
             ActnOvld ovld = typazr2.Typu.FindOrNewActnOvld(nameasm);
 
             List<Token> prms = new List<Token>();
-            Token prmpre = t.FindGroupOf("PrmDef");
+            Token prmpre = t.Find("@PrmDef");
             Token prm;
-            while (prmpre != null && (prm = prmpre.FindGroupOf("Prm")) != null)
+            while (prmpre != null && (prm = prmpre.Find("@Prm")) != null)
             {
                 prms.Add(prm);
-                prmpre = prm.FindGroupOf("Separator");
+                prmpre = prm.Find("@Separator");
             }
 
             List<Variable> prmls = new List<Variable>();
             Token ty;
             foreach (Token p in prms)
             {
-                ty = p.FindGroupOf("TypeSpec2");
+                ty = p.Find("@TypeSpec/@TypeSpec2");
                 Typ typ = Above.RequireTyp(ty);
                 Debug.Assert(typ != null);
                 Debug.Assert(string.IsNullOrEmpty(p.Value) == false);
@@ -694,7 +694,6 @@ namespace Nana.Semantics
             Typ voidtyp = Env.FindOrNewRefType(typeof(void));
 
             Typ returnType = voidtyp;
-            //Typ returnType = null;
             if (isCtor)
             {
                 returnType = Above.Nsp is Typ
@@ -702,7 +701,7 @@ namespace Nana.Semantics
             }
             else if(t.Contains("@TypeSpec"))
             {
-                Token rty = t.Find("@TypeSpec/@TypeSpec2")[0];
+                Token rty = t.Select("@TypeSpec/@TypeSpec2")[0];
                 returnType = Above.RequireTyp(rty);
             }
 
@@ -713,7 +712,7 @@ namespace Nana.Semantics
 
             Actn.MthdAttrs = attrs;
 
-            Token body = t.FindGroupOf("Block");
+            Token body = t.Find("@Block");
             Debug.Assert(body != null && body.Follows != null);
             foreach (Token exe in body.Follows)
             { RegisterAnalyzer(new ExeAnalyzer(exe, this)); }
