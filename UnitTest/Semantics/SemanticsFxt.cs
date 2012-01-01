@@ -2791,12 +2791,12 @@ namespace UnitTest.Semantics.Root
 
                 Assembly exeasmb = Assembly.GetExecutingAssembly();
                 string name = GetType().Name;
-                root.Find("@Root/@CompileOptions")[0]
+                root.Find("@CompileOptions")[0]
                     .FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
                     .FlwsAdd(Path.GetFileNameWithoutExtension(exeasmb.Location), "reference")
                     .FlwsAdd(name + ".exe", "out")
                     ;
-                root.Find("@Root/@Sources")[0].FlwsAdd(c.Input, "SourceText");
+                root.Find("@Sources")[0].FlwsAdd(c.Input, "SourceText");
 
                 Ctrl.Check(root);
                 Ctrl ctrl = new Ctrl();
@@ -2806,7 +2806,7 @@ namespace UnitTest.Semantics.Root
                 try
                 {
                     ctrl.Compile(root);
-                    trace(root.Find("@Root/@Code")[0].Value);
+                    trace(root.Find("@Code")[0].Value);
                 }
                 catch (Nana.Infr.Error e)
                 {

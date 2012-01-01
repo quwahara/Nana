@@ -106,24 +106,25 @@ namespace Nana.Tokens
 
             List<Token> ts = new List<Token>();
             string[] pathspl = path.Split(new char[] { '/' }, 2);
-            
             if (pathspl.Length < 1) { return ts.ToArray(); }
 
             string p = pathspl[0];
-            bool valmatches = p.StartsWith("@") == false && Value == p;
-            bool grpmatches = p.StartsWith("@") == true && Group == p.Substring(1);
+            bool matchWithGroup = p.StartsWith("@");
+            if (matchWithGroup)
+            { p = p.Substring(1); }
 
-            if (pathspl.Length == 1 && (valmatches || grpmatches))
+            foreach (Token t in Follows)
             {
-                ts.Add(this);
-            }
-            else if (pathspl.Length > 1 && (valmatches || grpmatches))
-            {
-                foreach (Token t in Follows)
+                if ((matchWithGroup && p == t.Group)
+                    || (false == matchWithGroup && p == t.Value))
                 {
-                    ts.AddRange(t.Find(pathspl[1]));
+                    if (pathspl.Length == 1)
+                    { ts.Add(t); }
+                    else
+                    { ts.AddRange(t.Find(pathspl[1])); }
                 }
             }
+
             return ts.ToArray();
         }
 

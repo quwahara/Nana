@@ -317,6 +317,11 @@ namespace Nana.Semantics
             return null;
         }
 
+        public override Typ RequireTyp(Token t)
+        {
+            return Find(t) as Typ;
+        }
+
     }
 
     public class SrcAnalyzer : NspAnalyzer
@@ -695,9 +700,9 @@ namespace Nana.Semantics
                 returnType = Above.Nsp is Typ
                     ? Above.Nsp as Typ : Above.Nsp.FindUpTypeIs<Typ>();
             }
-            else if(t.Contains("@Func/@TypeSpec"))
+            else if(t.Contains("@TypeSpec"))
             {
-                Token rty = t.Find("@Func/@TypeSpec/@TypeSpec2")[0];
+                Token rty = t.Find("@TypeSpec/@TypeSpec2")[0];
                 returnType = Above.RequireTyp(rty);
             }
 
@@ -783,7 +788,7 @@ namespace Nana.Semantics
             if (string.IsNullOrEmpty(returnType) == false)
             {
                 f.FlwsAdd(":", "TypeSpec");
-                f.FlwsTail.FlwsAdd(returnType, "Id");
+                f.FlwsTail.FlwsAdd(returnType, "TypeSpec2");
             }
 
             f.FlwsAdd("..", "Block");

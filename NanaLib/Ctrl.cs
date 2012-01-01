@@ -48,31 +48,29 @@ namespace Nana
         public static void Check(Token root)
         {
             if (root == null) { throw new ArgumentNullException("args"); }
-            if (0 == root.Find("@Root").Length) { throw new ArgumentException("No @Root Token"); }
-            if (1 < root.Find("@Root").Length) { throw new ArgumentException("Too many @Root Token"); }
 
-            if (0 == root.Find("@Root/@CompileOptions").Length) { throw new ArgumentException("No @CompileOptions Token"); }
-            if (1 < root.Find("@Root/@CompileOptions").Length) { throw new ArgumentException("Too many @CompileOptions Token"); }
+            if (0 == root.Find("@CompileOptions").Length) { throw new ArgumentException("No @CompileOptions Token"); }
+            if (1 < root.Find("@CompileOptions").Length) { throw new ArgumentException("Too many @CompileOptions Token"); }
 
-            if (0 == root.Find("@Root/@Sources").Length || 0 == root.Find("@Root/@Sources")[0].Follows.Length)
+            if (0 == root.Find("@Sources").Length || 0 == root.Find("@Sources")[0].Follows.Length)
             { throw new ArgumentException("No @Sources Token"); }
 
-            if (1 < root.Find("@Root/@Sources").Length) { throw new ArgumentException("Too many @Sources Token"); }
+            if (1 < root.Find("@Sources").Length) { throw new ArgumentException("Too many @Sources Token"); }
 
-            if (0 == root.Find("@Root/@CompileOptions/@out").Length)
+            if (0 == root.Find("@CompileOptions/@out").Length)
             {
-                if (0 == root.Find("@Root/@Sources").Length
-                    || 0 == root.Find("@Root/@Sources")[0].Follows.Length)
+                if (0 == root.Find("@Sources").Length
+                    || 0 == root.Find("@Sources")[0].Follows.Length)
                 {
                     throw new ArgumentException("Cannot omit source path when out option was omitted");
                 }
             }
 
-            if (1 < root.Find("@Root/@CompileOptions/@out").Length) { throw new ArgumentException("Too many out option"); }
+            if (1 < root.Find("@CompileOptions/@out").Length) { throw new ArgumentException("Too many out option"); }
 
-            if (1 == root.Find("@Root/@Sources").Length)
+            if (1 == root.Find("@Sources").Length)
             {
-                foreach (Token p in root.Find("@Root/@Sources")[0].Find("@SourcePath"))
+                foreach (Token p in root.Find("@Sources/@SourcePath"))
                 {
                     if (false == File.Exists(p.Value)) { throw new FileNotFoundException("Source file was not found", p.Value); }
                 }
@@ -84,7 +82,7 @@ namespace Nana
         {
             Prepare(root);
 
-            Token srcs = root.Find("@Root/@Sources")[0];
+            Token srcs = root.Find("@Sources")[0];
 
             //  append SourceText if it's SourcePath
             ReadSourceFiles(root);
@@ -103,23 +101,23 @@ namespace Nana
             IMRGenerator imrgen = new IMRGenerator();
             imrgen.GenerateIMR(env.FindInTypeOf<App>());
 
-            Token code = root.Find("@Root/@Code")[0];
+            Token code = root.Find("@Code")[0];
             CodeGenerator codegen = new CodeGenerator();
             code.Value = codegen.GenerateCode(env);
         }
 
         public static void Prepare(Token root)
         {
-            if (false == root.Contains("@Root/@Syntax"))
+            if (false == root.Contains("@Syntax"))
             { root.FlwsAdd(new Token("", "Syntax")); }
 
-            if (false == root.Contains("@Root/@Code"))
+            if (false == root.Contains("@Code"))
             { root.FlwsAdd(new Token("", "Code")); }
         }
 
         public static void ReadSourceFiles(Token root)
         {
-            Token srcs = root.Find("@Root/@Sources")[0];
+            Token srcs = root.Find("@Sources")[0];
 
             UTF8Encoding utf8 = new UTF8Encoding(false /* no byte order mark */);
             List<Token> srcsflw = new List<Token>();
@@ -140,9 +138,9 @@ namespace Nana
         {
             SyntaxAnalyzer analyzer = new SyntaxAnalyzer();
 
-            Token srcs = root.Find("@Root/@Sources")[0];
+            Token srcs = root.Find("@Sources")[0];
 
-            Token syntax = root.Find("@Root/@Syntax")[0];
+            Token syntax = root.Find("@Syntax")[0];
             List<Token> synflw = new List<Token>();
             foreach (Token f in srcs.Follows)
             {
@@ -165,11 +163,11 @@ namespace Nana
                 Ctrl.Check(root);
                 Ctrl c = new Ctrl();
 
-                if (root.Contains("@Root/@CompileOptions/@xxxsyntax"))
+                if (root.Contains("@CompileOptions/@xxxsyntax"))
                 {
                     c.AfterSyntaxAnalyze = delegate(Token root_)
                     {
-                        foreach (Token t in root_.Find("@Root/@Syntax/0Source"))
+                        foreach (Token t in root_.Find("@Syntax/0Source"))
                         {
                             StdOut(TokenEx.ToTree(t));
                         }
@@ -178,14 +176,14 @@ namespace Nana
 
                 c.Compile(root);
 
-                if (root.Contains("@Root/@CompileOptions/@xxxil"))
+                if (root.Contains("@CompileOptions/@xxxil"))
                 {
-                    StdOut(root.Find("@Root/@Code")[0].Value);
+                    StdOut(root.Find("@Code")[0].Value);
                 }
 
-                ilpath = root.Find("@Root/@CompileOptions/@out")[0].Value;
+                ilpath = root.Find("@CompileOptions/@out")[0].Value;
                 ilpath = Path.ChangeExtension(ilpath, ".il");
-                code = root.Find("@Root/@Code")[0].Value;
+                code = root.Find("@Code")[0].Value;
                 File.WriteAllText(ilpath, code, utf8);
 
                 ILASMRunner r = new ILASMRunner();
@@ -195,7 +193,7 @@ namespace Nana
             catch (Exception e)
             {
                 StdErr(e.Message);
-                if (null != root && root.Contains("@Root/@CompileOptions/@xxxtrace"))
+                if (null != root && root.Contains("@CompileOptions/@xxxtrace"))
                 { StdErr(e.StackTrace); }
             }
         }
