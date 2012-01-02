@@ -868,7 +868,6 @@ namespace Nana.Semantics
     {
         public Stack<Literal> Breaks;
         public Stack<Literal> Continues;
-        public Stack<Typ> RequireReturnValues;
         public Env Env;
         public Actn Actn;
         public Fctn Fctn;
@@ -885,7 +884,6 @@ namespace Nana.Semantics
         {
             Breaks = new Stack<Literal>();
             Continues = new Stack<Literal>();
-            RequireReturnValues = new Stack<Typ>();
             Seed = seed;
         }
 
