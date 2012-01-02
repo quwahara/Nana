@@ -630,7 +630,6 @@ namespace Nana.Semantics
         [DebuggerNonUserCode]
         override public Nsp Nsp { get { return Actn; } }
         public Token ActnToken = null;
-        public Stack<ReturnValue> RequiredReturnValues = new Stack<ReturnValue>();
 
         public ActnAnalyzer(Token seed, NspAnalyzer above)
             : base(seed, above)
