@@ -195,10 +195,6 @@ namespace Nana.Semantics
             //  do nothing, place holder for next phase
         }
 
-        public void AnalyzeIgnore(Token t)
-        {
-        }
-
         public static void RemoveReferencingType(Env env)
         {
             env.Members.RemoveAll(delegate(INmd n)
