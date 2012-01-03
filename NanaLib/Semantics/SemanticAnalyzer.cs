@@ -99,8 +99,6 @@ namespace Nana.Semantics
             , typeof(TypEnsureAnalyzer)
             , typeof(BaseInstanceConstructorCallAnalyzer)
             , typeof(ExeAnalyzer)
-            , typeof(EnsureAppExeAnalyzer)
-            , typeof(EnsureEntryPointAnalyzer)
         });
 
         public Dictionary<Type, List<Action>> Subanalyzes = new Dictionary<Type, List<Action>>();
@@ -137,11 +135,15 @@ namespace Nana.Semantics
             AddSystemTyps(Env);
             AddBuiltInFunction(Env, "`p", "WriteLine", typeof(Console));
             AnalyzeAll(Seed.Follows);
-            Order.ForEach(delegate(Type t)
+            foreach (Type t in Order)
             {
-                Subanalyzes[t].ForEach
-                    (delegate(Action a) { a(); });
-            });
+                foreach (Action a in Subanalyzes[t])
+                {
+                    a();
+                }
+            }
+            EnsureAppExe();
+            EnsureEntryPoint();
             RemoveReferencingType(Env);
         }
 
@@ -193,6 +195,32 @@ namespace Nana.Semantics
         public void AnalyzeCode(Token t)
         {
             //  do nothing, place holder for next phase
+        }
+
+        public void EnsureAppExe()
+        {
+            App app = AppAzr.App;
+            if (app.Exes.Count == 0) { return; }
+
+            Token t = ActnAnalyzer.GenFuncToken("scons", Actn.EntryPointNameImplicit, "void");
+            (new ActnAnalyzer(t, AppAzr)).Analyze();
+            Actn cctor = app.FindActnOvld(".cctor").GetActnOf(new Typ[] { }, app);
+            cctor.Exes.AddRange(app.Exes);
+            app.Exes.Clear();
+        }
+
+        public void EnsureEntryPoint()
+        {
+            App app = AppAzr.App;
+            List<Actn> actns = app.FindDownAllTypeIs<Actn>();
+            List<Actn> founds = actns.FindAll(delegate(Actn a) { return a.IsEntryPoint; });
+            if (founds.Count > 1)
+            { throw new SyntaxError("Specify one entry point. There were two entry points or more."); }
+            if (founds.Count == 1)
+            { return; }
+
+            Token t = ActnAnalyzer.GenFuncToken("sfun", Actn.EntryPointNameImplicit, "void");
+            (new ActnAnalyzer(t, AppAzr)).Analyze();
         }
 
         public static void RemoveReferencingType(Env env)
@@ -281,8 +309,6 @@ namespace Nana.Semantics
             Typu = App;
             Actn = App;
             AnalyzeAll(Seed.Follows);
-            RegisterAnalyzer(new EnsureEntryPointAnalyzer(this));
-            RegisterAnalyzer(new EnsureAppExeAnalyzer(this));
         }
 
         public void AnalyzeSource(Token t)
@@ -815,53 +841,6 @@ namespace Nana.Semantics
             Above.Actn.Exes.Add(new CallAction(callee, instance, new IValuable[] { }, false /*:isNewObj*/));
         }
 
-    }
-
-    public class EnsureEntryPointAnalyzer : SemanticAnalyzer
-    {
-        [DebuggerNonUserCode]
-        public AppAnalyzer Above { get { return Above_ as AppAnalyzer; } }
-
-        public EnsureEntryPointAnalyzer(AppAnalyzer above)
-            : base(above)
-        { }
-
-        override public void Analyze()
-        {
-            App app = Above.App;
-            List<Actn> actns = app.FindDownAllTypeIs<Actn>();
-            List<Actn> founds = actns.FindAll(delegate(Actn a) { return a.IsEntryPoint; });
-            if (founds.Count > 1)
-            { throw new SyntaxError("Specify one entry point. There were two entry points or more."); }
-            if (founds.Count == 1)
-            { return; }
-
-            Token t = ActnAnalyzer.GenFuncToken("sfun", Actn.EntryPointNameImplicit, "void");
-            (new ActnAnalyzer(t, Above)).Analyze();
-        }
-
-    }
-
-    public class EnsureAppExeAnalyzer : SemanticAnalyzer
-    {
-        [DebuggerNonUserCode]
-        public AppAnalyzer Above { get { return Above_ as AppAnalyzer; } }
-
-        public EnsureAppExeAnalyzer(AppAnalyzer above)
-            : base(above)
-        { }
-
-        override public void Analyze()
-        {
-            App app = Above.App;
-            if (app.Exes.Count == 0) { return; }
-
-            Token t = ActnAnalyzer.GenFuncToken("scons", Actn.EntryPointNameImplicit, "void");
-            (new ActnAnalyzer(t, Above)).Analyze();
-            Actn cctor = app.FindActnOvld(".cctor").GetActnOf(new Typ[] { }, app);
-            cctor.Exes.AddRange(app.Exes);
-            app.Exes.Clear();
-        }
     }
 
     public class ExeAnalyzer : SemanticAnalyzer
