@@ -14,9 +14,12 @@ namespace Nana.Semantics
     public class ActionableDictionary<TKey, TActPrm> : Dictionary<TKey, Action<TActPrm>>
     {
         public Action<TActPrm> Default = delegate(TActPrm p) { };
-        [DebuggerNonUserCode]
         public void Action(KeyValuePair<TKey, TActPrm> pair)
-        { (ContainsKey(pair.Key) ? base[pair.Key] : Default)(pair.Value); }
+        {
+            Action<TActPrm> a;
+            if (TryGetValue(pair.Key, out a))   /**/ { a(pair.Value); }
+            else                                /**/ { Default(pair.Value); }
+        }
     }
 
     abstract public class SemanticAnalyzer
@@ -46,6 +49,14 @@ namespace Nana.Semantics
         public Action<Token> CreateInvoker(SemanticAnalyzer a, MethodInfo m)
         {
             return delegate(Token t) { m.Invoke(a, new object[] { t }); };
+        }
+
+        public void SetAnalyzeNothingGroups(string[] groups)
+        {
+            foreach (string g in groups)
+            {
+                AnalyzeDic[g] = AnalyzeNothing;
+            }
         }
 
         abstract public void Analyze();
@@ -80,6 +91,11 @@ namespace Nana.Semantics
             return Above_ == null ? null : Above_ is T ? Above_ as T : Above_.FindUpTypeIs<T>();
         }
 
+        public void AnalyzeNothing(Token t)
+        {
+            //  Do nothing
+        }
+
     }
 
     public class EnvAnalyzer : SemanticAnalyzer
@@ -106,6 +122,7 @@ namespace Nana.Semantics
         public EnvAnalyzer()
             : base(null)
         {
+            SetAnalyzeNothingGroups(new string[] { "Sources" });
             Order.ForEach(delegate(Type t) { Subanalyzes.Add(t, new List<Action>()); });
         }
 
@@ -180,10 +197,10 @@ namespace Nana.Semantics
             }
         }
 
-        public void AnalyzeSources(Token t)
-        {
-            //  ignore
-        }
+        //public void AnalyzeSources(Token t)
+        //{
+        //    //  ignore
+        //}
 
         public void AnalyzeSyntax(Token t)
         {
@@ -360,10 +377,10 @@ namespace Nana.Semantics
         [DebuggerNonUserCode]
         override public Nsp Nsp { get { return Above.Nsp; } }
 
-        public SrcAnalyzer(Token seed, AppAnalyzer above)
+        public SrcAnalyzer(Token seed, NspAnalyzer above)
             : base(seed, above)
         {
-            Env = above.Env;
+            Env = above.FindUpTypeOf<EnvAnalyzer>().Env;
             Usings = new List<string>();
             AnalyzeDic.Default = AnalyzeDefault;
         }
@@ -680,7 +697,6 @@ namespace Nana.Semantics
             Token t = ActnToken;
             ActnToken = null;
             AnalyzeActnToken(t);
-            return;
         }
 
         public void AnalyzeActnToken(Token t)
