@@ -122,7 +122,6 @@ namespace Nana.Semantics
         public EnvAnalyzer()
             : base(null)
         {
-            SetAnalyzeNothingGroups(new string[] { "Sources" });
             Order.ForEach(delegate(Type t) { Subanalyzes.Add(t, new List<Action>()); });
         }
 
@@ -151,7 +150,10 @@ namespace Nana.Semantics
             Env = new Env(Seed);
             AddSystemTyps(Env);
             AddBuiltInFunction(Env, "`p", "WriteLine", typeof(Console));
-            AnalyzeAll(Seed.Follows);
+
+            AnalyzeCompileOptions(Seed.Find("@CompileOptions"));
+            AnalyzeSyntax(Seed.Find("@Syntax"));
+
             foreach (Type t in Order)
             {
                 foreach (Action a in Subanalyzes[t])
@@ -159,6 +161,7 @@ namespace Nana.Semantics
                     a();
                 }
             }
+
             EnsureAppExe();
             EnsureEntryPoint();
             RemoveReferencingType(Env);
@@ -197,21 +200,11 @@ namespace Nana.Semantics
             }
         }
 
-        //public void AnalyzeSources(Token t)
-        //{
-        //    //  ignore
-        //}
-
         public void AnalyzeSyntax(Token t)
         {
             if (AppAzr != null) { throw new InternalError(@"Cannot speficy two or more ""sources"".", t); }
             AppAzr = new AppAnalyzer(t, this);
             RegisterAnalyzer(AppAzr);
-        }
-
-        public void AnalyzeCode(Token t)
-        {
-            //  do nothing, place holder for next phase
         }
 
         public void EnsureAppExe()
