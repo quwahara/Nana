@@ -232,7 +232,8 @@ end
             };
             try
             {
-                ctrl.Compile(root);
+                ctrl.Compile2(root);
+                //ctrl.Compile(root);
                 trace(root.Find("@Code").Value);
             }
             catch (Nana.Infr.Error e)
