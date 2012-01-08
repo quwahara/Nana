@@ -2795,7 +2795,160 @@ namespace UnitTest.Semantics.Root
                 Action<string> trace = delegate(string s_) { b.Append(s_); };
                 try
                 {
-                    ctrl.Compile(root);
+                    ctrl.Compile2(root);
+                    //ctrl.Compile(root);
+                    trace(root.Find("@Code").Value);
+                }
+                catch (Nana.Infr.Error e)
+                {
+                    trace(e.Message);
+                    Console.WriteLine(e.StackTrace);
+                }
+                catch (Exception ex)
+                {
+                    trace(ex.ToString());
+                }
+
+                return b.ToString();
+            };
+
+            new TestCase("", Inp, Epc, f).Run();
+        }
+    }
+}
+
+namespace UnitTest.Semantics.Root
+{
+    public class RootFxt2
+    {
+        public string Inp;
+        public string Epc;
+
+        [SetUp]
+        public void SetUp()
+        {
+            //TraceTree = false;
+            string asm = GetType().Name;
+
+            Inp = "";
+            Epc = @".assembly extern mscorlib {.ver 2:0:0:0 .publickeytoken = (B7 7A 5C 56 19 34 E0 89)}
+.assembly extern UnitTest {.ver 1:0:0:0}
+.assembly " + asm + @" { }
+.module " + asm + @".exe
+";
+        }
+
+        [Test]
+        public void T101()
+        {
+            Inp = @"
+a:int[,]
+a       = int[3,5]
+a[1,2]  = 7
+b       = a[1, 2]
+System.Console.WriteLine(b)
+";
+            Epc +=
+@".field static int32[0...,0...] a
+.field static int32 b
+.method static public void .cctor() {
+    ldc.i4 3
+    ldc.i4 5
+    newobj instance void int32[0...,0...]::.ctor(int32, int32)
+    stsfld int32[0...,0...] a
+    ldsfld int32[0...,0...] a
+    ldc.i4 1
+    ldc.i4 2
+    ldc.i4 7
+    call instance void int32[0...,0...]::Set(int32, int32, int32)
+    ldsfld int32[0...,0...] a
+    ldc.i4 1
+    ldc.i4 2
+    call instance int32 int32[0...,0...]::Get(int32, int32)
+    stsfld int32 b
+    ldsfld int32 b
+    call void [mscorlib]System.Console::WriteLine(int32)
+    ret
+}
+.method static public void '0'() {
+    .entrypoint
+    ret
+}
+";
+            Test();
+        }
+
+        [Test]
+        public void T101_CallRefFuncP0()
+        {
+            Inp = @"
+class CallRefFuncP0
+begin
+    sfun Main():void
+    begin
+        System.Console.WriteLine()
+    end
+end
+";
+            Epc +=
+@".class public CallRefFuncP0 {
+    .method static public void Main() {
+        .entrypoint
+        call void [mscorlib]System.Console::WriteLine()
+        ret
+    }
+    .method public void .ctor() {
+        ldarg.0
+        call instance void object::.ctor()
+        ret
+    }
+}
+";
+            Test();
+        }
+
+        [Test]
+        public void T_HelloWorld()
+        {
+            Inp = @"`p(""Hello, world!"")
+";
+            Epc +=
+@".method static public void .cctor() {
+    ldstr ""Hello, world!""
+    call void [mscorlib]System.Console::WriteLine(string)
+    ret
+}
+.method static public void '0'() {
+    .entrypoint
+    ret
+}
+";
+            Test();
+        }
+
+        public void Test()
+        {
+            Func<TestCase, string> f = delegate(TestCase c)
+            {
+                Token root = Ctrl.CreateRootTemplate();
+
+                Assembly exeasmb = Assembly.GetExecutingAssembly();
+                string name = GetType().Name;
+                root.Find("@CompileOptions")
+                    .FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
+                    .FlwsAdd(Path.GetFileNameWithoutExtension(exeasmb.Location), "reference")
+                    .FlwsAdd(name + ".exe", "out")
+                    ;
+                root.Find("@Sources").FlwsAdd(c.Input, "SourceText");
+
+                Ctrl.Check(root);
+                Ctrl ctrl = new Ctrl();
+
+                StringBuilder b = new StringBuilder();
+                Action<string> trace = delegate(string s_) { b.Append(s_); };
+                try
+                {
+                    ctrl.Compile2(root);
                     trace(root.Find("@Code").Value);
                 }
                 catch (Nana.Infr.Error e)

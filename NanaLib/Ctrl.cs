@@ -201,6 +201,36 @@ namespace Nana
             }
         }
 
+        public void Compile2(Token root)
+        {
+            Prepare(root);
+
+            Token srcs = root.Find("@Sources");
+
+            //  append SourceText if it's SourcePath
+            ReadSourceFiles(root);
+
+            AnalyzeSyntax(root);
+
+            AfterSyntaxAnalyze(root);
+
+            Env env =  AnalyzeSemantic2(root);
+
+            AfterSemanticAnalyze(root, env);
+
+            IMRGenerator imrgen = new IMRGenerator();
+            imrgen.GenerateIMR(env.FindInTypeOf<App>());
+
+            Token code = root.Find("@Code");
+            CodeGenerator codegen = new CodeGenerator();
+            code.Value = codegen.GenerateCode(env);
+        }
+
+        public static Env AnalyzeSemantic2(Token root)
+        {
+            return EnvAnalyzer2.Run(root);
+        }
+
     }
 
 }
