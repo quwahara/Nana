@@ -849,21 +849,6 @@ namespace Nana.Semantics
         public virtual Typ RequireTyp(Token t)
         { return AboveBlock == null ? null : AboveBlock.RequireTyp(t); }
 
-        //public static Typ FindTypByValueAndValueImplicit(Token t, Nsp nsp)
-        //{
-        //    INmd n;
-
-        //    n = nsp.Find(t.Value);
-        //    if (n != null && n.GetType() == typeof(Typ))
-        //    { return n as Typ; }
-
-        //    n = nsp.Find(t.ValueImplicit);
-        //    if (n != null && n.GetType() == typeof(Typ))
-        //    { return n as Typ; }
-
-        //    return null;
-        //}
-
     }
 
     public class ActnAnalyzer : BlockAnalyzer

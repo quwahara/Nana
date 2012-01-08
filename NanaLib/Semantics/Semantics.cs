@@ -1407,24 +1407,13 @@ namespace Nana.Semantics
     public class CalcInfo : IValuable
     {
         public string Sign;
-        //public C[] Codes2 = new C[0];
         public IValuable Lv;
         public IValuable Rv;
         public Typ Typ_;
 
-        //  TODO    codes2 should be string of actual sign. translation C to C is ridiculous
-        //public CalcInfo(C[] codes2, IValuable lv, IValuable rv, Typ typ)
-        //{
-        //    Codes2 = codes2;
-        //    Lv = lv;
-        //    Rv = rv;
-        //    Typ_ = typ;
-        //}
-
         public CalcInfo(string sign, IValuable lv, IValuable rv, Typ typ)
         {
             Sign = sign;
-            //Codes2 = codes2;
             Lv = lv;
             Rv = rv;
             Typ_ = typ;
@@ -1434,30 +1423,6 @@ namespace Nana.Semantics
         {
             Lv.Give(gen);
             Rv.Give(gen);
-
-            //foreach (C c in Codes2)
-            //{
-            //    switch (c)
-            //    {
-            //        // Arithmetical Operations (p270)
-            //        case C.Add: gen.Add(); break;
-            //        case C.Sub: gen.Sub(); break;
-            //        case C.Mul: gen.Mul(); break;
-            //        case C.Div: gen.Div(); break;
-            //        case C.Rem: gen.Rem(); break;
-            //        case C.Neg: gen.Neg(); break;
-            //        // Bitwise Operations (p272)
-            //        case C.And: gen.And(); break;
-            //        case C.Or: gen.Or(); break;
-            //        case C.Xor: gen.Xor(); break;
-            //        case C.Not: gen.Not(); break;
-            //        // Logical Condition Check Instructions (p275)
-            //        case C.Ceq: gen.Ceq(); break;
-            //        case C.Cgt: gen.Cgt(); break;
-            //        case C.Clt: gen.Clt(); break;
-            //    }
-            //}
-
             gen.Ope(Sign, Typ_);
         }
 
