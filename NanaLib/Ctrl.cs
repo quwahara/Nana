@@ -79,36 +79,6 @@ namespace Nana
 
         }
 
-        //public void Compile(Token root)
-        //{
-        //    Prepare(root);
-
-        //    Token srcs = root.Find("@Sources");
-
-        //    //  append SourceText if it's SourcePath
-        //    ReadSourceFiles(root);
-
-        //    AnalyzeSyntax(root);
-
-        //    AfterSyntaxAnalyze(root);
-
-        //    Env env = AnalyzeSemantic(root);
-
-        //    AfterSemanticAnalyze(root, env);
-
-        //    IMRGenerator imrgen = new IMRGenerator();
-        //    imrgen.GenerateIMR(env.FindInTypeOf<App>());
-
-        //    Token code = root.Find("@Code");
-        //    CodeGenerator codegen = new CodeGenerator();
-        //    code.Value = codegen.GenerateCode(env);
-        //}
-
-        //public static Env AnalyzeSemantic(Token root)
-        //{
-        //    return (new EnvAnalyzer()).Run(root);
-        //}
-
         public static void Prepare(Token root)
         {
             if (false == root.Contains("@Syntax"))
@@ -177,8 +147,7 @@ namespace Nana
                     };
                 }
 
-                //c.Compile(root);
-                c.Compile2(root);
+                c.Compile(root);
 
                 if (root.Contains("@CompileOptions/@xxxil"))
                 {
@@ -202,7 +171,7 @@ namespace Nana
             }
         }
 
-        public void Compile2(Token root)
+        public void Compile(Token root)
         {
             Prepare(root);
 
@@ -215,7 +184,7 @@ namespace Nana
 
             AfterSyntaxAnalyze(root);
 
-            Env env =  AnalyzeSemantic2(root);
+            Env env =  AnalyzeSemantic(root);
 
             AfterSemanticAnalyze(root, env);
 
@@ -227,9 +196,9 @@ namespace Nana
             code.Value = codegen.GenerateCode(env);
         }
 
-        public static Env AnalyzeSemantic2(Token root)
+        public static Env AnalyzeSemantic(Token root)
         {
-            return EnvAnalyzer2.Run(root);
+            return EnvAnalyzer.Run(root);
         }
 
     }
