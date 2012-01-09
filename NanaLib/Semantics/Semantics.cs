@@ -58,13 +58,13 @@ namespace Nana.Semantics
 
         public List<Action<Nsp>> EnsureMembersList = new List<Action<Nsp>>();
 
-        public bool IsReferencing_ = false;
+        public bool IsReferencing = false;
 
         public Nsp(string name, Nsp family, bool isReferencing)
         {
             Name_ = name;
             Family = family;
-            IsReferencing_ = isReferencing;
+            IsReferencing = isReferencing;
         }
 
         public Nsp(string name, Nsp family)
@@ -445,7 +445,6 @@ namespace Nana.Semantics
 
         public string SpecialName = "";
         public MethodAttributes MthdAttrs;
-        //public List<Variable2> Params;
         public List<Variable> Params
         {
             get
@@ -468,7 +467,6 @@ namespace Nana.Semantics
         public bool IsConstructor { get { return Nana.IMRs.IMRGenerator.IsAnyCons(Family.Name); } }
         public bool IsEntryPoint { get { return Family != null && (Family.Name == EntryPointNameDefault || Family.Name == EntryPointNameImplicit); } }
         public bool IsInherited = false;
-        public bool IsReferencing { get { return Mb != null; } }
         public bool IsStatic { get { return (MthdAttrs & MethodAttributes.Static) == MethodAttributes.Static; } }
         public bool IsInstance { get { return (MthdAttrs & MethodAttributes.Static) != MethodAttributes.Static; } }
         public bool IsVirtual { get { return (MthdAttrs & MethodAttributes.Virtual) == MethodAttributes.Virtual; } }
@@ -534,7 +532,7 @@ namespace Nana.Semantics
             new List<ParameterInfo>(mb.GetParameters()).ForEach(delegate(ParameterInfo p)
                     { NewParam(p.Name, Env.FindOrNewRefType(p.ParameterType)); });
                     //{ NewParam(p.Name, App.FindOrNewRefType(p.ParameterType)); });
-            IsReferencing_ = true;
+            IsReferencing = true;
             MthdAttrs = mb.Attributes;
             if (MethodAttributes.SpecialName == (mb.Attributes & MethodAttributes.SpecialName))
             { SpecialName = mb.Name; }
@@ -651,8 +649,6 @@ namespace Nana.Semantics
 
         public List<INmd> DebuggerDisplayMembers { get { return Members_; } }
 
-        new public bool IsReferencing { [DebuggerNonUserCode]  get { return (RefType != null); } }
-
         public Typ(Token seed, Nsp family)
             : base(seed, family, null)
         {
@@ -701,7 +697,7 @@ namespace Nana.Semantics
         {
             RefType = refType;
             IsValueType = refType.IsValueType;
-            IsReferencing_ = true;
+            IsReferencing = true;
             _FullName = refType.FullName;
             AssemblyName = refType.Assembly.GetName().Name;
         }
@@ -755,6 +751,7 @@ namespace Nana.Semantics
             _FullName = genericTyp._FullName;
             IsValueType = genericTyp.IsValueType;
             RefType = genericTyp.RefType;
+            IsReferencing = true;
 
             Name = genericTyp._FullName + "<" + string.Join(","
             , new List<Typ>(genericTypeParams).ConvertAll<string>(

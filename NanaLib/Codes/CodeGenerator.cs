@@ -215,13 +215,13 @@ namespace Nana.CodeGeneration
 
         public string BeginNsp(Nsp d)
         {
-            if (d.IsReferencing_) { return ""; }
+            if (d.IsReferencing) { return ""; }
             return "";
         }
 
         public string EndNsp(Nsp d)
         {
-            if (d.IsReferencing_) { return ""; }
+            if (d.IsReferencing) { return ""; }
             return "";
         }
 
