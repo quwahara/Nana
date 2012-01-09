@@ -101,12 +101,6 @@ namespace Nana.Semantics
         public T BeAMember<T>(T member) where T : INmd
         {
             if (member.Name == null) { return default(T); }
-            if (ContainsKey(member.Name))
-            {
-                INmd m = Find(member.Name);
-                throw new SyntaxError("The member is already defined, exists:" + m.ToString() + ", candidate:" + member.ToString() + ", in:" + this.ToString());
-                //throw new SyntaxError("The member is already defined:" + member.Name);
-            }
             Members.Add(member);
             member.Family = this;
             return member;

@@ -708,6 +708,28 @@ class A
             Test();
         }
 
+        [Test]
+        public void TC0109_Error_1_The_variable_is_already_defined()
+        {
+            Inp = @"
+a:int
+a:int
+";
+            EpcIL = @"(ERROR)The variable is already defined. Variable name:a";
+            Test();
+        }
+
+        [Test]
+        public void TC0109_Error_2_The_type_is_already_defined()
+        {
+            Inp = @"
+class a ... ,,,
+class a ... ,,,
+";
+            EpcIL = @"(ERROR)The type is already defined. Type name:a";
+            Test();
+        }
+
         public void Test()
         {
             Func<TestCase, string> f = delegate(TestCase c)

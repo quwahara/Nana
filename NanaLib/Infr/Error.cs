@@ -60,6 +60,18 @@ namespace Nana.Infr
         }
     }
 
+    public class SemanticError : Error
+    {
+        public SemanticError(string message)
+            : base(message)
+        {
+        }
+        public SemanticError(string message, Token t)
+            : base(message, t)
+        {
+        }
+    }
+
     public class TypeError : Error
     {
         public TypeError(string message, Token t)

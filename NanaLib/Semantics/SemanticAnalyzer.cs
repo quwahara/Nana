@@ -248,7 +248,10 @@ namespace Nana.Semantics
             Debug.Assert(t.Follows != null);
             Debug.Assert(t.Follows.Length == 1);
 
-            AnId id = Require<AnId>(t.First);
+            object obj = Gate(t.First);
+            if (obj.GetType() != typeof(AnId))
+            { throw new SemanticError("The variable is already defined. Variable name:" + t.First.Value, t.First); }
+            AnId id = obj as AnId;
             Typ ty = RequireTyp(t.Follows[0]);
 
             return Actn.NewVar(id.Seed.Value, ty);
@@ -1003,10 +1006,12 @@ namespace Nana.Semantics
             Token t = Seed;
             Token name = t.Find("@Name");
             if (name == null || string.IsNullOrEmpty(name.Value))
-            { throw new SyntaxError("Specify name to the class", t); }
+            { throw new InternalError("Specify name to the type", t); }
 
             AppAnalyzer appazr = FindUpTypeOf<AppAnalyzer>();
             App app = appazr.App;
+            if (app.ContainsKey(name.Value))
+            { throw new SemanticError("The type is already defined. Type name:" + name.Value, name); }
             Typu = app.NewTyp(name);
 
             base.Nsp = base.Actn = Typu;
