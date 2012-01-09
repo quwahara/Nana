@@ -919,9 +919,6 @@ namespace Nana.Semantics
             if (isCtor)
             {
                 returnType = FindUpTypeIs<TypAnalyzer>().Typu;
-
-                //returnType = Above.Nsp is Typ
-                //    ? Above.Nsp as Typ : Above.Nsp.FindUpTypeIs<Typ>();
             }
             else if (null != (ty = t.Find("@TypeSpec/@TypeSpec2")))
             {
@@ -929,7 +926,6 @@ namespace Nana.Semantics
             }
 
             Actn = returnType == voidtyp
-                //Actn = returnType == null
                 ? ovld.NewActn(new Token(nameasm), prmls)
                 : ovld.NewFctn(new Token(nameasm), prmls, returnType);
 
@@ -945,13 +941,6 @@ namespace Nana.Semantics
                 { throw new SyntaxError("Cannot define instance constructor in this sapce", t); }
                 Actn.NewThis();
             }
-
-            //if (Nana.IMRs.IMRGenerator.IsInstCons(nameasm))
-            //{
-            //    Token baseInstanceConstructorCall = new Token(".ctor");
-            //    RegisterAnalyzer(new BaseInstanceConstructorCallAnalyzer(baseInstanceConstructorCall, this));
-            //}
-
         }
 
         public string ResolveFuncType(string func, bool isInTypDecl)
