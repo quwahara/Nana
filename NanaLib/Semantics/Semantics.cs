@@ -747,17 +747,8 @@ namespace Nana.Semantics
             return ls.ToArray();
         }
 
-        static public string ToBracket(int dimension)
-        {
-            string s = "[";
-            if (dimension >= 2) s += "0...";
-            for (int i = 2; i <= dimension; i++) s += ",0...";
-            s += "]";
-            return s;
-        }
-
         public Typ(Typ typ, Env env, int dimension)
-            : base(new Token(typ._FullName + ToBracket(dimension)), env, null)
+            : base(new Token(typ._FullName + "[" + dimension + "]"), env, null)
         {
             Dimension = dimension;
             IsVector = dimension == 1;

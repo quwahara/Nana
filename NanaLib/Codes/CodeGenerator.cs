@@ -93,7 +93,7 @@ namespace Nana.CodeGeneration
             string brk = "";
             while (t.IsVectorOrArray)
             {
-                brk = Typ.ToBracket(t.Dimension) + brk;
+                brk = ToArrayBracket(t.Dimension) + brk;
                 t = t.ArrayType;
             }
 
@@ -106,6 +106,15 @@ namespace Nana.CodeGeneration
             if (t.RefType == typeof(string)) { return "string" + brk; }
 
             return null;
+        }
+
+        static public string ToArrayBracket(int dimension)
+        {
+            string s = "[";
+            if (dimension >= 2) s += "0...";
+            for (int i = 2; i <= dimension; i++) s += ",0...";
+            s += "]";
+            return s;
         }
 
         static public string TypeNameGeneral(Typ t)
