@@ -730,6 +730,17 @@ class a ... ,,,
             Test();
         }
 
+        [Test]
+        public void TC0109_Error_3_The_function_is_already_defined()
+        {
+            Inp = @"
+fun a() .. ,,
+fun a() .. ,,
+";
+            EpcIL = @"(ERROR)The function is already defined. Function name:a";
+            Test();
+        }
+
         public void Test()
         {
             Func<TestCase, string> f = delegate(TestCase c)

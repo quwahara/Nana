@@ -102,6 +102,16 @@ namespace Nana.Infr
 
         public static bool NotNull(object obj) { return obj != null; }
 
+        public static bool EqualForAll(object[] a, object[] b)
+        {
+            if (a == null || b == null) { return false; }
+            if (a.Length != b.Length) { return false; }
+            int len = a.Length;
+            for (int i = 0; i < len; ++i)
+            { if (a[i] != b[i]) { return false; } }
+            return true;
+        }
+
     }
 
     /// <summary>Funkadelic List</summary>

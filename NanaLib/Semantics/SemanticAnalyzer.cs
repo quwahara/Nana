@@ -903,6 +903,7 @@ namespace Nana.Semantics
             }
 
             List<Variable> prmls = new List<Variable>();
+            List<Typ> signature = new List<Typ>();
             Token ty;
             foreach (Token p in prms)
             {
@@ -911,6 +912,7 @@ namespace Nana.Semantics
                 Debug.Assert(typ != null);
                 Debug.Assert(string.IsNullOrEmpty(p.Value) == false);
                 prmls.Add(new Variable(p.Value, null, typ, Variable.VariableKind.Param));
+                signature.Add(typ);
             }
 
             Typ voidtyp =  FindUpTypeOf<EnvAnalyzer>().Env.FindOrNewRefType(typeof(void));
@@ -924,6 +926,9 @@ namespace Nana.Semantics
             {
                 returnType = RequireTyp(ty);
             }
+
+            if (ovld.Contains(signature.ToArray()))
+            { throw new SemanticError("The function is already defined. Function name:" + nameasm, t); }
 
             Actn = returnType == voidtyp
                 ? ovld.NewActn(new Token(nameasm), prmls)

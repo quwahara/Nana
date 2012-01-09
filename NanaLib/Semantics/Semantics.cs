@@ -267,15 +267,9 @@ namespace Nana.Semantics
                 .Find(delegate(Typ t)
                 {
                     bool b = t.GenericType == typ
-                      && t.GenericTypeParams != null
-                      && t.GenericTypeParams.Length == genericTypeParams.Length;
-                    if (b == false) { return false; }
-                    for (int i = 0; i < t.GenericTypeParams.Length; ++i)
-                    {
-                        if (t.GenericTypeParams[i] != genericTypeParams[i])
-                        { return false; }
-                    }
-                    return false;
+                        && Cty.EqualForAll(t.GenericTypeParams, genericTypeParams)
+                        ;
+                    return b;
                 });
         }
 
@@ -434,22 +428,17 @@ namespace Nana.Semantics
             return candidates;
         }
 
-        static bool IsAssignableFrom(Typ[] src, Typ[] dst)
+        public bool Contains(Typ[] signature)
         {
-            Debug.Assert(src != null && dst != null);
-            if (src.Length != dst.Length) { return false; }
-            for (int i = 0; i < dst.Length; ++i)
-            { if (false == dst[i].IsAssignableFrom(src[i])) { return false; } }
-            return true;
-        }
-
-        static bool EqualsAllIn(Typ[] a, Typ[] b)
-        {
-            Debug.Assert(a != null && b != null);
-            if (a.Length != b.Length) { return false; }
-            for (int i = 0; i < b.Length; ++i)
-            { if (b[i] == a[i]) { return false; } }
-            return true;
+            Actn a;
+            for (int i = 0; i < Members.Count; ++i)
+            {
+                if (null == (a = (Members[i] as Actn)))
+                { continue; }
+                if (a.IsSameSignature(signature))
+                { return true; }
+            }
+            return false;
         }
 
         static string Signature(List<Typ> typs)
@@ -514,14 +503,9 @@ namespace Nana.Semantics
             return true;
         }
 
-        public bool IsSameSignature(Typ[] callertyps)
+        public bool IsSameSignature(Typ[] signature)
         {
-            if (callertyps == null) { return false; }
-            Typ[] sign = Signature;
-            if (sign.Length != callertyps.Length) { return false; }
-            for (int i = 0; i < sign.Length; ++i)
-            { if (sign[i] != callertyps[i]) { return false; } }
-            return true;
+            return Cty.EqualForAll(Signature, signature);
         }
 
         public List<IExecutable> Exes = new List<IExecutable>();
