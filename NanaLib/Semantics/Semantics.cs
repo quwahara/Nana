@@ -698,6 +698,12 @@ namespace Nana.Semantics
             return FindActnOvld(name) ?? NewActnOvld(name);
         }
 
+        public ActnOvld FindActnOvld(string name)
+        {
+            return FindAllTypeOf<ActnOvld>()
+                        .Find(GetNamePredicate<ActnOvld>(name));
+        }
+
         public ActnOvld NewActnOvld(string name)
         {
             if (Members_.Exists(GetNamePredicate<INmd>(name)))
@@ -705,12 +711,6 @@ namespace Nana.Semantics
             ActnOvld ovl = new ActnOvld(new Token(name), this);
             BeAMember(ovl);
             return ovl;
-        }
-
-        public ActnOvld FindActnOvld(string name)
-        {
-            return FindAllTypeOf<ActnOvld>()
-                        .Find(GetNamePredicate<ActnOvld>(name));
         }
 
         public Type RefType = null;
