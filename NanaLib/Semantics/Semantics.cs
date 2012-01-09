@@ -49,10 +49,10 @@ namespace Nana.Semantics
     public class Nsp : INmd
     {
         public Token Seed;
-        public string _Name;
-        public string Name { get { return _Name; } set { _Name = value; } }
-        public Nsp _Family;
-        public Nsp Family { get { return _Family; } set { _Family = value; } }
+        public string Name_;
+        public string Name { get { return Name_; } set { Name_ = value; } }
+        public Nsp Family_;
+        public Nsp Family { get { return Family_; } set { Family_ = value; } }
 
         public List<INmd> Members_ = new List<INmd>();
 
@@ -62,10 +62,9 @@ namespace Nana.Semantics
 
         public Nsp(string name, Nsp family, bool isReferencing)
         {
-            _Name = name;
+            Name_ = name;
             Family = family;
             IsReferencing_ = isReferencing;
-
         }
 
         public Nsp(string name, Nsp family)
@@ -132,12 +131,12 @@ namespace Nana.Semantics
 
         public T FindUpTypeOf<T>() where T : Nsp
         {
-            return _Family == null ? null : _Family.GetType() == typeof(T) ? _Family as T : _Family.FindUpTypeOf<T>();
+            return Family_ == null ? null : Family_.GetType() == typeof(T) ? Family_ as T : Family_.FindUpTypeOf<T>();
         }
 
         public T FindUpTypeIs<T>() where T : Nsp
         {
-            return _Family == null ? null : _Family is T ? _Family as T : _Family.FindUpTypeIs<T>();
+            return Family_ == null ? null : Family_ is T ? Family_ as T : Family_.FindUpTypeIs<T>();
         }
 
         public List<T> FindDownAllTypeOf<T>() where T : Nsp
@@ -561,7 +560,7 @@ namespace Nana.Semantics
             if (params_ == null) { return; }
             params_.ConvertAll<StringBuilder>(delegate(Variable v)
             { return b.Append(" ").Append(v.Typ._FullName); });
-            _Name = seed.Value + b.ToString();
+            Name_ = seed.Value + b.ToString();
             params_.ForEach(delegate(Variable v)
             { BeAMember(v); });
         }
