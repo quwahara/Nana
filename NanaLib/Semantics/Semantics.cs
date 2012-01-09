@@ -302,25 +302,6 @@ namespace Nana.Semantics
         {
         }
 
-        public Actn Inherit(Actn a)
-        {
-            return a.GetType() == typeof(Fctn) ? InheritFctn(a as Fctn) : InheritActn(a);
-        }
-
-        public Actn InheritActn(Actn a)
-        {
-            Actn inh = a.Mb == null ? NewActn(a.Seed, a.Params) : NewActn(a.Mb);
-            inh.IsInherited = true;
-            return inh;
-        }
-
-        public Fctn InheritFctn(Fctn f)
-        {
-            Fctn inh = f.Mb == null ? NewFctn(f.Seed, f.Params, f.Typ) : NewFctn(f.Mb);
-            inh.IsInherited = true;
-            return inh;
-        }
-
         public Actn NewActn(Token seed, List<Variable> params_)
         {
             return BeAMember(new Actn(seed, this, params_));
@@ -816,12 +797,6 @@ namespace Nana.Semantics
         {
             return BeAMember<Prop>(new Prop(this, p));
         }
-
-        public void InheritActnOvld(ActnOvld ov)
-        { ov.FindAllTypeIs<Actn>().ForEach(InheritActn); }
-
-        public void InheritActn(Actn a)
-        { FindOrNewActnOvld(a.Name).Inherit(a); }
 
         public bool IsAssignableFrom(Typ y)
         {
