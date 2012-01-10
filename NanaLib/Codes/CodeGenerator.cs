@@ -596,7 +596,8 @@ namespace Nana.CodeGeneration
             string nm;
             if (MethodAttributes.SpecialName != (fi.MthdAttrs & MethodAttributes.SpecialName))
             {
-                nm = fi.Family.Name;
+                nm = fi.Name;
+                //nm = fi.Family.Name;
             }
             else
             {

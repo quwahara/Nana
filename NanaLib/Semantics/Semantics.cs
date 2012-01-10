@@ -488,12 +488,6 @@ namespace Nana.Semantics
         }
 
         public List<IExecutable> Exes = new List<IExecutable>();
-        //public List<Func<string>> _Intermediates = new List<Func<string>>();
-        //public List<Func<string>> Instructions
-        //{
-        //    get { return _Intermediates; }
-        //    set { _Intermediates = value; ; }
-        //}
 
         public List<IMR> _Intermediates = new List<IMR>();
         public List<IMR> Instructions
@@ -502,22 +496,10 @@ namespace Nana.Semantics
             set { _Intermediates = value; ; }
         }
 
-        //public List<object> _Intermediates = new List<object>();
-        //public List<object> Instructions
-        //{
-        //    get { return _Intermediates; }
-        //    set { _Intermediates = value; ; }
-        //}
-
         public Actn(Token seed, Nsp family, List<Variable> params_)
             : base(seed, family)
         {
-            StringBuilder b = new StringBuilder();
-
             if (params_ == null) { return; }
-            params_.ConvertAll<StringBuilder>(delegate(Variable v)
-            { return b.Append(" ").Append(v.Typ._FullName); });
-            Name_ = seed.Value + b.ToString();
             params_.ForEach(delegate(Variable v)
             { BeAMember(v); });
         }
