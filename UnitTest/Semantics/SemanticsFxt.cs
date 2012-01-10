@@ -122,7 +122,7 @@ end
         , VarKind=This
         }:Variable
     , Callee={
-        Name=0
+        Name=.ctor
         }:Fctn
     , Args={}
     , IsNewObj=False

@@ -525,13 +525,11 @@ namespace Nana.Semantics
         public MethodBase Mb;
 
         public Actn(MethodBase mb, Nsp family)
-            : base(new Token(family.Members.Count.ToString()), family)
-            //: base(new Token(GenSignature(mb)), family)
+            : base(new Token(mb.Name), family)
         {
             Mb = mb;
             new List<ParameterInfo>(mb.GetParameters()).ForEach(delegate(ParameterInfo p)
                     { NewParam(p.Name, Env.FindOrNewRefType(p.ParameterType)); });
-                    //{ NewParam(p.Name, App.FindOrNewRefType(p.ParameterType)); });
             IsReferencing = true;
             MthdAttrs = mb.Attributes;
             if (MethodAttributes.SpecialName == (mb.Attributes & MethodAttributes.SpecialName))
@@ -918,6 +916,7 @@ namespace Nana.Semantics
                 typ = typ.BaseTyp;
                 mem = typ.Find(name);
             }
+            //  you have to clone instance when the found method was base class method
             if (mem != null && mem.Family != this)
             {
                 mem = mem.Clone();
