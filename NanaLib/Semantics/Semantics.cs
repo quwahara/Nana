@@ -512,15 +512,13 @@ namespace Nana.Semantics
             return BeAMember(new Variable(name, this, typ, Variable.VariableKind.Param));
         }
 
+        public LinkedList<Variable> Vars = new LinkedList<Variable>();
+
         virtual public Variable NewVar(string name, Typ typ)
         {
-            return BeAMember(new Variable(name, this, typ, Variable.VariableKind.Local));
-        }
-
-        public List<Variable> FindAllLocalVariables()
-        {
-            return FindAllTypeOf<Variable>()
-                .FindAll(delegate(Variable v) { return v.VarKind == Variable.VariableKind.Local; });
+            Variable v = new Variable(name, this, typ, Variable.VariableKind.Local);
+            Vars.AddLast(v);
+            return BeAMember(v);
         }
 
         static public string GenSignature(MethodBase mb)
@@ -926,7 +924,9 @@ namespace Nana.Semantics
 
         override public Variable NewVar(string name, Typ typ)
         {
-            return BeAMember(new Variable(name, this, typ, Variable.VariableKind.StaticField));
+            Variable v = new Variable(name, this, typ, Variable.VariableKind.StaticField);
+            Vars.AddLast(v);
+            return BeAMember(v);
         }
 
     }

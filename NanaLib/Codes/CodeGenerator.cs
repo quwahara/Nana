@@ -281,10 +281,9 @@ namespace Nana.CodeGeneration
                 .Append(".module ")
                 .Append(name)
                 .AppendLine();
-            ap.FindAllTypeOf<Variable>()
-                .FindAll(delegate(Variable v) { return v.VarKind == Variable.VariableKind.StaticField; })
-                .ConvertAll<StringBuilder>(delegate(Variable v) { return b.Append(DeclareField(v)); })
-                ;
+
+            foreach (Variable v in ap.Vars)
+            { b.Append(DeclareField(v)); }
 
             return b.ToString();
         }
@@ -373,20 +372,22 @@ namespace Nana.CodeGeneration
 
             if (f.IsEntryPoint) { b.Append(ind1).Append(".entrypoint").AppendLine(); }
 
-            List<Variable> locals = f.FindAllLocalVariables();
 
-            if (locals.Count >= 1)
+            if (f.Vars.Count > 0)
             {
                 b.Append(ind1).Append(".locals (").AppendLine();
-                Variable v;
                 Func<Typ, string> lf = TypeNameInSig;
-                v = locals[0];
-                b.Append(ind2).Append(lf(v.Typ)).Append(" ").Append(v.Name).AppendLine();
-                for (int i = 1; i < locals.Count; ++i)
-                {
-                    v = locals[i];
-                    b.Append(ind2).Append(", ").Append(lf(v.Typ)).Append(" ").Append(v.Name).AppendLine();
-                }
+                b.Append(ind2);
+                b.Append(
+                    string.Join(Environment.NewLine  + ind2 + ", "
+                    , (new List<Variable>(f.Vars))
+                    .ConvertAll<string>(delegate(Variable v)
+                    { return lf(v.Typ) + " " + v.Name; }
+                    )
+                    .ToArray()
+                    )
+                    );
+                b.AppendLine();
                 b.Append(ind1).Append(")").AppendLine();
             }
 
