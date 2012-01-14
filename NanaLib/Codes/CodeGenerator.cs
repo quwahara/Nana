@@ -605,31 +605,19 @@ namespace Nana.CodeGeneration
             b.Append(Qk(nm));
 
             b.Append("(");
-            Variable v;
-            string s;
-            List<Variable> Params = a.FindAllTypeOf<Variable>();
-            Params.RemoveAll(delegate(Variable vv)
+            List<Variable> prms = a.Params;
+            if (prms.Count > 0)
             {
-                return vv.VarKind != Variable.VariableKind.Param
-                    && vv.VarKind != Variable.VariableKind.ParamGeneric;
-            });
-            if (Params.Count > 0)
-            {
-                v = Params[0];
-                s = v.VarKind == Variable.VariableKind.ParamGeneric
-                    ? "!" + v.GenericIndex : TypeNameInSig(v.Typ);
-                b.Append(s);
-                for (int i = 1; i < Params.Count; i++)
-                {
-                    b.Append(", ");
-                    v = Params[i];
-                    s = v.VarKind == Variable.VariableKind.ParamGeneric
-                        ? "!" + v.GenericIndex : TypeNameInSig(v.Typ);
-                    //s = TypeLongForm(v.Typ);
-                    b.Append(s);
-                }
+                b.Append(
+                    string.Join(", "
+                    , prms.ConvertAll<string>(delegate(Variable v)
+                    {
+                        return v.VarKind == Variable.VariableKind.ParamGeneric
+                            ? "!" + v.GenericIndex : TypeNameInSig(v.Typ);
+                    })
+                    .ToArray()
+                    ));
             }
-
             b.Append(")");
 
             return b.ToString();
