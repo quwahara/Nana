@@ -111,11 +111,6 @@ namespace Nana.Semantics
             return member;
         }
 
-        public T FindInTypeOf<T>()
-        {
-            return (T)Members.Find(delegate(INmd m) { return m.GetType() == typeof(T); });
-        }
-
         public List<T> FindAllTypeOf<T>() where T : class, INmd
         {
             return Members.FindAll(delegate(INmd v) { return v.GetType() == typeof(T); })
@@ -198,6 +193,7 @@ namespace Nana.Semantics
 
     public class Env : Nsp
     {
+        public App Ap;
         public TypeLoader TypeLdr = new TypeLoader();
         public int Sequence = 0;
         public string GetTempName() { ++Sequence; return "$" + Sequence.ToString("D6"); }
@@ -211,7 +207,8 @@ namespace Nana.Semantics
 
         public App NewApp(Token seed)
         {
-            return BeAMember(new App(seed, this, this));
+            Ap = new App(seed, this, this);
+            return BeAMember(Ap);
         }
 
         public Typ NewRefTyp(Type refType)

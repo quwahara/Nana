@@ -189,7 +189,7 @@ namespace Nana
             AfterSemanticAnalyze(root, env);
 
             IMRGenerator imrgen = new IMRGenerator();
-            imrgen.GenerateIMR(env.FindInTypeOf<App>());
+            imrgen.GenerateIMR(env.Ap);
 
             Token code = root.Find("@Code");
             CodeGenerator codegen = new CodeGenerator();
