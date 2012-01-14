@@ -179,17 +179,17 @@ namespace Nana.Semantics
 
         public object Num(Token t)
         {
-            return new Literal(int.Parse(t.Value), Env.FindOrNewRefType(typeof(int)), TmpVarGen);
+            return new Literal(int.Parse(t.Value), Env.BTY.Int, TmpVarGen);
         }
 
         public object Str(Token t)
         {
-            return new Literal(t.Value.Substring(1, t.Value.Length - 2), Env.FindOrNewRefType(typeof(string)));
+            return new Literal(t.Value.Substring(1, t.Value.Length - 2), Env.BTY.String);
         }
 
         public object Bol(Token t)
         {
-            return new Literal(t.Value == "true", Env.FindOrNewRefType(typeof(bool)), TmpVarGen);
+            return new Literal(t.Value == "true", Env.BTY.Bool, TmpVarGen);
         }
 
         public object Id(Token t)
@@ -265,9 +265,6 @@ namespace Nana.Semantics
 
             lv = Require<IValuable>(t.First);
             rv = Require<IValuable>(t.Second);
-            Typ boolty = Env.FindOrNewRefType(typeof(bool));
-            Typ intty = Env.FindOrNewRefType(typeof(int));
-            Typ stringty = Env.FindOrNewRefType(typeof(string));
 
             string ope = t.Value;
             Typ tp = lv.Typ;
@@ -281,7 +278,7 @@ namespace Nana.Semantics
                     case "*":
                     case "/":
                     case "%":
-                        c = new CalcInfo(ope, lv, rv, intty); break;
+                        c = new CalcInfo(ope, lv, rv, Env.BTY.Int); break;
 
                     case "==":
                     case "!=":
@@ -292,7 +289,7 @@ namespace Nana.Semantics
                     case "and":
                     case "or":
                     case "xor":
-                        c = new CalcInfo(ope, lv, rv, boolty); break;
+                        c = new CalcInfo(ope, lv, rv, Env.BTY.Bool); break;
 
                     default:
                         throw new SyntaxError("Can not use '" + ope + "'", t);
@@ -309,7 +306,7 @@ namespace Nana.Semantics
                     case "and":
                     case "or":
                     case "xor":
-                        c = new CalcInfo(ope, lv, rv, boolty); break;
+                        c = new CalcInfo(ope, lv, rv, Env.BTY.Bool); break;
 
                     default:
                         throw new SyntaxError("Can not use '" + ope + "'", t);
@@ -320,7 +317,8 @@ namespace Nana.Semantics
             {
                 if (ope == "+")
                 {
-                    Fctn concat = stringty.FindActnOvld("Concat").GetActnOf(stringty, new Typ[] { stringty, stringty }, ThisTyp, Actn) as Fctn;
+                    Typ ts = Env.BTY.String;
+                    Fctn concat = ts.FindActnOvld("Concat").GetActnOf(ts, new Typ[] { ts, ts }, ThisTyp, Actn) as Fctn;
                     return new CallFunction(tp, concat, /* instance */ null, new IValuable[] { lv, rv }, /* isNewObj */ false);
                 }
                 else
@@ -936,8 +934,7 @@ namespace Nana.Semantics
                 signature.Add(typ);
             }
 
-            Typ voidtyp =  FindUpTypeOf<EnvAnalyzer>().Env.FindOrNewRefType(typeof(void));
-
+            Typ voidtyp = FindUpTypeOf<EnvAnalyzer>().Env.BTY.Void;
             Typ returnType = voidtyp;
             if (isCtor)
             {
@@ -1175,9 +1172,7 @@ namespace Nana.Semantics
         {
             Env = new Env(Seed);
             base.Nsp = Env;
-            AddSystemTyps(Env);
             AddBuiltInFunction("`p", "WriteLine", typeof(Console));
-            //AddBuiltInFunction(Env, "`p", "WriteLine", typeof(Console));
             foreach (Token opt in Seed.Find("@CompileOptions").Follows)
             {
                 switch (opt.Group.ToLower())
@@ -1198,22 +1193,6 @@ namespace Nana.Semantics
             Subs.AddLast(new AppAnalyzer(Seed.Find("@Syntax"), this));
             ConstructSubsAll();
         }
-
-        static public void AddSystemTyps(Env env)
-        {
-            env.FindOrNewRefType(typeof(void));
-            env.FindOrNewRefType(typeof(object));
-            env.FindOrNewRefType(typeof(string));
-        }
-
-        //static public void AddBuiltInFunction(Env env, string built_in_function_name, string actualname, Type holdertype)
-        //{
-        //    ActnOvld ao = env.NewActnOvld(built_in_function_name);
-        //    Typ hty = env.FindOrNewRefType(holdertype);
-        //    ActnOvld actualao = hty.FindMemeber(actualname) as ActnOvld;
-        //    Debug.Assert(actualao != null);
-        //    ao.Members.AddRange(actualao.Members);
-        //}
 
         public void AddBuiltInFunction(string built_in_function_name, string actualname, Type holdertype)
         {

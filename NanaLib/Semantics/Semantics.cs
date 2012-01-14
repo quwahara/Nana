@@ -184,6 +184,7 @@ namespace Nana.Semantics
 
     public class Env : Nsp
     {
+        public BuiltInTyp BTY;
         public App Ap;
         public TypeLoader TypeLdr = new TypeLoader();
         public int Sequence = 0;
@@ -194,6 +195,7 @@ namespace Nana.Semantics
             : base(seed, null, null)
         {
             E = this;
+            BTY = new BuiltInTyp(this);
         }
 
         public App NewApp(Token seed)
@@ -277,6 +279,26 @@ namespace Nana.Semantics
             return ovl;
         }
 
+    }
+
+    public class BuiltInTyp
+    {
+        public Typ Void;
+        public Typ Object;
+        public Typ String;
+        public Typ Bool;
+        public Typ Int;
+        public Typ Array;
+
+        public BuiltInTyp(Env e)
+        {
+            Void = e.FindOrNewRefType(typeof(void));
+            Object = e.FindOrNewRefType(typeof(object));
+            String = e.FindOrNewRefType(typeof(string));
+            Bool = e.FindOrNewRefType(typeof(bool));
+            Int = e.FindOrNewRefType(typeof(int));
+            Array = e.FindOrNewRefType(typeof(System.Array));
+        }
     }
 
     public class ActnOvld : Nsp
@@ -692,7 +714,7 @@ namespace Nana.Semantics
             IsArray = dimension > 1;
             IsVectorOrArray = IsVector || IsArray;
             ArrayType = typ;
-            SetBaseTyp(env.FindOrNewRefType(typeof(System.Array)));
+            SetBaseTyp(env.BTY.Array);
         }
 
         public Typ GenericType = null;
