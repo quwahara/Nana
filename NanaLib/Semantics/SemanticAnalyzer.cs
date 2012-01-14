@@ -68,6 +68,7 @@ namespace Nana.Semantics
 
     public class LineAnalyzer : SemanticAnalyzer
     {
+        public Typ ThisTyp;
         public BlockAnalyzer AboveBlock;
 
         public Stack<Literal> Breaks;
@@ -93,6 +94,7 @@ namespace Nana.Semantics
 
         public void AnalyzeLine()
         {
+            ThisTyp = AboveBlock.ThisTyp;
             Actn = FindUpTypeIs<ActnAnalyzer>().Actn;
             IsInFctn = Actn is Fctn;
             Fctn = IsInFctn ? Actn as Fctn : null;
@@ -318,8 +320,8 @@ namespace Nana.Semantics
             {
                 if (ope == "+")
                 {
-                    Fctn concat = stringty.FindActnOvld("Concat").GetActnOf(new Typ[] { stringty, stringty }, Actn) as Fctn;
-                    return new CallFunction(concat, /* instance */ null, new IValuable[] { lv, rv }, /* isNewObj */ false);
+                    Fctn concat = stringty.FindActnOvld("Concat").GetActnOf(stringty, new Typ[] { stringty, stringty }, ThisTyp, Actn) as Fctn;
+                    return new CallFunction(tp, concat, /* instance */ null, new IValuable[] { lv, rv }, /* isNewObj */ false);
                 }
                 else
                 {
@@ -499,12 +501,14 @@ namespace Nana.Semantics
 
             ActnOvld actovl = null;
             Member mbr = null;
+            Typ calleetyp = null;
             if (firstty == typeof(Member))
             {
                 mbr = first as Member;
                 if (mbr.Value.GetType() != typeof(ActnOvld))
                 { throw new NotImplementedException(); }
 
+                calleetyp = mbr.Ty;
                 actovl = mbr.Value as ActnOvld;
             }
             if (firstty == typeof(ActnOvld))
@@ -514,23 +518,24 @@ namespace Nana.Semantics
             bool isNewObj = false;
             if (firstty == typeof(Typ))
             {
+                calleetyp = first as Typ;
                 isNewObj = true;
-                actovl = (first as Typ).FindActnOvld(Nana.IMRs.IMRGenerator.InstCons);
+                actovl = calleetyp.FindActnOvld(Nana.IMRs.IMRGenerator.InstCons);
             }
             Debug.Assert(actovl != null);
 
             Actn sig = null;
 
-            sig = actovl.GetActnOf(argtyps.ToArray(), Actn);
+            sig = actovl.GetActnOf(calleetyp, argtyps.ToArray(), ThisTyp, Actn);
             if (sig == null) { throw new SyntaxError("It is not a member", t.First); }
 
             IValuable instance = mbr == null ? null : mbr.Instance;
 
             if (sig.GetType() == typeof(Actn))
-            { return new CallAction(sig, instance, argvals.ToArray(), false /*:isNewObj*/); }
+            { return new CallAction(calleetyp, sig, instance, argvals.ToArray(), false /*:isNewObj*/); }
 
             if (sig.GetType() == typeof(Fctn))
-            { return new CallFunction(sig as Fctn, instance, argvals.ToArray(), isNewObj); }
+            { return new CallFunction(calleetyp, sig as Fctn, instance, argvals.ToArray(), isNewObj); }
 
             throw new NotImplementedException();
         }
@@ -574,9 +579,9 @@ namespace Nana.Semantics
 
             if (mbr == null) { throw new SyntaxError("It is not a member", t.Second); }
 
-            if (mbr is Prop) { return new CallPropInfo(mbr as Prop, v); };
+            if (mbr is Prop) { return new CallPropInfo(y, mbr as Prop, v); };
 
-            return new Member(t, mbr, v);
+            return new Member(t, y, mbr, v);
         }
 
         static public readonly Token Empty = new Token("(Empty)", "Empty");
@@ -839,12 +844,12 @@ namespace Nana.Semantics
             }
         }
 
-        virtual public INmd Find(Token t)
+        virtual public object Find(Token t)
         {
             return Nsp.Find(t.Value);
         }
 
-        virtual public INmd FindUp(Token t)
+        virtual public object FindUp(Token t)
         {
             return Find(t) ?? (AboveBlock != null ? AboveBlock.FindUp(t) : null);
         }
@@ -852,6 +857,22 @@ namespace Nana.Semantics
         public virtual Typ RequireTyp(Token t)
         { return AboveBlock == null ? null : AboveBlock.RequireTyp(t); }
 
+        public Typ ThisTyp_ = null;
+        public Typ ThisTyp
+        {
+            get
+            {
+                if (ThisTyp_ == null)
+                {
+                    TypAnalyzer ta
+                        = FindUpTypeOf<TypAnalyzer>()
+                        ?? FindUpTypeOf<AppAnalyzer>()
+                        ;
+                    ThisTyp_ = ta.Typu;
+                }
+                return ThisTyp_;
+            }
+        }
     }
 
     public class ActnAnalyzer : BlockAnalyzer
@@ -944,7 +965,7 @@ namespace Nana.Semantics
                 TypAnalyzer typazr = FindUpTypeOf<TypAnalyzer>();
                 if (typazr == null)
                 { throw new SyntaxError("Cannot define instance constructor in this sapce", t); }
-                Actn.NewThis();
+                Actn.NewThis(typazr.Typu);
             }
         }
 
@@ -1021,6 +1042,17 @@ namespace Nana.Semantics
                 baseTypeDef.FlwsAdd("System.Object", "Id");
             }
             Typu.BaseTyp = RequireTyp(baseTypeDef.Follows[0]);
+        }
+
+        public override object Find(Token t)
+        {
+            INmd n = Typu.Find(t.Value);
+            if (n == null)
+            { return null; }
+            Type nt = n.GetType();
+            if (nt == typeof(ActnOvld))
+            { return new Member(t, Typu, n, null); }
+            return n;
         }
 
     }
@@ -1124,6 +1156,7 @@ namespace Nana.Semantics
     public class EnvAnalyzer : AppAnalyzer
     {
         public Env Env;
+        public Dictionary<string, Member> BuiltInFunctions = new Dictionary<string, Member>();
 
         public EnvAnalyzer(Token seed)
             : base(seed, null)
@@ -1143,7 +1176,8 @@ namespace Nana.Semantics
             Env = new Env(Seed);
             base.Nsp = Env;
             AddSystemTyps(Env);
-            AddBuiltInFunction(Env, "`p", "WriteLine", typeof(Console));
+            AddBuiltInFunction("`p", "WriteLine", typeof(Console));
+            //AddBuiltInFunction(Env, "`p", "WriteLine", typeof(Console));
             foreach (Token opt in Seed.Find("@CompileOptions").Follows)
             {
                 switch (opt.Group.ToLower())
@@ -1172,13 +1206,23 @@ namespace Nana.Semantics
             env.FindOrNewRefType(typeof(string));
         }
 
-        static public void AddBuiltInFunction(Env env, string built_in_function_name, string actualname, Type holdertype)
+        //static public void AddBuiltInFunction(Env env, string built_in_function_name, string actualname, Type holdertype)
+        //{
+        //    ActnOvld ao = env.NewActnOvld(built_in_function_name);
+        //    Typ hty = env.FindOrNewRefType(holdertype);
+        //    ActnOvld actualao = hty.FindMemeber(actualname) as ActnOvld;
+        //    Debug.Assert(actualao != null);
+        //    ao.Members.AddRange(actualao.Members);
+        //}
+
+        public void AddBuiltInFunction(string built_in_function_name, string actualname, Type holdertype)
         {
-            ActnOvld ao = env.NewActnOvld(built_in_function_name);
-            Typ hty = env.FindOrNewRefType(holdertype);
+            Typ hty = Env.FindOrNewRefType(holdertype);
             ActnOvld actualao = hty.FindMemeber(actualname) as ActnOvld;
-            Debug.Assert(actualao != null);
-            ao.Members.AddRange(actualao.Members);
+            BuiltInFunctions.Add(
+                built_in_function_name
+                , new Member(null, hty, actualao, null)
+                );
         }
 
         public void Main()
@@ -1286,9 +1330,11 @@ namespace Nana.Semantics
                 Actn actn = aa.Actn;
                 if (false == Nana.IMRs.IMRGenerator.IsInstCons(actn.Name))
                 { continue; }
-                Actn callee = mytyp.BaseTyp.FindActnOvld(".ctor").GetActnOf(new Typ[] { }, actn);
+                Typ bty = mytyp.BaseTyp;
+                Actn callee = bty.FindActnOvld(".ctor").GetActnOf(bty, new Typ[] { }, mytyp, actn);
                 IValuable instance = actn.FindAllTypeIs<Variable>().Find(Nsp.GetNamePredicate<Variable>("this"));
-                actn.Exes.Add(new CallAction(callee, instance, new IValuable[] { }, false /*:isNewObj*/));
+                actn.Exes.Add(new CallAction(bty, callee, instance, new IValuable[] { }, false /*:isNewObj*/));
+                //actn.Exes.Add(new CallAction(callee, instance, new IValuable[] { }, false /*:isNewObj*/));
             }
         }
 
@@ -1305,10 +1351,16 @@ namespace Nana.Semantics
             return Find(t) as Typ;
         }
 
-        public override INmd Find(Token t)
+        public override object Find(Token t)
         {
             if (TypeUtil.IsBuiltIn(t.Value))
             { return Env.FindOrNewRefType(TypeUtil.FromBuiltIn(t.Value)); }
+
+            {
+                Member m;
+                if (BuiltInFunctions.TryGetValue(t.Value, out m))
+                { return m; }
+            }
 
             INmd n;
             if (null != (n = Env.Find(t.Value))) { return n; }
@@ -1332,7 +1384,7 @@ namespace Nana.Semantics
 
             Token t = GenFuncToken("scons", Actn.EntryPointNameImplicit, "void");
             (new ActnAnalyzer(t, aa)).AnalyzeActn();
-            Actn cctor = app.FindActnOvld(".cctor").GetActnOf(new Typ[] { }, app);
+            Actn cctor = app.FindActnOvld(".cctor").GetActnOf(app, new Typ[] { }, app, app);
             cctor.Exes.AddRange(app.Exes);
             app.Exes.Clear();
         }

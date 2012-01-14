@@ -49,7 +49,7 @@ namespace Nana.IMRs
         public IMR() { }
         public IMR(C c) { C = c; }
         public IMR(C c, string v) : this(c) { StringV = v; }
-        public IMR(C c, Actn v) : this(c) { ActnV = v; }
+        public IMR(C c, Typ vt, Actn va) : this(c) { TypV = vt; ActnV = va; }
         public IMR(C c, Literal v) : this(c) { LiteralV = v; }
         public IMR(C c, Variable v) : this(c) { VariableV = v; }
         public IMR(C c, Typ v) : this(c) { TypV = v; }
@@ -133,9 +133,9 @@ namespace Nana.IMRs
 
         public IMR StArrayElement(Typ t, Typ t2) { return Append(new IMR(C.StArrayElement, t, t2)); }
 
-        public IMR NewObject(Actn a) { return Append(new IMR(C.NewObject, a)); }        
+        public IMR NewObject(Typ t, Actn a) { return Append(new IMR(C.NewObject, t, a)); }
 
-        public IMR CallAction(Actn a) { return Append(new IMR(C.CallAction, a)); }
+        public IMR CallAction(Typ t, Actn a) { return Append(new IMR(C.CallAction, t, a)); }
 
         public IMR Br(string label) { return Append(new IMR(C.Br, label)); }
         public IMR BrFalse(string label) { return Append(new IMR(C.BrFalse, label)); }

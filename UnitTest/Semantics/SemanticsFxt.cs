@@ -100,14 +100,14 @@ end
             Analyze();
 
             Assert.IsNotNull(Env);
-            Assert.AreEqual(2, Env.Members.Count);
+            Assert.AreEqual(1, Env.Members.Count);
 
             App app = Env.Members.Find(delegate(INmd n_) { return n_ is App; }) as App;
             Assert.IsNotNull(app);
 
             Typ typ = Env.FindByNamePath(ModuleFilename + @"/Class1Func0") as Typ;
             ActnOvld ao = Env.FindByNamePath(ModuleFilename + @"/Class1Func0/.ctor") as ActnOvld;
-            Actn a = ao.GetActnOf(new Typ[] { }, typ);
+            Actn a = ao.GetActnOf(typ, new Typ[] { }, typ, typ);
 
             Assert.IsTrue(1 == a.Exes.Count);
             string s = a.Exes[0].ToString();
@@ -159,7 +159,7 @@ end
 
             Typ typ = App.FindByNamePath("T102_Class1Func1P0") as Typ;
             ActnOvld ao = typ.FindByNamePath(@".ctor") as ActnOvld;
-            Actn a = ao.GetActnOf(new Typ[] { }, typ);
+            Actn a = ao.GetActnOf(typ, new Typ[] { }, typ, typ);
 
             Assert.IsTrue(1 == a.Exes.Count);
 
@@ -168,8 +168,8 @@ end
 
             Typ typ2 = App.FindByNamePath("T102_Class1Func1P0") as Typ;
 
-            Actn main = (typ2.FindByNamePath(@"Main") as ActnOvld).GetActnOf(new Typ[] { }, typ2);
-            Actn ctor = (typ2.FindByNamePath(@".ctor") as ActnOvld).GetActnOf(new Typ[] { }, typ2);
+            Actn main = (typ2.FindByNamePath(@"Main") as ActnOvld).GetActnOf(typ2, new Typ[] { }, typ2, typ2);
+            Actn ctor = (typ2.FindByNamePath(@".ctor") as ActnOvld).GetActnOf(typ2, new Typ[] { }, typ2, typ2);
 
 
 

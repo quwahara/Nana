@@ -356,7 +356,7 @@ namespace Nana.CodeGeneration
             b.Append(".method ");
             b.Append(FromMethodAttributes(f.MthdAttrs).ToLower());
             b.Append(" ").Append(TypeFullName(returnType));
-            b.Append(" ").Append(Qk(f.Family.Name));
+            b.Append(" ").Append(Qk(f.Name));
             b.Append("(");
 
             b.Append(
@@ -421,8 +421,8 @@ namespace Nana.CodeGeneration
                 case C.StVariable: return StoreVariable(imr.VariableV);
                 case C.LdArrayElement: return LdArrayElement(imr);
                 case C.StArrayElement: return StArrayElement(imr);
-                case C.NewObject: return NewObject(imr.ActnV);
-                case C.CallAction: return CallAction(imr.ActnV);
+                case C.NewObject: return NewObject(imr.TypV, imr.ActnV);
+                case C.CallAction: return CallAction(imr.TypV, imr.ActnV);
                 case C.Br: return Br(imr);
                 case C.BrFalse: return BrFalse(imr);
                 case C.PutLabel: return PutLabel(imr);
@@ -560,28 +560,27 @@ namespace Nana.CodeGeneration
             throw new NotSupportedException();
         }
 
-        public static string NewObject(Actn t)
+        public static string NewObject(Typ t, Actn a)
         {
-            return S(OpCodes.Newobj) + " instance " + Body(t);
+            return S(OpCodes.Newobj) + " instance " + Body(t, a);
         }
 
-        public static string CallAction(Actn t)
+        public static string CallAction(Typ t, Actn a)
         {
-            if (t.IsConstructor) return S(OpCodes.Call) + " instance " + Body(t); ;
-            if (t.IsStatic) return S(OpCodes.Call) + " " + Body(t);
-            return S(OpCodes.Callvirt) + " instance " + Body(t);
+            if (a.IsConstructor) return S(OpCodes.Call) + " instance " + Body(t, a); ;
+            if (a.IsStatic) return S(OpCodes.Call) + " " + Body(t, a);
+            return S(OpCodes.Callvirt) + " instance " + Body(t, a);
         }
 
-        public static string Body(Actn fi)
+        public static string Body(Typ t, Actn a)
         {
             StringBuilder b = new StringBuilder();
-            Typ retti = fi is ITyped && fi.IsConstructor == false ? (fi as ITyped).Typ : null;
+            Typ retti = a is ITyped && a.IsConstructor == false ? (a as ITyped).Typ : null;
             b.Append(TypeFullName(retti));
 
-            Typ m = fi.FindUpTypeOf<Typ>();
-            if (m != null && m.GetType() == typeof(Typ))
+            if (t != null && t.GetType() == typeof(Typ))
             {
-                Typ ti = m as Typ;
+                Typ ti = t as Typ;
                 if (ti.IsGeneric)
                 { b.Append(ti.IsValueType ? " value" : " class"); }
                 b.Append(" ");
@@ -594,21 +593,20 @@ namespace Nana.CodeGeneration
             }
 
             string nm;
-            if (MethodAttributes.SpecialName != (fi.MthdAttrs & MethodAttributes.SpecialName))
+            if (MethodAttributes.SpecialName != (a.MthdAttrs & MethodAttributes.SpecialName))
             {
-                nm = fi.Name;
-                //nm = fi.Family.Name;
+                nm = a.Name;
             }
             else
             {
-                nm = fi.SpecialName;
+                nm = a.SpecialName;
             }
             b.Append(Qk(nm));
 
             b.Append("(");
             Variable v;
             string s;
-            List<Variable> Params = fi.FindAllTypeOf<Variable>();
+            List<Variable> Params = a.FindAllTypeOf<Variable>();
             Params.RemoveAll(delegate(Variable vv)
             {
                 return vv.VarKind != Variable.VariableKind.Param
