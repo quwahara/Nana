@@ -123,15 +123,6 @@ namespace Nana.Semantics
             .ConvertAll<T>(delegate(INmd v) { return v as T; });
         }
 
-        public List<T> FindDownAllTypeOf<T>() where T : Nsp
-        {
-            List<T> founds = new List<T>();
-            founds.AddRange(FindAllTypeOf<T>());
-            Members.ForEach(delegate(INmd n)
-            { if (n is Nsp) { founds.AddRange((n as Nsp).FindDownAllTypeOf<T>()); } });
-            return founds;
-        }
-
         public List<T> FindDownAllTypeIs<T>() where T : Nsp
         {
             List<T> founds = new List<T>();
