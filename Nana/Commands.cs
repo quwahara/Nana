@@ -83,7 +83,7 @@ namespace Nana
             {
                 Cmds[cmd](args, quit, LEM);
             }
-            catch (Error er)
+            catch (Error /*er*/)
             {
                 LEM.CW.N().WN(string.Format("The command is unkown: {0}", "yyy"));
             }

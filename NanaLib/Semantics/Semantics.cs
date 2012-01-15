@@ -111,12 +111,6 @@ namespace Nana.Semantics
             return member;
         }
 
-        public List<T> FindAllTypeOf<T>() where T : class, INmd
-        {
-            return Members.FindAll(delegate(INmd v) { return v.GetType() == typeof(T); })
-            .ConvertAll<T>(delegate(INmd v) { return v as T; });
-        }
-
         public List<T> FindAllTypeIs<T>() where T : class, INmd
         {
             return Members.FindAll(delegate(INmd v) { return v is T; })
@@ -191,6 +185,10 @@ namespace Nana.Semantics
         public string GetTempName() { ++Sequence; return "$" + Sequence.ToString("D6"); }
         public string OutPath = "";
 
+        public List<Typ> RefTyps = new List<Typ>();
+        public List<Typ> ArrayTyps = new List<Typ>();
+        public List<Typ> GenericTypInstances = new List<Typ>();
+
         public Env(Token seed)
             : base(seed, null, null)
         {
@@ -207,6 +205,7 @@ namespace Nana.Semantics
         public Typ NewRefTyp(Type refType)
         {
             Typ t = new Typ(refType, this, this);
+            RefTyps.Add(t);
             BeAMember(t);
             t.EnsureMembersList.Add(Typ.EnsureMembers);
             return t;
@@ -214,8 +213,8 @@ namespace Nana.Semantics
 
         public Typ FindRefTyp(Type refType)
         {
-            return FindAllTypeOf<Typ>()
-                .Find(GetNamePredicate<Typ>(refType.FullName ?? refType.Name));
+            EnsureMembers();
+            return RefTyps.Find(GetNamePredicate<Typ>(refType.FullName ?? refType.Name));
         }
 
         public Typ FindOrNewRefType(Type refType)
@@ -226,14 +225,15 @@ namespace Nana.Semantics
         public Typ NewArrayTyp(Typ typ, int dimension)
         {
             Typ t = new Typ(typ, this, dimension);
+            ArrayTyps.Add(t);
             BeAMember(t);
             return t;
         }
 
         public Typ FindArrayTyp(Typ typ, int dimension)
         {
-            return FindAllTypeOf<Typ>()
-                .Find(delegate(Typ t) { return t.ArrayType == typ && t.Dimension == dimension; });
+            EnsureMembers();
+            return ArrayTyps.Find(delegate(Typ t) { return t.ArrayType == typ && t.Dimension == dimension; });
         }
 
         public Typ FindOrNewArrayTyp(Typ typ, int dimension)
@@ -243,14 +243,15 @@ namespace Nana.Semantics
 
         public Typ NewGenericTypInstance(Typ typ, Typ[] genericTypeParams)
         {
-            Typ t = BeAMember(new Typ(typ, this, genericTypeParams)); ;
+            Typ t = BeAMember(new Typ(typ, this, genericTypeParams));
+            GenericTypInstances.Add(t);
             return t;
         }
 
         public Typ FindGenericTypInstance(Typ typ, Typ[] genericTypeParams)
         {
-            return FindAllTypeOf<Typ>()
-                .Find(delegate(Typ t)
+            EnsureMembers();
+            return GenericTypInstances.Find(delegate(Typ t)
                 {
                     bool b = t.GenericType == typ
                         && Cty.EqualForAll(t.GenericTypeParams, genericTypeParams)
@@ -407,6 +408,7 @@ namespace Nana.Semantics
             foreach (Actn a in srclst)
             {
                 if (a.Params.Count != argtyps.Length) { continue; }
+                //if (a.Params.Count != argtyps.Length) { continue; }
                 if (a.IsAssignableSignature(argtyps) == false) { continue; }
                 if (candidates.Exists(delegate(Actn a_) { return a_.IsSameSignature(a.Signature); })) { continue; }
                 candidates.Add(a);
@@ -450,17 +452,9 @@ namespace Nana.Semantics
 
         public string SpecialName = "";
         public MethodAttributes MthdAttrs;
-        public List<Variable> Params
-        {
-            get
-            {
-                return FindAllTypeOf<Variable>().FindAll(delegate(Variable v)
-                       {
-                           return v.VarKind == Variable.VariableKind.Param
-                                || v.VarKind == Variable.VariableKind.ParamGeneric;
-                       });
-            }
-        }
+        public List<Variable> Params = new List<Variable>();
+        public List<Variable> Vars = new List<Variable>();
+
         public Typ[] Signature
         {
             get
@@ -506,7 +500,10 @@ namespace Nana.Semantics
         {
             if (params_ == null) { return; }
             params_.ForEach(delegate(Variable v)
-            { BeAMember(v); });
+            {
+                Params.Add(v);
+                BeAMember(v);
+            });
         }
 
         public MethodBase Mb;
@@ -531,15 +528,15 @@ namespace Nana.Semantics
 
         public Variable NewParam(string name, Typ typ)
         {
-            return BeAMember(new Variable(name, this, typ, Variable.VariableKind.Param));
+            Variable v = new Variable(name, this, typ, Variable.VariableKind.Param);
+            Params.Add(v);
+            return BeAMember(v);
         }
-
-        public LinkedList<Variable> Vars = new LinkedList<Variable>();
 
         virtual public Variable NewVar(string name, Typ typ)
         {
             Variable v = new Variable(name, this, typ, Variable.VariableKind.Local);
-            Vars.AddLast(v);
+            Vars.Add(v);
             return BeAMember(v);
         }
 
@@ -629,6 +626,8 @@ namespace Nana.Semantics
         public bool IsGeneric = false;
         public bool IsGenericInstance = false;
 
+        public List<ActnOvld> Ovlds = new List<ActnOvld>();
+
         public List<INmd> DebuggerDisplayMembers { get { return Members_; } }
 
         public Typ(Token seed, Nsp family, Env env, App app)
@@ -659,8 +658,10 @@ namespace Nana.Semantics
 
         public ActnOvld FindActnOvld(string name)
         {
-            return FindAllTypeOf<ActnOvld>()
-                        .Find(GetNamePredicate<ActnOvld>(name));
+            EnsureMembers();
+            return Ovlds.Find(GetNamePredicate<ActnOvld>(name));
+            //return FindAllTypeOf<ActnOvld>()
+            //            .Find(GetNamePredicate<ActnOvld>(name));
         }
 
         public ActnOvld NewActnOvld(string name)
@@ -668,6 +669,7 @@ namespace Nana.Semantics
             if (Members_.Exists(GetNamePredicate<INmd>(name)))
             { throw new SyntaxError("The name is already defined: " + name); }
             ActnOvld ovl = new ActnOvld(new Token(name), this, E);
+            Ovlds.Add(ovl);
             BeAMember(ovl);
             return ovl;
         }
@@ -947,7 +949,7 @@ namespace Nana.Semantics
         override public Variable NewVar(string name, Typ typ)
         {
             Variable v = new Variable(name, this, typ, Variable.VariableKind.StaticField);
-            Vars.AddLast(v);
+            Vars.Add(v);
             return BeAMember(v);
         }
 
