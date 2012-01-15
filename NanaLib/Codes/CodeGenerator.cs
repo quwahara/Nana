@@ -145,8 +145,12 @@ namespace Nana.CodeGeneration
             
             if (d is IInstructionsHolder)
             { b.Append(CallMiddle(d as IInstructionsHolder)); }
-            
-            d.FindAllTypeIs<Nsp>()
+
+            d.Members
+                .FindAll(delegate(INmd n)
+                { return n is Nsp; })
+                .ConvertAll<Nsp>(delegate(INmd n)
+                { return n as Nsp; })
                 .ConvertAll<string>(GenerateCode)
                 .ConvertAll<StringBuilder>(b.Append);
             
@@ -360,8 +364,7 @@ namespace Nana.CodeGeneration
 
             b.Append(
                 string.Join(", "
-                , f.FindAllTypeIs<Variable>()
-                .FindAll(delegate(Variable v) { return v.VarKind == Variable.VariableKind.Param; })
+                , f.Params
                 .ConvertAll<string>(delegate(Variable v)
                 { return TypeFullName(v.Typ) + " " + Qk(v.Name); })
                 .ToArray()
@@ -372,18 +375,21 @@ namespace Nana.CodeGeneration
 
             if (f.IsEntryPoint) { b.Append(ind1).Append(".entrypoint").AppendLine(); }
 
+            List<Variable> vars = new List<Variable>(f.Vars)
+                .FindAll(delegate(Variable v)
+                { return v.VarKind != Variable.VariableKind.This; })
+                ;
 
-            if (f.Vars.Count > 0)
+            if (vars.Count > 0)
             {
                 b.Append(ind1).Append(".locals (").AppendLine();
                 Func<Typ, string> lf = TypeNameInSig;
                 b.Append(ind2);
                 b.Append(
                     string.Join(Environment.NewLine  + ind2 + ", "
-                    , (new List<Variable>(f.Vars))
+                    , vars
                     .ConvertAll<string>(delegate(Variable v)
-                    { return lf(v.Typ) + " " + v.Name; }
-                    )
+                    { return lf(v.Typ) + " " + v.Name; })
                     .ToArray()
                     )
                     );

@@ -109,7 +109,7 @@ end
             ActnOvld ao = Env.FindByNamePath(ModuleFilename + @"/Class1Func0/.ctor") as ActnOvld;
             Actn a = ao.GetActnOf(typ, new Typ[] { }, typ, typ);
 
-            Assert.IsTrue(1 == a.Exes.Count);
+            Assert.IsTrue(2 == a.Exes.Count);
             string s = a.Exes[0].ToString();
 
             Assert.AreEqual(Sty.Sieve(
@@ -161,7 +161,7 @@ end
             ActnOvld ao = typ.FindByNamePath(@".ctor") as ActnOvld;
             Actn a = ao.GetActnOf(typ, new Typ[] { }, typ, typ);
 
-            Assert.IsTrue(1 == a.Exes.Count);
+            Assert.IsTrue(2 == a.Exes.Count);
 
             List<string> xs = a.Exes.ConvertAll<string>(delegate(IExecutable x) { return x.ToString(); });
             Assert.IsTrue(xs[0].EndsWith("}:CallAction"));

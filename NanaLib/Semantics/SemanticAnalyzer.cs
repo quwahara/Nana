@@ -991,6 +991,26 @@ namespace Nana.Semantics
             return nameasm;
         }
 
+        static public void EnusureReturn(Actn a)
+        {
+            bool rds = false;
+            foreach (IExecutable x in a.Exes)
+            {
+                if (x is IReturnDeterminacyState)
+                { rds |= (x as IReturnDeterminacyState).RDS; }
+            }
+            if (a.IsConstructor == false && a is Fctn)
+            {
+                if (false == rds)
+                { throw new SyntaxError("Function doesn't return value"); }
+            }
+            else
+            {
+                if (false == rds)
+                { a.Exes.Add(new Ret()); }
+            }
+        }
+
     }
 
     public class TypAnalyzer : ActnAnalyzer
@@ -1220,6 +1240,7 @@ namespace Nana.Semantics
         {
             EnsureAppExe();
             EnsureEntryPoint();
+            EnsureActnReturnAll();
             RemoveReferencingType(Env);
         }
 
@@ -1257,10 +1278,10 @@ namespace Nana.Semantics
             foreach (TypAnalyzer ta in CollectTypeOf<TypAnalyzer>())
             {
                 Typ y = ta.Typu;
-                if (y.FindAllTypeIs<ActnOvld>()
+                if (y.Ovlds
                     .Exists(delegate(ActnOvld ao_)
                     {
-                        return ao_.FindAllTypeIs<Actn>()
+                        return ao_.Actns
                             .Exists(delegate(Actn a) { return a.IsInherited == false && a.Name == ".ctor"; });
                     }))
                 { continue; }
@@ -1311,9 +1332,8 @@ namespace Nana.Semantics
                 { continue; }
                 Typ bty = mytyp.BaseTyp;
                 Actn callee = bty.FindActnOvld(".ctor").GetActnOf(bty, new Typ[] { }, mytyp, actn);
-                IValuable instance = actn.FindAllTypeIs<Variable>().Find(Nsp.GetNamePredicate<Variable>("this"));
+                IValuable instance = actn.FindVar("this");
                 actn.Exes.Add(new CallAction(bty, callee, instance, new IValuable[] { }, false /*:isNewObj*/));
-                //actn.Exes.Add(new CallAction(callee, instance, new IValuable[] { }, false /*:isNewObj*/));
             }
         }
 
@@ -1357,13 +1377,14 @@ namespace Nana.Semantics
 
         public void EnsureAppExe()
         {
-            AppAnalyzer aa = CollectTypeOf<AppAnalyzer>().First.Value;
-            App app = aa.App;
+            AppAnalyzer appaz = CollectTypeOf<AppAnalyzer>().First.Value;
+            App app = appaz.App;
             if (app.Exes.Count == 0) { return; }
 
             Token t = GenFuncToken("scons", Actn.EntryPointNameImplicit, "void");
-            (new ActnAnalyzer(t, aa)).AnalyzeActn();
-            Actn cctor = app.FindActnOvld(".cctor").GetActnOf(app, new Typ[] { }, app, app);
+            ActnAnalyzer actaz = new ActnAnalyzer(t, appaz);
+            actaz.AnalyzeActn();
+            Actn cctor = actaz.Actn;
             cctor.Exes.AddRange(app.Exes);
             app.Exes.Clear();
         }
@@ -1372,8 +1393,8 @@ namespace Nana.Semantics
         {
             AppAnalyzer aa = CollectTypeOf<AppAnalyzer>().First.Value;
             App app = aa.App;
-            List<Actn> actns = app.FindDownAllTypeIs<Actn>();
-            List<Actn> founds = actns.FindAll(delegate(Actn a) { return a.IsEntryPoint; });
+            List<INmd> actns = app.FindDownAll(delegate(INmd n) { return n is Actn; });
+            List<INmd> founds = actns.FindAll(delegate(INmd a) { return  (a as Actn).IsEntryPoint; });
             if (founds.Count > 1)
             { throw new SyntaxError("Specify one entry point. There were two entry points or more."); }
             if (founds.Count == 1)
@@ -1381,6 +1402,18 @@ namespace Nana.Semantics
 
             Token t = GenFuncToken("sfun", Actn.EntryPointNameImplicit, "void");
             (new ActnAnalyzer(t, aa)).AnalyzeActn();
+        }
+
+        public void EnsureActnReturnAll()
+        {
+            AppAnalyzer aa = CollectTypeOf<AppAnalyzer>().First.Value;
+            App app = aa.App;
+
+            Predicate<INmd> pred = delegate(INmd n)
+            { return n.GetType() == typeof(Actn) || n.GetType() == typeof(Fctn); };
+
+            foreach (Actn a in app.FindDownAll(pred))
+            { ActnAnalyzer.EnusureReturn(a); }
         }
 
         public static void RemoveReferencingType(Env env)

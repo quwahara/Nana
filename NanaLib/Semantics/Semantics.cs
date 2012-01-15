@@ -111,21 +111,6 @@ namespace Nana.Semantics
             return member;
         }
 
-        public List<T> FindAllTypeIs<T>() where T : class, INmd
-        {
-            return Members.FindAll(delegate(INmd v) { return v is T; })
-            .ConvertAll<T>(delegate(INmd v) { return v as T; });
-        }
-
-        public List<T> FindDownAllTypeIs<T>() where T : Nsp
-        {
-            List<T> founds = new List<T>();
-            founds.AddRange(FindAllTypeIs<T>());
-            Members.ForEach(delegate(INmd n)
-            { if (n is Nsp) { founds.AddRange((n as Nsp).FindDownAllTypeIs<T>()); } });
-            return founds;
-        }
-
         public List<INmd> FindDownAll(Predicate<INmd> pred)
         {
             List<INmd> founds = new List<INmd>();
@@ -304,6 +289,8 @@ namespace Nana.Semantics
 
     public class ActnOvld : Nsp
     {
+        public List<Actn> Actns = new List<Actn>();
+
         public ActnOvld(Token seed, Nsp family, Env env)
             : base(seed, family, env)
         {
@@ -311,22 +298,30 @@ namespace Nana.Semantics
 
         public Actn NewActn(Token seed, List<Variable> params_)
         {
-            return BeAMember(new Actn(seed, this, params_, E));
+            Actn a = new Actn(seed, this, params_, E);
+            Actns.Add(a);
+            return BeAMember(a);
         }
 
         public Actn NewActn(MethodBase mb)
         {
-            return BeAMember(new Actn(mb, this, E));
+            Actn a = new Actn(mb, this, E);
+            Actns.Add(a);
+            return BeAMember(a);
         }
 
         public Fctn NewFctn(Token seed, List<Variable> params_, Typ returnTyp)
         {
-            return BeAMember(new Fctn(seed, this, params_, returnTyp,  E));
+            Fctn f = new Fctn(seed, this, params_, returnTyp, E);
+            Actns.Add(f);
+            return BeAMember(f);
         }
 
         public Fctn NewFctn(MethodBase mb)
         {
-            return BeAMember(new Fctn(mb, this, E));
+            Fctn f = new Fctn(mb, this, E);
+            Actns.Add(f);
+            return BeAMember(f);
         }
 
         public Actn GetActnOf(Typ ty, Typ[] argtyps, Typ ert, Actn caller)
@@ -398,10 +393,10 @@ namespace Nana.Semantics
                 .ConvertAll<ActnOvld>(delegate(Typ y) { return y.FindActnOvld(this.Name); });
 
             //  collect same name Actn
-            List<Actn> srclst = this.FindAllTypeIs<Actn>();
+            List<Actn> srclst = new List<Actn>(this.Actns);
             foreach (ActnOvld ovld in ovlds2)
             {
-                srclst.AddRange(ovld.FindAllTypeIs<Actn>());
+                srclst.AddRange(ovld.Actns);
             }
 
             //  collect Actn that has same signature or assignalbe signature but not in candidate list
@@ -523,7 +518,9 @@ namespace Nana.Semantics
         public Variable NewThis(Typ typ)
         {
             if (typ == null) { throw new NotImplementedException("Cannot define this in here"); }
-            return BeAMember(new Variable("this", this, typ, Variable.VariableKind.This));
+            Variable v = new Variable("this", this, typ, Variable.VariableKind.This);
+            Vars.Add(v);
+            return BeAMember(v);
         }
 
         public Variable NewParam(string name, Typ typ)
@@ -538,6 +535,12 @@ namespace Nana.Semantics
             Variable v = new Variable(name, this, typ, Variable.VariableKind.Local);
             Vars.Add(v);
             return BeAMember(v);
+        }
+
+        public Variable FindVar(string name)
+        {
+            EnsureMembers();
+            return Vars.Find(GetNamePredicate<Variable>(name));
         }
 
         static public string GenSignature(MethodBase mb)
@@ -831,16 +834,16 @@ namespace Nana.Semantics
             Debug.Assert(self != null && self.IsGeneric && self.IsGenericInstance && self.GenericType != null);
 
             Typ gt = self.GenericType;
-            List<ActnOvld> aos = gt.FindAllTypeIs<ActnOvld>();
-            foreach (ActnOvld gao in gt.FindAllTypeIs<ActnOvld>())
+            gt.EnsureMembers();
+            foreach (ActnOvld gao in gt.Ovlds)
             {
                 ActnOvld sao = self.FindOrNewActnOvld(gao.Name);
                 List<Variable> svs = new List<Variable>();
-                foreach (Actn ga in gao.FindAllTypeIs<Actn>())
+                foreach (Actn ga in gao.Actns)
                 {
                     Variable sv; Typ st; int genericIndex;
                     svs.Clear();
-                    foreach (Variable gv in ga.FindAllTypeIs<Variable>())
+                    foreach (Variable gv in ga.Params)
                     {
                         if (gv.VarKind != Variable.VariableKind.Param)
                         {
