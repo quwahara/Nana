@@ -866,7 +866,7 @@ namespace Nana.Semantics
                         = FindUpTypeOf<TypAnalyzer>()
                         ?? FindUpTypeOf<AppAnalyzer>()
                         ;
-                    ThisTyp_ = ta.Typu;
+                    ThisTyp_ = ta.Typ;
                 }
                 return ThisTyp_;
             }
@@ -910,7 +910,7 @@ namespace Nana.Semantics
                 ?? FindUpTypeOf<AppAnalyzer>()
                 ;
             Debug.Assert(typazr2 != null);
-            ActnOvld ovld = typazr2.Typu.FindOrNewActnOvld(nameasm);
+            ActnOvld ovld = typazr2.Typ.FindOrNewActnOvld(nameasm);
 
             List<Token> prms = new List<Token>();
             Token prmpre = t.Find("@PrmDef");
@@ -938,7 +938,7 @@ namespace Nana.Semantics
             Typ returnType = voidtyp;
             if (isCtor)
             {
-                returnType = FindUpTypeIs<TypAnalyzer>().Typu;
+                returnType = FindUpTypeIs<TypAnalyzer>().Typ;
             }
             else if (null != (ty = t.Find("@TypeSpec/@TypeSpec2")))
             {
@@ -962,7 +962,7 @@ namespace Nana.Semantics
                 TypAnalyzer typazr = FindUpTypeOf<TypAnalyzer>();
                 if (typazr == null)
                 { throw new SyntaxError("Cannot define instance constructor in this sapce", t); }
-                Actn.NewThis(typazr.Typu);
+                Actn.NewThis(typazr.Typ);
             }
         }
 
@@ -1015,11 +1015,11 @@ namespace Nana.Semantics
 
     public class TypAnalyzer : ActnAnalyzer
     {
-        public Typ Typu_;
-        public Typ Typu
+        public Typ Typ_;
+        public Typ Typ
         {
-            get { return Typu_; }
-            set { base.Actn = Typu_ = value; }
+            get { return Typ_; }
+            set { base.Actn = Typ_ = value; }
         }
 
         public TypAnalyzer(Token seed, BlockAnalyzer above)
@@ -1044,9 +1044,9 @@ namespace Nana.Semantics
             App app = appazr.App;
             if (app.ContainsKey(name.Value))
             { throw new SemanticError("The type is already defined. Type name:" + name.Value, name); }
-            Typu = app.NewTyp(name);
+            Typ = app.NewTyp(name);
 
-            base.Nsp = base.Actn = Typu;
+            base.Nsp = base.Actn = Typ;
         }
         
         public void AnalyzeBaseTyp()
@@ -1058,17 +1058,17 @@ namespace Nana.Semantics
                 baseTypeDef = new Token();
                 baseTypeDef.FlwsAdd("System.Object", "Id");
             }
-            Typu.BaseTyp = RequireTyp(baseTypeDef.Follows[0]);
+            Typ.BaseTyp = RequireTyp(baseTypeDef.Follows[0]);
         }
 
         public override object Find(Token t)
         {
-            INmd n = Typu.Find(t.Value);
+            INmd n = Typ.Find(t.Value);
             if (n == null)
             { return null; }
             Type nt = n.GetType();
             if (nt == typeof(ActnOvld))
-            { return new Member(t, Typu, n, null); }
+            { return new Member(t, Typ, n, null); }
             return n;
         }
 
@@ -1103,7 +1103,7 @@ namespace Nana.Semantics
 
         public void AnalyzeSrc()
         {
-            base.Typu = FindUpTypeOf<AppAnalyzer>().Typu;
+            base.Typ = FindUpTypeOf<AppAnalyzer>().Typ;
         }
 
         public override Typ RequireTyp(Token t)
@@ -1140,7 +1140,7 @@ namespace Nana.Semantics
         public App App
         {
             get { return App_; }
-            set { base.Typu = App_ = value; }
+            set { base.Typ = App_ = value; }
         }
 
         public AppAnalyzer(Token seed, BlockAnalyzer above)
@@ -1277,7 +1277,7 @@ namespace Nana.Semantics
         {
             foreach (TypAnalyzer ta in CollectTypeOf<TypAnalyzer>())
             {
-                Typ y = ta.Typu;
+                Typ y = ta.Typ;
                 if (y.Ovlds
                     .Exists(delegate(ActnOvld ao_)
                     {
@@ -1325,7 +1325,7 @@ namespace Nana.Semantics
                 Typ mytyp
                     = (aa.FindUpTypeOf<TypAnalyzer>()
                     ?? aa.FindUpTypeOf<AppAnalyzer>()
-                    ).Typu
+                    ).Typ
                     ;
                 Actn actn = aa.Actn;
                 if (false == Nana.IMRs.IMRGenerator.IsInstCons(actn.Name))

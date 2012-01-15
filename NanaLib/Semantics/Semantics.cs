@@ -1080,11 +1080,11 @@ namespace Nana.Semantics
 
     public class GenericArgument : INmd
     {
-        public string _Name;
-        public string Name { get { return _Name; } set { _Name = value; } }
+        public string Name_;
+        public string Name { get { return Name_; } set { Name_ = value; } }
 
-        public Nsp _Family;
-        public Nsp Family { get { return _Family; } set { _Family = value; } }
+        public Nsp Family_;
+        public Nsp Family { get { return Family_; } set { Family_ = value; } }
 
         public INmd Clone() { return MemberwiseClone() as INmd; }
 
@@ -1093,8 +1093,8 @@ namespace Nana.Semantics
         public GenericArgument(Type refType, Nsp family)
         {
             RefType = refType;
-            _Name = refType.Name;
-            _Family = family;
+            Name_ = refType.Name;
+            Family_ = family;
         }
     }
 
@@ -1108,21 +1108,21 @@ namespace Nana.Semantics
         public VariableKind VarKind;
         public int GenericIndex = -1;
 
-        public string _Name;
-        public string Name { get { return _Name; } set { _Name = value; } }
+        public string Name_;
+        public string Name { get { return Name_; } set { Name_ = value; } }
 
-        public Nsp _Family;
-        public Nsp Family { get { return _Family; } set { _Family = value; } }
+        public Nsp Family_;
+        public Nsp Family { get { return Family_; } set { Family_ = value; } }
 
-        public Typ Typu;
-        public Typ Typ { [DebuggerNonUserCode] get { return Typu; } }
+        public Typ Typ_;
+        public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
 
-        public Variable(string name, Nsp family, Typ typu, VariableKind varKind)
+        public Variable(string name, Nsp family, Typ typ, VariableKind varKind)
             : base()
         {
-            _Name = name;
-            _Family = family;
-            Typu = typu;
+            Name_ = name;
+            Family_ = family;
+            Typ_ = typ;
             VarKind = varKind;
         }
 
@@ -1473,12 +1473,12 @@ namespace Nana.Semantics
         // prepare for over twice referenced instatication
         public IMR PlaceHolder;
         public Variable TmpVar;
-        public Typ Typu;
-        public Typ Typ { [DebuggerNonUserCode]get { return Typu; } }
+        public Typ Typ_;
+        public Typ Typ { [DebuggerNonUserCode]get { return Typ_; } }
 
-        public ArrayInstatiation(Typ typu, IValuable[] lens, TmpVarGenerator tmpVarGen)
+        public ArrayInstatiation(Typ typ, IValuable[] lens, TmpVarGenerator tmpVarGen)
         {
-            Typu = typu;
+            Typ_ = typ;
             Lens = lens;
             TmpVarGen = tmpVarGen;
         }
@@ -1527,26 +1527,26 @@ namespace Nana.Semantics
             DeclareVariable = declareVariable;
         }
 
-        public Variable Generate(Typ typu, IMRGenerator gen)
+        public Variable Generate(Typ typ, IMRGenerator gen)
         {
-            return DeclareVariable(GetTempName(), typu);
+            return DeclareVariable(GetTempName(), typ);
         }
 
-        public Variable Substitute(Typ typu, IMRGenerator gen)
+        public Variable Substitute(Typ typ, IMRGenerator gen)
         {
-            Variable v = Generate(typu, gen);
+            Variable v = Generate(typ, gen);
             v.Take(gen);
             return v;
         }
 
-        public Variable Insert(Typ typu, IMRGenerator gen, IMR PlaceHolder)
+        public Variable Insert(Typ typ, IMRGenerator gen, IMR PlaceHolder)
         {
             Debug.Assert(PlaceHolder != null);
             Debug.Assert(GetTempName != null);
             Debug.Assert(DeclareVariable != null);
 
             IMRGenerator tmpgen = new IMRGenerator();
-            Variable v = Substitute(typu, tmpgen);
+            Variable v = Substitute(typ, tmpgen);
             v.Give(tmpgen);
 
             int idx = gen.IndexOf(PlaceHolder);
@@ -1564,12 +1564,12 @@ namespace Nana.Semantics
         public IValuable Val;
         public IValuable[] Indices;
 
-        public Typ Typu;
-        public Typ Typ { [DebuggerNonUserCode] get { return Typu; } }
+        public Typ Typ_;
+        public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
 
         public ArrayAccessInfo(IValuable val, IValuable[] indices)
         {
-            Typu = val.Typ.ArrayType;
+            Typ_ = val.Typ.ArrayType;
             Val = val;
             Indices = indices;
         }
@@ -1602,14 +1602,14 @@ namespace Nana.Semantics
         public ArrayAccessInfo ArrayAccess;
         public IValuable GiveVal;
 
-        public Typ Typu;
-        public Typ Typ { [DebuggerNonUserCode] get { return Typu; } }
+        public Typ Typ_;
+        public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
 
         public ArraySetInfo(ArrayAccessInfo arrayAccess, IValuable giveVal)
         {
             Debug.Assert(arrayAccess != null && arrayAccess.Val != null && arrayAccess.Val.Typ != null);
 
-            Typu = arrayAccess.Typ;
+            Typ_ = arrayAccess.Typ;
             ArrayAccess = arrayAccess;
             GiveVal = giveVal;
         }
@@ -1637,7 +1637,7 @@ namespace Nana.Semantics
          
             if (t.IsVector)
             {
-                t2 = Typu;
+                t2 = Typ_;
             }
             else if (t.IsArray)
             {
