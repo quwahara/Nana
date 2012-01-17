@@ -39,8 +39,6 @@ namespace Nana.Semantics
     public interface INmd
     {
         string Name { get; set; }
-        Nsp Family { get; set; }
-        INmd Clone();
     }
 
     public interface ITyped
@@ -53,8 +51,6 @@ namespace Nana.Semantics
         public Token Seed;
         public string Name_;
         public string Name { get { return Name_; } set { Name_ = value; } }
-        public Nsp Family_;
-        public Nsp Family { get { return Family_; } set { Family_ = value; } }
 
         public List<INmd> Members_ = new List<INmd>();
 
@@ -64,21 +60,20 @@ namespace Nana.Semantics
 
         public Env E;
 
-        public Nsp(string name, Nsp family, bool isReferencing, Env env)
+        public Nsp(string name, bool isReferencing, Env env)
         {
             Name_ = name;
-            Family = family;
             IsReferencing = isReferencing;
             E = env;
         }
 
-        public Nsp(string name, Nsp family, Env env)
-            : this(name, family, false, env)
+        public Nsp(string name, Env env)
+            : this(name, false, env)
         {
         }
 
-        public Nsp(Token seed, Nsp family, Env env)
-            : this(seed.Value, family, env)
+        public Nsp(Token seed, Env env)
+            : this(seed.Value, env)
         {
             Seed = seed;
         }
@@ -107,7 +102,6 @@ namespace Nana.Semantics
         {
             if (member.Name == null) { return default(T); }
             Members.Add(member);
-            member.Family = this;
             return member;
         }
 
@@ -144,17 +138,7 @@ namespace Nana.Semantics
 
         public override string ToString()
         {
-            //return Name + "(" + Members_.Count + "):" + GetType().Name;
             return Bty.New().Add("{").Nv("Name", Name).Add("}").Add(":").Add(GetType().Name).ToS();
-            //return Sty.Curly(Sty.Nv("Name", Name)) + ":" + GetType().Name;
-        }
-
-        public INmd Clone()
-        {
-            Nsp c = MemberwiseClone() as Nsp;
-            foreach (INmd m in c.Members)
-            { m.Family = c; }
-            return c;
         }
 
         static public Predicate<T> GetNamePredicate<T>(string name) where T : INmd
@@ -175,7 +159,7 @@ namespace Nana.Semantics
         public List<Typ> GenericTypInstances = new List<Typ>();
 
         public Env(Token seed)
-            : base(seed, null, null)
+            : base(seed, null)
         {
             E = this;
             BTY = new BuiltInTyp(this);
@@ -183,13 +167,13 @@ namespace Nana.Semantics
 
         public App NewApp(Token seed)
         {
-            Ap = new App(seed, this, this);
+            Ap = new App(seed, this);
             return BeAMember(Ap);
         }
 
         public Typ NewRefTyp(Type refType)
         {
-            Typ t = new Typ(refType, this, this);
+            Typ t = new Typ(refType, this);
             RefTyps.Add(t);
             BeAMember(t);
             t.EnsureMembersList.Add(Typ.EnsureMembers);
@@ -253,14 +237,14 @@ namespace Nana.Semantics
 
         public Nsp NewNsp2(string ns)
         {
-            return BeAMember(new Nsp(ns, this, true, this)); ;
+            return BeAMember(new Nsp(ns, true, this)); ;
         }
 
         public ActnOvld NewActnOvld(string name)
         {
             if (Members_.Exists(GetNamePredicate<INmd>(name)))
             { throw new SyntaxError("The name is already defined: " + name); }
-            ActnOvld ovl = new ActnOvld(new Token(name), this, this);
+            ActnOvld ovl = new ActnOvld(new Token(name), this);
             BeAMember(ovl);
             return ovl;
         }
@@ -291,35 +275,35 @@ namespace Nana.Semantics
     {
         public List<Actn> Actns = new List<Actn>();
 
-        public ActnOvld(Token seed, Nsp family, Env env)
-            : base(seed, family, env)
+        public ActnOvld(Token seed, Env env)
+            : base(seed, env)
         {
         }
 
         public Actn NewActn(Token seed, List<Variable> params_)
         {
-            Actn a = new Actn(seed, this, params_, E);
+            Actn a = new Actn(seed, params_, E);
             Actns.Add(a);
             return BeAMember(a);
         }
 
         public Actn NewActn(MethodBase mb)
         {
-            Actn a = new Actn(mb, this, E);
+            Actn a = new Actn(mb, E);
             Actns.Add(a);
             return BeAMember(a);
         }
 
         public Fctn NewFctn(Token seed, List<Variable> params_, Typ returnTyp)
         {
-            Fctn f = new Fctn(seed, this, params_, returnTyp, E);
+            Fctn f = new Fctn(seed, params_, returnTyp, E);
             Actns.Add(f);
             return BeAMember(f);
         }
 
         public Fctn NewFctn(MethodBase mb)
         {
-            Fctn f = new Fctn(mb, this, E);
+            Fctn f = new Fctn(mb, E);
             Actns.Add(f);
             return BeAMember(f);
         }
@@ -403,7 +387,6 @@ namespace Nana.Semantics
             foreach (Actn a in srclst)
             {
                 if (a.Params.Count != argtyps.Length) { continue; }
-                //if (a.Params.Count != argtyps.Length) { continue; }
                 if (a.IsAssignableSignature(argtyps) == false) { continue; }
                 if (candidates.Exists(delegate(Actn a_) { return a_.IsSameSignature(a.Signature); })) { continue; }
                 candidates.Add(a);
@@ -458,8 +441,8 @@ namespace Nana.Semantics
             }
         }
 
-        public bool IsConstructor { get { return Nana.IMRs.IMRGenerator.IsAnyCons(Family.Name); } }
-        public bool IsEntryPoint { get { return Family != null && (Family.Name == EntryPointNameDefault || Family.Name == EntryPointNameImplicit); } }
+        public bool IsConstructor { get { return Nana.IMRs.IMRGenerator.IsAnyCons(Name); } }
+        public bool IsEntryPoint { get { return Name == EntryPointNameDefault || Name == EntryPointNameImplicit; } }
         public bool IsInherited = false;
         public bool IsStatic { get { return (MthdAttrs & MethodAttributes.Static) == MethodAttributes.Static; } }
         public bool IsInstance { get { return (MthdAttrs & MethodAttributes.Static) != MethodAttributes.Static; } }
@@ -490,8 +473,8 @@ namespace Nana.Semantics
             set { _Intermediates = value; ; }
         }
 
-        public Actn(Token seed, Nsp family, List<Variable> params_, Env env)
-            : base(seed, family, env)
+        public Actn(Token seed, List<Variable> params_, Env env)
+            : base(seed, env)
         {
             if (params_ == null) { return; }
             params_.ForEach(delegate(Variable v)
@@ -503,8 +486,8 @@ namespace Nana.Semantics
 
         public MethodBase Mb;
 
-        public Actn(MethodBase mb, Nsp family, Env env)
-            : base(new Token(mb.Name), family, env)
+        public Actn(MethodBase mb, Env env)
+            : base(new Token(mb.Name), env)
         {
             Mb = mb;
             new List<ParameterInfo>(mb.GetParameters()).ForEach(delegate(ParameterInfo p)
@@ -518,21 +501,21 @@ namespace Nana.Semantics
         public Variable NewThis(Typ typ)
         {
             if (typ == null) { throw new NotImplementedException("Cannot define this in here"); }
-            Variable v = new Variable("this", this, typ, Variable.VariableKind.This);
+            Variable v = new Variable("this", typ, Variable.VariableKind.This);
             Vars.Add(v);
             return BeAMember(v);
         }
 
         public Variable NewParam(string name, Typ typ)
         {
-            Variable v = new Variable(name, this, typ, Variable.VariableKind.Param);
+            Variable v = new Variable(name, typ, Variable.VariableKind.Param);
             Params.Add(v);
             return BeAMember(v);
         }
 
         virtual public Variable NewVar(string name, Typ typ)
         {
-            Variable v = new Variable(name, this, typ, Variable.VariableKind.Local);
+            Variable v = new Variable(name, typ, Variable.VariableKind.Local);
             Vars.Add(v);
             return BeAMember(v);
         }
@@ -596,14 +579,14 @@ namespace Nana.Semantics
         public Typ Typ_;
         public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
 
-        public Fctn(Token seed, Nsp family, List<Variable> params_, Typ returnTyp, Env env)
-            : base(seed, family, params_, env)
+        public Fctn(Token seed, List<Variable> params_, Typ returnTyp, Env env)
+            : base(seed, params_, env)
         {
             Typ_ = returnTyp;
         }
 
-        public Fctn(MethodBase mb, Nsp family, Env env)
-            : base(mb, family, env)
+        public Fctn(MethodBase mb, Env env)
+            : base(mb, env)
         {
             Type t = mb.IsConstructor && (mb.IsStatic == false)
                 ? mb.DeclaringType
@@ -633,8 +616,8 @@ namespace Nana.Semantics
 
         public List<INmd> DebuggerDisplayMembers { get { return Members_; } }
 
-        public Typ(Token seed, Nsp family, Env env, App app)
-            : base(seed, family, null, env)
+        public Typ(Token seed, Env env, App app)
+            : base(seed, null, env)
         {
             if (app != null) { AssemblyName = app.AssemblyName; }
             _FullName = Name;
@@ -663,15 +646,13 @@ namespace Nana.Semantics
         {
             EnsureMembers();
             return Ovlds.Find(GetNamePredicate<ActnOvld>(name));
-            //return FindAllTypeOf<ActnOvld>()
-            //            .Find(GetNamePredicate<ActnOvld>(name));
         }
 
         public ActnOvld NewActnOvld(string name)
         {
             if (Members_.Exists(GetNamePredicate<INmd>(name)))
             { throw new SyntaxError("The name is already defined: " + name); }
-            ActnOvld ovl = new ActnOvld(new Token(name), this, E);
+            ActnOvld ovl = new ActnOvld(new Token(name), E);
             Ovlds.Add(ovl);
             BeAMember(ovl);
             return ovl;
@@ -679,8 +660,8 @@ namespace Nana.Semantics
 
         public Type RefType = null;
 
-        public Typ(Type refType, Nsp family, Env env)
-            : base(new Token(refType.FullName ?? refType.Name), family, null, env)
+        public Typ(Type refType, Env env)
+            : base(new Token(refType.FullName ?? refType.Name), null, env)
         {
             RefType = refType;
             IsValueType = refType.IsValueType;
@@ -706,13 +687,13 @@ namespace Nana.Semantics
             List<GenericArgument> ls = new List<GenericArgument>();
             foreach (Type t in RefType.GetGenericArguments())
             {
-                ls.Add(new GenericArgument(t, this));
+                ls.Add(new GenericArgument(t));
             }
             return ls.ToArray();
         }
 
         public Typ(Typ typ, Env env, int dimension)
-            : base(new Token(typ._FullName + "[" + dimension + "]"), env, null, env)
+            : base(new Token(typ._FullName + "[" + dimension + "]"), null, env)
         {
             Dimension = dimension;
             IsVector = dimension == 1;
@@ -727,7 +708,7 @@ namespace Nana.Semantics
         public Dictionary<string, Typ> GenericDic = null;
 
         public Typ(Typ genericTyp, Env env, Typ[] genericTypeParams)
-            : base(new Token(genericTyp.Name), env, null, env)
+            : base(new Token(genericTyp.Name), null, env)
         {
             GenericType = genericTyp;
             GenericTypeParams = genericTypeParams;
@@ -761,7 +742,6 @@ namespace Nana.Semantics
         public Actn NewActn(MethodBase mb)
         {
             ActnOvld ovld = FindOrNewActnOvld(mb.Name);
-            //TypLoader typLdr = Root.FindRoot(above).TypLdr;
             if (mb is MethodInfo)
             {
                 Type returnType = (mb as MethodInfo).ReturnType;
@@ -779,7 +759,7 @@ namespace Nana.Semantics
 
         public Prop NewProp(PropertyInfo p)
         {
-            return BeAMember<Prop>(new Prop(this, p, E));
+            return BeAMember<Prop>(new Prop(p, E));
         }
 
         public bool IsAssignableFrom(Typ y)
@@ -850,7 +830,7 @@ namespace Nana.Semantics
                             continue;
                         }
                         st = TransGenericType(self, gv.Typ);
-                        sv = new Variable(gv.Name, null, st, Variable.VariableKind.Param);
+                        sv = new Variable(gv.Name, st, Variable.VariableKind.Param);
                         genericIndex = self.GenericDic.ContainsKey(gv.Typ.Name)
                             ? Array.IndexOf(self.GenericTypeParams, self.GenericDic[gv.Typ.Name])
                             : -1;
@@ -905,12 +885,6 @@ namespace Nana.Semantics
                 typ = typ.BaseTyp;
                 mem = typ.Find(name);
             }
-            //  you have to clone instance when the found method was base class method
-            if (mem != null && mem.Family != this)
-            {
-                mem = mem.Clone();
-                mem.Family = this;
-            }
             return mem;
         }
 
@@ -929,8 +903,8 @@ namespace Nana.Semantics
 
     public class App : Typ
     {
-        public App(Token seed, Env family, Env env)
-            : base(seed, family, env, null)
+        public App(Token seed, Env env)
+            : base(seed, env, null)
         {
             Name = Path.GetFileName(Env.OutPath);
             AssemblyName = Path.GetFileNameWithoutExtension(Env.OutPath);
@@ -938,7 +912,7 @@ namespace Nana.Semantics
 
         public Nsp NewNsp(Token seed)
         {
-            Nsp n = new Nsp(seed, this, E);
+            Nsp n = new Nsp(seed, E);
             n.Name = seed.ValueImplicit;
             BeAMember(n);
             return n;
@@ -946,12 +920,12 @@ namespace Nana.Semantics
 
         public Typ NewTyp(Token seed)
         {
-            return BeAMember(new Typ(seed, this, E, this));
+            return BeAMember(new Typ(seed, E, this));
         }
 
         override public Variable NewVar(string name, Typ typ)
         {
-            Variable v = new Variable(name, this, typ, Variable.VariableKind.StaticField);
+            Variable v = new Variable(name, typ, Variable.VariableKind.StaticField);
             Vars.Add(v);
             return BeAMember(v);
         }
@@ -965,8 +939,8 @@ namespace Nana.Semantics
         public Fctn Getter;
         public Typ Typ_;
 
-        public Prop(Nsp family, PropertyInfo p, Env env)
-            : base(new Token(p.Name), family, env)
+        public Prop(PropertyInfo p, Env env)
+            : base(new Token(p.Name), env)
         {
             P = p;
             MethodInfo m;
@@ -974,13 +948,13 @@ namespace Nana.Semantics
             Getter = null;
             if (m != null)
             {
-                Getter = BeAMember<Fctn>(new Fctn(m, this, env));
+                Getter = BeAMember<Fctn>(new Fctn(m, env));
             }
             Setter = null;
             m = p.GetSetMethod(/* nonPublic:*/ true);
             if (m != null)
             {
-                Setter = BeAMember<Actn>(new Actn(m, this, env));
+                Setter = BeAMember<Actn>(new Actn(m, env));
             }
             Typ_ = env.FindOrNewRefType(p.PropertyType);
         }
@@ -1083,18 +1057,12 @@ namespace Nana.Semantics
         public string Name_;
         public string Name { get { return Name_; } set { Name_ = value; } }
 
-        public Nsp Family_;
-        public Nsp Family { get { return Family_; } set { Family_ = value; } }
-
-        public INmd Clone() { return MemberwiseClone() as INmd; }
-
         public Type RefType = null;
 
-        public GenericArgument(Type refType, Nsp family)
+        public GenericArgument(Type refType)
         {
             RefType = refType;
             Name_ = refType.Name;
-            Family_ = family;
         }
     }
 
@@ -1111,17 +1079,13 @@ namespace Nana.Semantics
         public string Name_;
         public string Name { get { return Name_; } set { Name_ = value; } }
 
-        public Nsp Family_;
-        public Nsp Family { get { return Family_; } set { Family_ = value; } }
-
         public Typ Typ_;
         public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
 
-        public Variable(string name, Nsp family, Typ typ, VariableKind varKind)
+        public Variable(string name, Typ typ, VariableKind varKind)
             : base()
         {
             Name_ = name;
-            Family_ = family;
             Typ_ = typ;
             VarKind = varKind;
         }
@@ -1149,7 +1113,6 @@ namespace Nana.Semantics
 
         public override string ToString()
         {
-            //return Name + ":" + Typ.Name + ":" + typeof(Variable).Name;
             Func<string, object, string> nv = Sty.Nv;
             return Sty.Curly(Sty.Csv(nv("Name", Name), nv("Typ", Typ), nv("VarKind", VarKind))) + ":" + GetType().Name;
         }
@@ -1320,8 +1283,6 @@ namespace Nana.Semantics
         }
 
     }
-
-
 
     public class CalcInfo : IValuable
     {

@@ -930,7 +930,7 @@ namespace Nana.Semantics
                 Typ typ = RequireTyp(ty);
                 Debug.Assert(typ != null);
                 Debug.Assert(string.IsNullOrEmpty(p.Value) == false);
-                prmls.Add(new Variable(p.Value, null, typ, Variable.VariableKind.Param));
+                prmls.Add(new Variable(p.Value, typ, Variable.VariableKind.Param));
                 signature.Add(typ);
             }
 
