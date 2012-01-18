@@ -147,9 +147,9 @@ namespace Nana.CodeGeneration
             { b.Append(CallMiddle(d as IInstructionsHolder)); }
 
             d.Members
-                .FindAll(delegate(INmd n)
+                .FindAll(delegate(Nmd n)
                 { return n is Nsp; })
-                .ConvertAll<Nsp>(delegate(INmd n)
+                .ConvertAll<Nsp>(delegate(Nmd n)
                 { return n as Nsp; })
                 .ConvertAll<string>(GenerateCode)
                 .ConvertAll<StringBuilder>(b.Append);

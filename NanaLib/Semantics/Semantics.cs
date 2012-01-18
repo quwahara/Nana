@@ -25,10 +25,10 @@ namespace Nana.Semantics
     public class Member
     {
         public Typ Ty;
-        public INmd Value;
+        public Nmd Value;
         public IValuable Instance;
 
-        public Member(Token seed, Typ ty, INmd value, IValuable instance)
+        public Member(Token seed, Typ ty, Nmd value, IValuable instance)
         {
             Ty = ty;
             Value = value;
@@ -36,9 +36,10 @@ namespace Nana.Semantics
         }
     }
 
-    public interface INmd
+    public class Nmd
     {
-        string Name { get; set; }
+        public string Name_;
+        public string Name { get { return Name_; } set { Name_ = value; } }
     }
 
     public interface ITyped
@@ -46,13 +47,11 @@ namespace Nana.Semantics
         Typ Typ { get; }
     }
 
-    public class Nsp : INmd
+    public class Nsp : Nmd
     {
         public Token Seed;
-        public string Name_;
-        public string Name { get { return Name_; } set { Name_ = value; } }
 
-        public List<INmd> Members_ = new List<INmd>();
+        public List<Nmd> Members_ = new List<Nmd>();
 
         public List<Action<Nsp>> EnsureMembersList = new List<Action<Nsp>>();
 
@@ -86,7 +85,7 @@ namespace Nana.Semantics
             tmp.ForEach(delegate(Action<Nsp> a) { a(this); });
         }
 
-        public List<INmd> Members
+        public List<Nmd> Members
         {
             get
             {
@@ -96,40 +95,40 @@ namespace Nana.Semantics
         }
 
         public bool ContainsKey(string name)
-        { return Members.Exists(GetNamePredicate<INmd>(name)); }
+        { return Members.Exists(GetNamePredicate<Nmd>(name)); }
 
-        public T BeAMember<T>(T member) where T : INmd
+        public T BeAMember<T>(T member) where T : Nmd
         {
             if (member.Name == null) { return default(T); }
             Members.Add(member);
             return member;
         }
 
-        public List<INmd> FindDownAll(Predicate<INmd> pred)
+        public List<Nmd> FindDownAll(Predicate<Nmd> pred)
         {
-            List<INmd> founds = new List<INmd>();
+            List<Nmd> founds = new List<Nmd>();
             founds.AddRange(Members.FindAll(pred));
-            Members.ForEach(delegate(INmd n)
+            Members.ForEach(delegate(Nmd n)
             { if (n is Nsp) { founds.AddRange((n as Nsp).FindDownAll(pred)); } });
             return founds;
         }
 
-        virtual public INmd Find(string name)
+        virtual public Nmd Find(string name)
         {
-            return Members.Find(GetNamePredicate<INmd>(name));
+            return Members.Find(GetNamePredicate<Nmd>(name));
         }
 
-        virtual public INmd FindByNamePath(string namepath)
+        virtual public Nmd FindByNamePath(string namepath)
         {
             Debug.Assert(false == string.IsNullOrEmpty(namepath));
             return FindByNamePath(new Queue<string>(namepath.Split(new char[] { '/' })));
         }
 
-        virtual public INmd FindByNamePath(Queue<string> namepath)
+        virtual public Nmd FindByNamePath(Queue<string> namepath)
         {
             Debug.Assert(namepath != null && namepath.Count > 0);
 
-            INmd n = Find(namepath.Dequeue());
+            Nmd n = Find(namepath.Dequeue());
             if (namepath.Count == 0) { return n; }
             Nsp nsp = n as Nsp;
             if (nsp == null) { return null; }
@@ -141,7 +140,7 @@ namespace Nana.Semantics
             return Bty.New().Add("{").Nv("Name", Name).Add("}").Add(":").Add(GetType().Name).ToS();
         }
 
-        static public Predicate<T> GetNamePredicate<T>(string name) where T : INmd
+        static public Predicate<T> GetNamePredicate<T>(string name) where T : Nmd
         { return delegate(T v) { return v.Name == name; }; }
     }
 
@@ -242,7 +241,7 @@ namespace Nana.Semantics
 
         public ActnOvld NewActnOvld(string name)
         {
-            if (Members_.Exists(GetNamePredicate<INmd>(name)))
+            if (Members_.Exists(GetNamePredicate<Nmd>(name)))
             { throw new SyntaxError("The name is already defined: " + name); }
             ActnOvld ovl = new ActnOvld(new Token(name), this);
             BeAMember(ovl);
@@ -614,7 +613,7 @@ namespace Nana.Semantics
 
         public List<ActnOvld> Ovlds = new List<ActnOvld>();
 
-        public List<INmd> DebuggerDisplayMembers { get { return Members_; } }
+        public List<Nmd> DebuggerDisplayMembers { get { return Members_; } }
 
         public Typ(Token seed, Env env, App app)
             : base(seed, null, env)
@@ -650,7 +649,7 @@ namespace Nana.Semantics
 
         public ActnOvld NewActnOvld(string name)
         {
-            if (Members_.Exists(GetNamePredicate<INmd>(name)))
+            if (Members_.Exists(GetNamePredicate<Nmd>(name)))
             { throw new SyntaxError("The name is already defined: " + name); }
             ActnOvld ovl = new ActnOvld(new Token(name), E);
             Ovlds.Add(ovl);
@@ -874,10 +873,10 @@ namespace Nana.Semantics
             return RefType != null && RefType == t;
         }
 
-        public INmd FindMemeber(string name)
+        public Nmd FindMemeber(string name)
         {
             Typ typ = this;
-            INmd mem = typ.Find(name);
+            Nmd mem = typ.Find(name);
             while (typ != null && mem == null)
             {
                 if (typ.IsReferencing && typ.RefType == typeof(object))
@@ -974,14 +973,6 @@ namespace Nana.Semantics
         void Exec(IMRGenerator gen);
     }
 
-    public class Exe /*-cution*/ : IExecutable
-    {
-        virtual public void Exec(IMRGenerator gen) { }
-        virtual public void Give(IMRGenerator gen) { }
-        virtual public void Take(IMRGenerator gen) { }
-        virtual public void Addr(IMRGenerator gen) { Give(gen); }
-    }
-
     public class DoNothing : IExecutable
     {
         public void Exec(IMRGenerator gen)
@@ -1052,11 +1043,8 @@ namespace Nana.Semantics
         public bool RDS { get { return true; } }
     }
 
-    public class GenericArgument : INmd
+    public class GenericArgument : Nmd
     {
-        public string Name_;
-        public string Name { get { return Name_; } set { Name_ = value; } }
-
         public Type RefType = null;
 
         public GenericArgument(Type refType)
@@ -1066,7 +1054,7 @@ namespace Nana.Semantics
         }
     }
 
-    public class Variable : Exe,  INmd, ITyped, IVariable
+    public class Variable : Nmd, ITyped, IVariable
     {
         public enum VariableKind
         {
@@ -1075,9 +1063,6 @@ namespace Nana.Semantics
         }
         public VariableKind VarKind;
         public int GenericIndex = -1;
-
-        public string Name_;
-        public string Name { get { return Name_; } set { Name_ = value; } }
 
         public Typ Typ_;
         public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
@@ -1090,25 +1075,27 @@ namespace Nana.Semantics
             VarKind = varKind;
         }
 
-        public override void Give(IMRGenerator gen)
+        public void Exec(IMRGenerator gen) { }
+
+        public void Give(IMRGenerator gen)
         {
             gen.LoadVariable(this);
         }
 
-        public override void Take(IMRGenerator gen)
+        public void Take(IMRGenerator gen)
         {
             gen.StoreVariable(this);
         }
 
-        public override void Addr(IMRGenerator gen)
+        public void Addr(IMRGenerator gen)
         {
             if (Typ.IsValueType) { gen.LoadAVariable(this); }
             else { gen.LoadVariable(this); }
         }
 
-        public INmd Clone()
+        public Nmd Clone()
         {
-            return MemberwiseClone() as INmd;
+            return MemberwiseClone() as Nmd;
         }
 
         public override string ToString()

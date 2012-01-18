@@ -102,7 +102,7 @@ end
             Assert.IsNotNull(Env);
             Assert.AreEqual(1, Env.Members.Count);
 
-            App app = Env.Members.Find(delegate(INmd n_) { return n_ is App; }) as App;
+            App app = Env.Members.Find(delegate(Nmd n_) { return n_ is App; }) as App;
             Assert.IsNotNull(app);
 
             Typ typ = Env.FindByNamePath(ModuleFilename + @"/Class1Func0") as Typ;
@@ -227,7 +227,7 @@ end
             ctrl.AfterSemanticAnalyze = delegate(Token root_, Env env_)
             {
                 Env = env_;
-                App = env_.Members.Find(delegate(INmd n_) { return n_ is App; }) as App;
+                App = env_.Members.Find(delegate(Nmd n_) { return n_ is App; }) as App;
 
             };
             try

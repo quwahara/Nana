@@ -573,7 +573,7 @@ namespace Nana.Semantics
             //TODO load funcs automaticaly
             //y.GetActions();
 
-            INmd mbr = y.FindMemeber(t.Second.Value);
+            Nmd mbr = y.FindMemeber(t.Second.Value);
 
             if (mbr == null) { throw new SyntaxError("It is not a member", t.Second); }
 
@@ -1063,7 +1063,7 @@ namespace Nana.Semantics
 
         public override object Find(Token t)
         {
-            INmd n = Typ.Find(t.Value);
+            Nmd n = Typ.Find(t.Value);
             if (n == null)
             { return null; }
             Type nt = n.GetType();
@@ -1361,7 +1361,7 @@ namespace Nana.Semantics
                 { return m; }
             }
 
-            INmd n;
+            Nmd n;
             if (null != (n = Env.Find(t.Value))) { return n; }
             if (null != (n = Env.Find(t.ValueImplicit))) { return n; }
 
@@ -1393,8 +1393,8 @@ namespace Nana.Semantics
         {
             AppAnalyzer aa = CollectTypeOf<AppAnalyzer>().First.Value;
             App app = aa.App;
-            List<INmd> actns = app.FindDownAll(delegate(INmd n) { return n is Actn; });
-            List<INmd> founds = actns.FindAll(delegate(INmd a) { return  (a as Actn).IsEntryPoint; });
+            List<Nmd> actns = app.FindDownAll(delegate(Nmd n) { return n is Actn; });
+            List<Nmd> founds = actns.FindAll(delegate(Nmd a) { return  (a as Actn).IsEntryPoint; });
             if (founds.Count > 1)
             { throw new SyntaxError("Specify one entry point. There were two entry points or more."); }
             if (founds.Count == 1)
@@ -1409,7 +1409,7 @@ namespace Nana.Semantics
             AppAnalyzer aa = CollectTypeOf<AppAnalyzer>().First.Value;
             App app = aa.App;
 
-            Predicate<INmd> pred = delegate(INmd n)
+            Predicate<Nmd> pred = delegate(Nmd n)
             { return n.GetType() == typeof(Actn) || n.GetType() == typeof(Fctn); };
 
             foreach (Actn a in app.FindDownAll(pred))
@@ -1418,7 +1418,7 @@ namespace Nana.Semantics
 
         public static void RemoveReferencingType(Env env)
         {
-            env.Members.RemoveAll(delegate(INmd n)
+            env.Members.RemoveAll(delegate(Nmd n)
             {
                 return n is Typ && (n as Typ).IsReferencing == true;
             });
