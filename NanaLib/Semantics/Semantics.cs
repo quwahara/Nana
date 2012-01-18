@@ -11,17 +11,6 @@ using System.IO;
 
 namespace Nana.Semantics
 {
-    public class AnId
-    {
-        public Token Seed;
-        [DebuggerNonUserCode]
-        public AnId(Token seed) { Seed = seed; }
-        public override string ToString()
-        {
-            return Seed.Value + ":" + typeof(AnId).Name;
-        }
-    }
-
     public class Member
     {
         public Typ Ty;
@@ -38,6 +27,16 @@ namespace Nana.Semantics
 
     public class Nmd
     {
+        public Token Seed;
+
+        public Nmd() { }
+        [DebuggerNonUserCode]
+        public Nmd(Token seed) { Seed = seed; }
+        public override string ToString()
+        {
+            return Seed.Value + ":" + typeof(Nmd).Name;
+        }
+
         public string Name_;
         public string Name { get { return Name_; } set { Name_ = value; } }
     }
@@ -49,8 +48,6 @@ namespace Nana.Semantics
 
     public class Nsp : Nmd
     {
-        public Token Seed;
-
         public List<Nmd> Members_ = new List<Nmd>();
 
         public List<Action<Nsp>> EnsureMembersList = new List<Action<Nsp>>();

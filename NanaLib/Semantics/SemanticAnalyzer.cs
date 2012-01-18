@@ -210,7 +210,7 @@ namespace Nana.Semantics
 
             if (string.IsNullOrEmpty(t.ValueImplicit)) { t.ValueImplicit = t.Value; }
 
-            return AboveBlock.FindUp(t) as object ?? new AnId(t);
+            return AboveBlock.FindUp(t) as object ?? new Nmd(t);
         }
 
         public object Asgn(Token assign, Token give, Token take)
@@ -218,7 +218,7 @@ namespace Nana.Semantics
             IValuable gv2 = Require<IValuable>(give);
             object tu = Gate(take);
 
-            if ((tu.GetType() == typeof(AnId)) == false
+            if ((tu.GetType() == typeof(Nmd)) == false
                 && (tu is IAssignable) == false
                 && (tu is ArrayAccessInfo) == false
                 )
@@ -230,9 +230,9 @@ namespace Nana.Semantics
             {
                 return new ArraySetInfo(tu as ArrayAccessInfo, gv2);
             }
-            if (tu.GetType() == typeof(AnId))
+            if (tu.GetType() == typeof(Nmd))
             {
-                tu = Actn.NewVar((tu as AnId).Seed.Value, gv2.Typ);
+                tu = Actn.NewVar((tu as Nmd).Seed.Value, gv2.Typ);
             }
 
             return new Assign(gv2, tu as IVariable);
@@ -251,9 +251,9 @@ namespace Nana.Semantics
             Debug.Assert(t.Follows.Length == 1);
 
             object obj = Gate(t.First);
-            if (obj.GetType() != typeof(AnId))
+            if (obj.GetType() != typeof(Nmd))
             { throw new SemanticError("The variable is already defined. Variable name:" + t.First.Value, t.First); }
-            AnId id = obj as AnId;
+            Nmd id = obj as Nmd;
             Typ ty = RequireTyp(t.Follows[0]);
 
             return Actn.NewVar(id.Seed.Value, ty);
@@ -777,10 +777,10 @@ namespace Nana.Semantics
             {
                 // get type or valuable
                 object specsem = Gate(spc);
-                if (specsem.GetType() != typeof(AnId))
+                if (specsem.GetType() != typeof(Nmd))
                 { throw new SyntaxError("Not a generic type", spc); }
                 //  Generic type name consists of name, "`" and count of type parameter.
-                Token ttt = (specsem as AnId).Seed;
+                Token ttt = (specsem as Nmd).Seed;
                 //ttt.Value += "`" + contents.Count.ToString();
                 ttt.ValueImplicit += "`" + contents.Count.ToString();
                 tp = RequireTyp(ttt);
