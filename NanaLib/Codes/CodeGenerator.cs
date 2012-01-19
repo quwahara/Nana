@@ -268,9 +268,9 @@ namespace Nana.CodeGeneration
         public string BeginApp(App ap)
         {
             string name = "";
-            if (ap.Env.Seed.Contains("@CompileOptions/@out"))
+            if (ap.E.Seed.Contains("@CompileOptions/@out"))
             {
-                name = ap.Env.Seed.Find("@CompileOptions/@out").Value;
+                name = ap.E.Seed.Find("@CompileOptions/@out").Value;
             }
             else
             {

@@ -98,7 +98,7 @@ namespace Nana.Semantics
             Actn = FindUpTypeIs<ActnAnalyzer>().Actn;
             IsInFctn = Actn is Fctn;
             Fctn = IsInFctn ? Actn as Fctn : null;
-            Env = Actn.Env;
+            Env = Actn.E;
             TmpVarGen = new TmpVarGenerator(Env.GetTempName, Actn.NewVar);
             if (AboveBlock.RequiredReturnValue.Count == 0)
             {
@@ -579,7 +579,7 @@ namespace Nana.Semantics
 
             if (mbr is Prop) { return new CallPropInfo(y, mbr as Prop, v); };
 
-            return new Member(t, y, mbr, v);
+            return new Member(y, mbr, v);
         }
 
         static public readonly Token Empty = new Token("(Empty)", "Empty");
@@ -1068,7 +1068,7 @@ namespace Nana.Semantics
             { return null; }
             Type nt = n.GetType();
             if (nt == typeof(ActnOvld))
-            { return new Member(t, Typ, n, null); }
+            { return new Member(Typ, n, null); }
             return n;
         }
 
@@ -1220,7 +1220,7 @@ namespace Nana.Semantics
             ActnOvld actualao = hty.FindMemeber(actualname) as ActnOvld;
             BuiltInFunctions.Add(
                 built_in_function_name
-                , new Member(null, hty, actualao, null)
+                , new Member(hty, actualao, null)
                 );
         }
 
@@ -1366,7 +1366,7 @@ namespace Nana.Semantics
             if (null != (n = Env.Find(t.ValueImplicit))) { return n; }
 
             if (Env.TypeLdr.IsNamespace(t.ValueImplicit))
-            { return Env.NewNsp2(t.ValueImplicit); }
+            { return Env.NewNsp(t.ValueImplicit); }
 
             Type type;
             if (null != (type = Env.TypeLdr.GetTypeByName(t.ValueImplicit)))

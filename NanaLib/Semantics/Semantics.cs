@@ -17,7 +17,7 @@ namespace Nana.Semantics
         public Nmd Value;
         public IValuable Instance;
 
-        public Member(Token seed, Typ ty, Nmd value, IValuable instance)
+        public Member(Typ ty, Nmd value, IValuable instance)
         {
             Ty = ty;
             Value = value;
@@ -36,6 +36,9 @@ namespace Nana.Semantics
         {
             return Seed.Value + ":" + typeof(Nmd).Name;
         }
+
+        public Nmd(string name)
+        { Name = name; }
 
         public string Name_;
         public string Name { get { return Name_; } set { Name_ = value; } }
@@ -231,7 +234,7 @@ namespace Nana.Semantics
                 ?? NewGenericTypInstance(typ, genericTypeParams);
         }
 
-        public Nsp NewNsp2(string ns)
+        public Nsp NewNsp(string ns)
         {
             return BeAMember(new Nsp(ns, true, this)); ;
         }
@@ -404,12 +407,6 @@ namespace Nana.Semantics
             return false;
         }
 
-        static string Signature(List<Typ> typs)
-        {
-            return string.Join(" "
-                , typs.ConvertAll<string>(delegate(Typ y) { return y.Name; }).ToArray());
-        }
-
     }
 
     public interface IInstructionsHolder
@@ -421,8 +418,6 @@ namespace Nana.Semantics
     {
         static public readonly string EntryPointNameDefault = "Main";
         static public readonly string EntryPointNameImplicit = "'0'";
-
-        public Env Env { get { return E; } }
 
         public string SpecialName = "";
         public MethodAttributes MthdAttrs;
@@ -487,7 +482,7 @@ namespace Nana.Semantics
         {
             Mb = mb;
             new List<ParameterInfo>(mb.GetParameters()).ForEach(delegate(ParameterInfo p)
-                    { NewParam(p.Name, Env.FindOrNewRefType(p.ParameterType)); });
+                    { NewParam(p.Name, E.FindOrNewRefType(p.ParameterType)); });
             IsReferencing = true;
             MthdAttrs = mb.Attributes;
             if (MethodAttributes.SpecialName == (mb.Attributes & MethodAttributes.SpecialName))
@@ -902,8 +897,8 @@ namespace Nana.Semantics
         public App(Token seed, Env env)
             : base(seed, env, null)
         {
-            Name = Path.GetFileName(Env.OutPath);
-            AssemblyName = Path.GetFileNameWithoutExtension(Env.OutPath);
+            Name = Path.GetFileName(E.OutPath);
+            AssemblyName = Path.GetFileNameWithoutExtension(E.OutPath);
         }
 
         public Nsp NewNsp(Token seed)
@@ -1088,11 +1083,6 @@ namespace Nana.Semantics
         {
             if (Typ.IsValueType) { gen.LoadAVariable(this); }
             else { gen.LoadVariable(this); }
-        }
-
-        public Nmd Clone()
-        {
-            return MemberwiseClone() as Nmd;
         }
 
         public override string ToString()
