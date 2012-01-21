@@ -102,13 +102,13 @@ namespace Nana.Semantics
             TmpVarGen = new TmpVarGenerator(Env.GetTempName, Actn.NewVar);
             if (AboveBlock.RequiredReturnValue.Count == 0)
             {
-                IExecutable exe = Require<IExecutable>(Seed);
+                Sema exe = RequireExec(Seed);
                 Actn.Exes.Add(exe);
             }
             else
             {
                 ReturnValue rv = AboveBlock.RequiredReturnValue.Pop();
-                rv.GiveVal = Require<IValuable>(Seed);
+                rv.GiveVal = Require<Sema>(Seed);
             }
 
         }
@@ -117,6 +117,18 @@ namespace Nana.Semantics
         {
             object s; if ((s = Gate(t)) is TR) { return (TR)s; }
             throw new SyntaxError("Require :" + typeof(TR).Name + ", Token:" + t.ToString(), t);
+        }
+
+        public Sema RequireExec(Token t)
+        {
+            object o = Gate(t);
+            if (false == (o is Sema))
+            { throw new SemanticError("Required executable sentence:" + t.ToString(), t); }
+            Sema s = o as Sema;
+            if (false == s.Att.CanExec)
+            { throw new SemanticError("Required executable sentence:" + t.ToString(), t); }
+
+            return s;
         }
 
         public object Gate(Token t)
@@ -215,12 +227,12 @@ namespace Nana.Semantics
 
         public object Asgn(Token assign, Token give, Token take)
         {
-            IValuable gv2 = Require<IValuable>(give);
+            Sema gv2 = Require<Sema>(give);
             object tu = Gate(take);
 
             if ((tu.GetType() == typeof(Nmd)) == false
-                && (tu is IAssignable) == false
                 && (tu is ArrayAccessInfo) == false
+                && ((tu is Sema) && (tu as Sema).Att.CanSet) == false
                 )
             {
                 throw new SyntaxError("Can not assign to: " + take.Value, take);
@@ -232,10 +244,10 @@ namespace Nana.Semantics
             }
             if (tu.GetType() == typeof(Nmd))
             {
-                tu = Actn.NewVar((tu as Nmd).Seed.Value, gv2.Typ);
+                tu = Actn.NewVar((tu as Nmd).Seed.Value, gv2.Att.TypGet);
             }
 
-            return new Assign(gv2, tu as IVariable);
+            return new Assign(gv2, tu as Sema);
         }
 
         public object TypeSpec(Token t)
@@ -261,13 +273,13 @@ namespace Nana.Semantics
 
         public object Ope(Token t)
         {
-            IValuable lv, rv;
+            Sema lv, rv;
 
-            lv = Require<IValuable>(t.First);
-            rv = Require<IValuable>(t.Second);
+            lv = Require<Sema>(t.First);
+            rv = Require<Sema>(t.Second);
 
             string ope = t.Value;
-            Typ tp = lv.Typ;
+            Typ tp = lv.Att.TypGet;
             if (tp.IsReferencingOf(typeof(int)))
             {
                 CalcInfo c;
@@ -319,7 +331,7 @@ namespace Nana.Semantics
                 {
                     Typ ts = Env.BTY.String;
                     Fctn concat = ts.FindActnOvld("Concat").GetActnOf(ts, new Typ[] { ts, ts }, ThisTyp, Actn) as Fctn;
-                    return new CallFunction(tp, concat, /* instance */ null, new IValuable[] { lv, rv }, /* isNewObj */ false);
+                    return new CallFunction(tp, concat, /* instance */ null, new Sema[] { lv, rv }, /* isNewObj */ false);
                 }
                 else
                 {
@@ -353,9 +365,9 @@ namespace Nana.Semantics
             Breaks.Push(endlbl);
             Continues.Push(dolbl);
 
-            IValuable condv = RequireCondition(cond);
+            Sema condv = RequireCondition(cond);
             bool rds;   //  not used
-            IExecutable[] lines = CreateBlock(do_.Follows, out rds);
+            Sema[] lines = CreateBlock(do_.Follows, out rds);
 
             Continues.Pop();
             Breaks.Pop();
@@ -369,7 +381,7 @@ namespace Nana.Semantics
             List<Token> elifs;
             IfInfo.Component ifthen;
             List<IfInfo.Component> elifthen = new List<IfInfo.Component>();
-            IExecutable[] elsels = null;
+            Sema[] elsels = null;
             bool rds = true, rdstmp;
 
             if (if_.Follows.Length < 2)
@@ -390,7 +402,7 @@ namespace Nana.Semantics
             }
 
             string fix = Env.GetTempName();
-            List<IExecutable> lines = new List<IExecutable>();
+            List<Sema> lines = new List<Sema>();
 
             ifthen = new IfInfo.Component();
             ifthen.Condition = RequireCondition(cond);
@@ -419,26 +431,26 @@ namespace Nana.Semantics
             return new IfInfo(fix, ifthen, elifthen.ToArray(), elsels, rds);
         }
 
-        public IValuable RequireCondition(Token cond)
+        public Sema RequireCondition(Token cond)
         {
-            IValuable condv = Require<IValuable>(cond);
-            if (false == condv.Typ.IsReferencingOf(typeof(bool)))
+            Sema condv = Require<Sema>(cond);
+            if (false == condv.Att.TypGet.IsReferencingOf(typeof(bool)))
             {
                 throw new TypeError("condition expression was not bool type", cond);
             }
             return condv;
         }
 
-        public IExecutable[] CreateBlock(Token[] block, out bool rds)
+        public Sema[] CreateBlock(Token[] block, out bool rds)
         {
-            List<IExecutable> lines = new List<IExecutable>();
+            List<Sema> lines = new List<Sema>();
             rds = false;
 
             int i = 0;
             while (i < block.Length)
             {
                 Token line = block[i];
-                IExecutable exe = Require<IExecutable>(line);
+                Sema exe = RequireExec(line);
                 lines.Add(exe);
                 if (exe is IReturnDeterminacyState)
                 { rds |= (exe as IReturnDeterminacyState).RDS; }
@@ -450,7 +462,7 @@ namespace Nana.Semantics
                 ReturnValue rv = exe as ReturnValue;
                 line = block[i];
 
-                rv.GiveVal = Require<IValuable>(line);
+                rv.GiveVal = Require<Sema>(line);
                 ++i;
             }
 
@@ -460,7 +472,7 @@ namespace Nana.Semantics
         public object CallFunc(Token t)
         {
             List<Typ> argtyps = new List<Typ>();
-            List<IValuable> argvals = new List<IValuable>();
+            List<Sema> argvals = new List<Sema>();
             object first;
             Type firstty;
 
@@ -482,10 +494,10 @@ namespace Nana.Semantics
                 for (int i = 0; i < args.Length; i += 2)
                 {
                     Token argt = args[i];
-                    IValuable v;
-                    v = Require<IValuable>(argt);
+                    Sema v;
+                    v = Require<Sema>(argt);
                     argvals.Add(v);
-                    argtyps.Add(v.Typ);
+                    argtyps.Add(v.Att.TypGet);
                 }
             }
 
@@ -527,7 +539,7 @@ namespace Nana.Semantics
             sig = actovl.GetActnOf(calleetyp, argtyps.ToArray(), ThisTyp, Actn);
             if (sig == null) { throw new SyntaxError("It is not a member", t.First); }
 
-            IValuable instance = mbr == null ? null : mbr.Instance;
+            Sema instance = mbr == null ? null : mbr.Instance;
 
             if (sig.GetType() == typeof(Actn))
             { return new CallAction(calleetyp, sig, instance, argvals.ToArray(), false /*:isNewObj*/); }
@@ -558,11 +570,11 @@ namespace Nana.Semantics
             }
 
             Typ y = null;
-            IValuable v = null;
-            if (holder is IValuable)
+            Sema v = null;
+            if (holder is Sema)
             {
-                v = holder as IValuable;
-                y = v.Typ;
+                v = holder as Sema;
+                y = v.Att.TypGet;
             }
             if (holder.GetType() == typeof(Typ))
             {
@@ -673,7 +685,7 @@ namespace Nana.Semantics
             // resolve the spec(ifier) that specifies meaning of "[]" syntax is type or array access
             object spec;
             Typ typ = null;
-            IValuable val = null;
+            Sema val = null;
             spec = Gate(r);
 
             if (spec.GetType() == typeof(Typ))
@@ -682,10 +694,10 @@ namespace Nana.Semantics
                 for (int i = 0; i < rs.Count; ++i)
                 { typ = Env.FindOrNewArrayTyp(typ, cirfxdlst[i].Length); }
             }
-            else if (spec is IValuable)
+            else if (spec is Sema)
             {
-                val = spec as IValuable;
-                if (val.Typ.IsVectorOrArray == false)
+                val = spec as Sema;
+                if (val.Att.TypGet.IsVectorOrArray == false)
                 { throw new SyntaxError("require an array value in front of '[]'", r); }
             }
             else
@@ -707,12 +719,12 @@ namespace Nana.Semantics
                 { throw new SyntaxError("cannot specify lenght", r); }
 
                 // get array length
-                IValuable len;
-                List<IValuable> lens = new List<IValuable>();
+                Sema len;
+                List<Sema> lens = new List<Sema>();
                 foreach (Token c in cirfxdlst[cirfxdlst.Count - 1])
                 {
-                    len = Require<IValuable>(c);
-                    Typ y = len.Typ;
+                    len = Require<Sema>(c);
+                    Typ y = len.Att.TypGet;
                     if (y.IsReferencing == false || y.RefType != typeof(int))
                     { throw new TypeError("specified not int value to array lenght", c); }
                     lens.Add(len);
@@ -729,12 +741,12 @@ namespace Nana.Semantics
                 rev.Reverse();
                 foreach (Token[] cf_ in rev)
                 {
-                    IValuable idx;
-                    List<IValuable> idcs = new List<IValuable>();
+                    Sema idx;
+                    List<Sema> idcs = new List<Sema>();
                     foreach (Token c in cf_)
                     {
-                        idx = Require<IValuable>(c);
-                        Typ y = idx.Typ;
+                        idx = Require<Sema>(c);
+                        Typ y = idx.Att.TypGet;
                         if (y.IsReferencing == false || y.RefType != typeof(int))
                         { throw new TypeError("specified not int value to array lenght", c); }
                         idcs.Add(idx);
@@ -994,7 +1006,7 @@ namespace Nana.Semantics
         static public void EnusureReturn(Actn a)
         {
             bool rds = false;
-            foreach (IExecutable x in a.Exes)
+            foreach (Sema x in a.Exes)
             {
                 if (x is IReturnDeterminacyState)
                 { rds |= (x as IReturnDeterminacyState).RDS; }
@@ -1332,8 +1344,8 @@ namespace Nana.Semantics
                 { continue; }
                 Typ bty = mytyp.BaseTyp;
                 Actn callee = bty.FindActnOvld(".ctor").GetActnOf(bty, new Typ[] { }, mytyp, actn);
-                IValuable instance = actn.FindVar("this");
-                actn.Exes.Add(new CallAction(bty, callee, instance, new IValuable[] { }, false /*:isNewObj*/));
+                Sema instance = actn.FindVar("this");
+                actn.Exes.Add(new CallAction(bty, callee, instance, new Sema[] { }, false /*:isNewObj*/));
             }
         }
 

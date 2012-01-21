@@ -11,13 +11,33 @@ using System.IO;
 
 namespace Nana.Semantics
 {
+    public class Attr
+    {
+        public bool CanExec_ = false;
+        public bool CanExec { get { return CanExec_ || CanGet || CanSet; } }
+        public bool CanGet { get { return TypGet != null; } }
+        public bool CanSet { get { return TypSet != null; } }
+        public Typ TypGet = null;
+        public Typ TypSet = null;
+    }
+
+    public class Sema
+    {
+        public Attr Att_ = new Attr();
+        public Attr Att { get { return Att_; } }
+        public virtual void Exec(IMRGenerator gen) { }
+        public virtual void Give(IMRGenerator gen) { }
+        public virtual void Take(IMRGenerator gen) { }
+        public virtual void Addr(IMRGenerator gen) { }
+    }
+
     public class Member
     {
         public Typ Ty;
         public Nmd Value;
-        public IValuable Instance;
+        public Sema Instance;
 
-        public Member(Typ ty, Nmd value, IValuable instance)
+        public Member(Typ ty, Nmd value, Sema instance)
         {
             Ty = ty;
             Value = value;
@@ -25,7 +45,7 @@ namespace Nana.Semantics
         }
     }
 
-    public class Nmd
+    public class Nmd : Sema
     {
         public Token Seed;
 
@@ -455,7 +475,7 @@ namespace Nana.Semantics
             return Cty.EqualForAll(Signature, signature);
         }
 
-        public List<IExecutable> Exes = new List<IExecutable>();
+        public List<Sema> Exes = new List<Sema>();
 
         public List<IMR> _Intermediates = new List<IMR>();
         public List<IMR> Instructions
@@ -567,13 +587,16 @@ namespace Nana.Semantics
 
     public class Fctn : Actn, ITyped
     {
+        public Typ ReturnTyp;
         public Typ Typ_;
         public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
 
         public Fctn(Token seed, List<Variable> params_, Typ returnTyp, Env env)
             : base(seed, params_, env)
         {
+            ReturnTyp = returnTyp;
             Typ_ = returnTyp;
+            Att.TypGet = returnTyp;
         }
 
         public Fctn(MethodBase mb, Env env)
@@ -583,6 +606,8 @@ namespace Nana.Semantics
                 ? mb.DeclaringType
                 : (mb as MethodInfo).ReturnType;
             Typ_ = env.FindOrNewRefType(t);
+            Att.TypGet = env.FindOrNewRefType(t);
+
         }
     }
 
@@ -948,6 +973,7 @@ namespace Nana.Semantics
                 Setter = BeAMember<Actn>(new Actn(m, env));
             }
             Typ_ = env.FindOrNewRefType(p.PropertyType);
+            Att.TypGet = env.FindOrNewRefType(p.PropertyType);
         }
 
         public Typ Typ { get { return Typ_; } }
@@ -960,26 +986,20 @@ namespace Nana.Semantics
         bool RDS { get;}
     }
 
-    public interface IExecutable
+    public class DoNothing : Sema
     {
-        void Exec(IMRGenerator gen);
-    }
+        public DoNothing()
+        {
+            Att.CanExec_ = true;
+        }
 
-    public class DoNothing : IExecutable
-    {
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             //  do nothing
         }
     }
 
-    public interface IValuable : IExecutable, ITyped
-    {
-        void Give(IMRGenerator gen);
-        void Addr(IMRGenerator gen);
-    }
-
-    public class Literal :IValuable
+    public class Literal : Sema
     {
         public object Value;
         public Typ Typ_;
@@ -995,19 +1015,20 @@ namespace Nana.Semantics
             Value = value;
             Typ_ = typ;
             TmpVarGen = tmpVarGen;
+            Att.TypGet = typ;
         }
 
-        public void Give(IMRGenerator gen)
+        public override void Give(IMRGenerator gen)
         {
             gen.LoadLiteral(this);
         }
 
-        public void Addr(IMRGenerator gen)
+        public override void Addr(IMRGenerator gen)
         {
             Give(gen);
         }
 
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             Give(gen);
             gen.Pop();
@@ -1016,18 +1037,9 @@ namespace Nana.Semantics
         public Typ Typ { get { return Typ_; } }
     }
 
-    public interface IAssignable
+    public class Ret : Sema, IReturnDeterminacyState
     {
-        void Take(IMRGenerator gen);
-    }
-
-    public interface IVariable : IAssignable, IValuable
-    {
-    }
-
-    public class Ret : IExecutable, IReturnDeterminacyState
-    {
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             gen.Ret();
         }
@@ -1046,7 +1058,7 @@ namespace Nana.Semantics
         }
     }
 
-    public class Variable : Nmd, ITyped, IVariable
+    public class Variable : Nmd, ITyped
     {
         public enum VariableKind
         {
@@ -1065,21 +1077,24 @@ namespace Nana.Semantics
             Name_ = name;
             Typ_ = typ;
             VarKind = varKind;
+
+            Att.TypGet = typ;
+            Att.TypSet = typ;
         }
 
-        public void Exec(IMRGenerator gen) { }
+        public override void Exec(IMRGenerator gen) { }
 
-        public void Give(IMRGenerator gen)
+        public override void Give(IMRGenerator gen)
         {
             gen.LoadVariable(this);
         }
 
-        public void Take(IMRGenerator gen)
+        public override void Take(IMRGenerator gen)
         {
             gen.StoreVariable(this);
         }
 
-        public void Addr(IMRGenerator gen)
+        public override void Addr(IMRGenerator gen)
         {
             if (Typ.IsValueType) { gen.LoadAVariable(this); }
             else { gen.LoadVariable(this); }
@@ -1092,36 +1107,37 @@ namespace Nana.Semantics
         }
     }
 
-    public class Assign : IVariable
+    public class Assign : Sema
     {
-        public Typ Typ { [DebuggerNonUserCode]get { return TakeVar.Typ; } }
-        public IValuable GiveVal;
-        public IVariable TakeVar;
+        public Typ Typ { [DebuggerNonUserCode]get { return TakeVar.Att.TypSet; } }
+        public Sema GiveVal;
+        public Sema TakeVar;
 
-        public Assign(IValuable give, IVariable take)
+        public Assign(Sema give, Sema take)
         {
             GiveVal = give;
             TakeVar = take;
+            Att_ = take.Att_;
         }
 
-        public void Take(IMRGenerator gen)
+        public override void Take(IMRGenerator gen)
         {
             Exec(gen);
             TakeVar.Take(gen);
         }
 
-        public void Give(IMRGenerator gen)
+        public override void Give(IMRGenerator gen)
         {
             Exec(gen);
             TakeVar.Give(gen);
         }
 
-        public void Addr(IMRGenerator gen)
+        public override void Addr(IMRGenerator gen)
         {
             Give(gen);
         }
 
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             GiveVal.Give(gen);
             TakeVar.Take(gen);
@@ -1129,11 +1145,16 @@ namespace Nana.Semantics
 
     }
 
-    public class ReturnValue : IExecutable, IReturnDeterminacyState
+    public class ReturnValue : Sema, IReturnDeterminacyState
     {
-        public IValuable GiveVal = null;
+        public Sema GiveVal = null;
 
-        public void Exec(IMRGenerator gen)
+        public ReturnValue()
+        {
+            Att.CanExec_ = true;
+        }
+
+        public override void Exec(IMRGenerator gen)
         {
             GiveVal.Give(gen);
             gen.Ret();
@@ -1142,21 +1163,22 @@ namespace Nana.Semantics
         public bool RDS { get { return true; } }
     }
 
-    public class CallAction : IExecutable
+    public class CallAction : Sema
     {
         public Typ CalleeTy;
         public Actn Callee;
-        public IValuable Instance;
-        public IValuable[] Args;
+        public Sema Instance;
+        public Sema[] Args;
         public bool IsNewObj;
 
-        public CallAction(Typ calleety, Actn callee, IValuable instance, IValuable[] args, bool isNewObj)
+        public CallAction(Typ calleety, Actn callee, Sema instance, Sema[] args, bool isNewObj)
         {
             CalleeTy = calleety;
             Callee = callee;
             Instance = instance;
             Args = args;
             IsNewObj = isNewObj;
+            Att.CanExec_ = true;
         }
 
         public void LoadInstance(IMRGenerator gen)
@@ -1164,9 +1186,9 @@ namespace Nana.Semantics
             if (Instance != null)
             {
                 Instance.Addr(gen);
-                if (Instance is Literal && Instance.Typ.IsValueType)
+                if (Instance is Literal && Instance.Att.TypGet.IsValueType)
                 {
-                    Variable v = (Instance as Literal).TmpVarGen.Substitute(Instance.Typ, gen);
+                    Variable v = (Instance as Literal).TmpVarGen.Substitute(Instance.Att.TypGet, gen);
                     v.Addr(gen);
                 }
             }
@@ -1174,10 +1196,10 @@ namespace Nana.Semantics
 
         public void LoadArgs(IMRGenerator gen)
         {
-            foreach (IValuable v in Args) { v.Give(gen); }
+            foreach (Sema v in Args) { v.Give(gen); }
         }
 
-        virtual public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             LoadInstance(gen);
             LoadArgs(gen);
@@ -1192,17 +1214,19 @@ namespace Nana.Semantics
 
     }
 
-    public class CallFunction : CallAction, ITyped, IValuable
+    public class CallFunction : CallAction, ITyped
     {
         public Fctn CalleeFctn { get { return Callee as Fctn; } }
 
-        public CallFunction(Typ calleety, Fctn callee, IValuable instance, IValuable[] args, bool isNewObj)
+        public CallFunction(Typ calleety, Fctn callee, Sema instance, Sema[] args, bool isNewObj)
             : base(calleety, callee, instance, args, isNewObj)
-        {  }
+        {
+            Att.TypGet = callee.Att.TypGet;
+        }
 
         public Typ Typ { get { return CalleeFctn.Typ; } }
 
-        public void Give(IMRGenerator gen)
+        public override void Give(IMRGenerator gen)
         {
             LoadInstance(gen);
             LoadArgs(gen);
@@ -1210,12 +1234,12 @@ namespace Nana.Semantics
             else { gen.CallAction(CalleeTy, Callee); }
         }
 
-        public void Addr(IMRGenerator gen)
+        public override void Addr(IMRGenerator gen)
         {
             Give(gen);
         }
 
-        override public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             Give(gen);
             gen.Pop();
@@ -1223,34 +1247,36 @@ namespace Nana.Semantics
 
     }
 
-    public class CallPropInfo : IValuable
+    public class CallPropInfo : Sema
     {
         public Typ CalleeTy;
         public Typ Typ { [DebuggerNonUserCode] get { return Prop.Typ; } }
         public Prop Prop;
-        public IValuable Instance;
+        public Sema Instance;
 
-        public CallPropInfo(Typ calleety, Prop prop, IValuable instance)
+        public CallPropInfo(Typ calleety, Prop prop, Sema instance)
         {
             CalleeTy = calleety;
             Prop = prop;
             Instance = instance;
+
+            Att.TypGet = prop.Typ;
         }
 
-        public void Give(IMRGenerator gen)
+        public override void Give(IMRGenerator gen)
         {
             if (Prop.Getter == null)
             { throw new SyntaxError("Cannot get value from the property"); }
-            CallFunction cf = new CallFunction(CalleeTy, Prop.Getter, Instance, new IValuable[0], /*isNewObj:*/ false);
+            CallFunction cf = new CallFunction(CalleeTy, Prop.Getter, Instance, new Sema[0], /*isNewObj:*/ false);
             cf.Give(gen);
         }
 
-        public void Addr(IMRGenerator gen)
+        public override void Addr(IMRGenerator gen)
         {
             Give(gen);
         }
 
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             Give(gen);
             gen.Pop();
@@ -1258,34 +1284,35 @@ namespace Nana.Semantics
 
     }
 
-    public class CalcInfo : IValuable
+    public class CalcInfo : Sema
     {
         public string Sign;
-        public IValuable Lv;
-        public IValuable Rv;
+        public Sema Lv;
+        public Sema Rv;
         public Typ Typ_;
 
-        public CalcInfo(string sign, IValuable lv, IValuable rv, Typ typ)
+        public CalcInfo(string sign, Sema lv, Sema rv, Typ typ)
         {
             Sign = sign;
             Lv = lv;
             Rv = rv;
             Typ_ = typ;
+            Att.TypGet = typ;
         }
 
-        public void Give(IMRGenerator gen)
+        public override void Give(IMRGenerator gen)
         {
             Lv.Give(gen);
             Rv.Give(gen);
             gen.Ope(Sign, Typ_);
         }
 
-        public void Addr(IMRGenerator gen)
+        public override void Addr(IMRGenerator gen)
         {
             Give(gen);
         }
 
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             Give(gen);
             gen.Pop();
@@ -1294,23 +1321,24 @@ namespace Nana.Semantics
         public Typ Typ { get { return Typ_; } }
     }
 
-    public class IfInfo : IExecutable, IReturnDeterminacyState
+    public class IfInfo : Sema, IReturnDeterminacyState
     {
         public class Component
         {
-            public IValuable Condition;
-            public IExecutable[] Lines;
+            public Sema Condition;
+            public Sema[] Lines;
         }
 
         public string Fix;
         public Component IfThen;
         public Component[] ElifThen;
-        public IExecutable[] Else;
+        public Sema[] Else;
         public bool RDS_;
         public bool RDS { get { return RDS_; } }
 
-        public IfInfo(string uniqFix, Component ifThen, Component[] elifThen, IExecutable[] else_, bool rds)
+        public IfInfo(string uniqFix, Component ifThen, Component[] elifThen, Sema[] else_, bool rds)
         {
+            Att.CanExec_ = true;
             Fix = uniqFix;
             IfThen = ifThen;
             ElifThen = elifThen;
@@ -1318,7 +1346,7 @@ namespace Nana.Semantics
             RDS_ = rds;
         }
 
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             string endlbl;
             Stack<string> elselbls;
@@ -1337,7 +1365,7 @@ namespace Nana.Semantics
 
             IfThen.Condition.Give(gen);
             brelse();
-            foreach (IExecutable s in IfThen.Lines) { s.Exec(gen); }
+            foreach (Sema  s in IfThen.Lines) { s.Exec(gen); }
             gotoend();
 
             foreach (Component elt_ in ElifThen)
@@ -1345,14 +1373,14 @@ namespace Nana.Semantics
                 putelse();
                 elt_.Condition.Give(gen);
                 brelse();
-                foreach (IExecutable l_ in elt_.Lines) { l_.Exec(gen); }
+                foreach (Sema  l_ in elt_.Lines) { l_.Exec(gen); }
                 gotoend();
             }
 
             if (Else != null)
             {
                 putelse();
-                foreach (IExecutable l_ in Else) { l_.Exec(gen); }
+                foreach (Sema  l_ in Else) { l_.Exec(gen); }
             }
 
             gen.PutLabel(endlbl);
@@ -1360,50 +1388,52 @@ namespace Nana.Semantics
 
     }
 
-    public class WhileInfo : IExecutable
+    public class WhileInfo : Sema
     {
         public Literal Dolbl;
         public Literal Endlbl;
-        public IValuable Condition;
-        public IExecutable[] Lines;
+        public Sema Condition;
+        public Sema[] Lines;
 
-        public WhileInfo(Literal dolbl, Literal endlbl, IValuable condition, IExecutable[] lines)
+        public WhileInfo(Literal dolbl, Literal endlbl, Sema condition, Sema[] lines)
         {
+            Att.CanExec_ = true;
             Dolbl = dolbl;
             Endlbl = endlbl;
             Condition = condition;
             Lines = lines;
         }
 
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             gen.PutLabel(Dolbl.Value.ToString());
             Condition.Give(gen);
             gen.BrFalse(Endlbl.Value.ToString());
-            foreach (IExecutable u_ in Lines) { u_.Exec(gen); }
+            foreach (Sema  u_ in Lines) { u_.Exec(gen); }
             gen.Br(Dolbl.Value.ToString());
             gen.PutLabel(Endlbl.Value.ToString());
         }
 
     }
 
-    public class BranchInfo : IExecutable
+    public class BranchInfo : Sema
     {
         public Literal Label;
         public BranchInfo(Literal label)
         {
+            Att.CanExec_ = true;
             Label = label;
         }
 
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             gen.Br(Label.Value.ToString());
         }
     }
 
-    public class ArrayInstatiation : IValuable
+    public class ArrayInstatiation : Sema
     {
-        public IValuable[] Lens;
+        public Sema[] Lens;
         public TmpVarGenerator TmpVarGen;
         // prepare for over twice referenced instatication
         public IMR PlaceHolder;
@@ -1411,32 +1441,33 @@ namespace Nana.Semantics
         public Typ Typ_;
         public Typ Typ { [DebuggerNonUserCode]get { return Typ_; } }
 
-        public ArrayInstatiation(Typ typ, IValuable[] lens, TmpVarGenerator tmpVarGen)
+        public ArrayInstatiation(Typ typ, Sema[] lens, TmpVarGenerator tmpVarGen)
         {
             Typ_ = typ;
             Lens = lens;
             TmpVarGen = tmpVarGen;
+            Att.TypGet = typ;
         }
 
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             Give(gen);
             gen.Pop();
         }
-        public void Give(IMRGenerator imrs)
+        public override void Give(IMRGenerator imrs)
         {
             if (PlaceHolder == null) { Give1st(imrs); }
             else { GiveSubsequent(imrs); }
         }
 
-        public void Addr(IMRGenerator gen)
+        public override void Addr(IMRGenerator gen)
         {
             Give(gen);
         }
 
         public void Give1st(IMRGenerator gen)
         {
-            foreach (IValuable v in Lens)
+            foreach (Sema v in Lens)
             { v.Give(gen); }
 
             PlaceHolder = gen.NewArray(Typ);
@@ -1494,34 +1525,36 @@ namespace Nana.Semantics
         }
     }
 
-    public class ArrayAccessInfo : IValuable
+    public class ArrayAccessInfo : Sema
     {
-        public IValuable Val;
-        public IValuable[] Indices;
+        public Sema Val;
+        public Sema[] Indices;
 
         public Typ Typ_;
         public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
 
-        public ArrayAccessInfo(IValuable val, IValuable[] indices)
+        public ArrayAccessInfo(Sema val, Sema[] indices)
         {
-            Typ_ = val.Typ.ArrayType;
+            Typ_ = val.Att.TypGet.ArrayType;
             Val = val;
             Indices = indices;
+
+            Att.TypGet = val.Att.TypGet.ArrayType;
         }
 
-        public void Give(IMRGenerator gen)
+        public override void Give(IMRGenerator gen)
         {
             Val.Give(gen);
-            Array.ForEach<IValuable>(Indices,
-                delegate(IValuable v_) { v_.Give(gen); });
+            Array.ForEach<Sema>(Indices,
+                delegate(Sema v_) { v_.Give(gen); });
 
-            gen.LdArrayElement(Val.Typ);
+            gen.LdArrayElement(Val.Att.TypGet);
         }
-        public void Addr(IMRGenerator gen)
+        public override void Addr(IMRGenerator gen)
         {
             Give(gen);
         }
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             Give(gen);
             gen.Pop();
@@ -1532,42 +1565,44 @@ namespace Nana.Semantics
         }
     }
 
-    public class ArraySetInfo : IValuable
+    public class ArraySetInfo : Sema
     {
         public ArrayAccessInfo ArrayAccess;
-        public IValuable GiveVal;
+        public Sema GiveVal;
 
         public Typ Typ_;
         public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
 
-        public ArraySetInfo(ArrayAccessInfo arrayAccess, IValuable giveVal)
+        public ArraySetInfo(ArrayAccessInfo arrayAccess, Sema giveVal)
         {
-            Debug.Assert(arrayAccess != null && arrayAccess.Val != null && arrayAccess.Val.Typ != null);
+            Debug.Assert(arrayAccess != null && arrayAccess.Val != null && arrayAccess.Val.Att.TypGet != null);
 
             Typ_ = arrayAccess.Typ;
             ArrayAccess = arrayAccess;
             GiveVal = giveVal;
+
+            Att.TypGet = arrayAccess.Typ;
         }
 
-        public void Give(IMRGenerator gen)
+        public override void Give(IMRGenerator gen)
         {
             Exec(gen);
             ArrayAccess.Give(gen);
         }
 
-        public void Addr(IMRGenerator gen)
+        public override void Addr(IMRGenerator gen)
         {
             Give(gen);
         }
 
-        public void Exec(IMRGenerator gen)
+        public override void Exec(IMRGenerator gen)
         {
             ArrayAccess.Val.Give(gen);
-            Array.ForEach<IValuable>(ArrayAccess.Indices,
-                delegate(IValuable v_) { v_.Give(gen); });
+            Array.ForEach<Sema>(ArrayAccess.Indices,
+                delegate(Sema v_) { v_.Give(gen); });
             GiveVal.Give(gen);
 
-            Typ t = ArrayAccess.Val.Typ;
+            Typ t = ArrayAccess.Val.Att.TypGet;
             Typ t2;
          
             if (t.IsVector)
@@ -1576,7 +1611,7 @@ namespace Nana.Semantics
             }
             else if (t.IsArray)
             {
-                t2 = ArrayAccess.Val.Typ;
+                t2 = ArrayAccess.Val.Att.TypGet;
             }
             else
             {

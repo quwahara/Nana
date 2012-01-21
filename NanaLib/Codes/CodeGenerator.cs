@@ -296,7 +296,7 @@ namespace Nana.CodeGeneration
         {
             StringBuilder b = new StringBuilder();
             b.Append(".field static ")
-                .Append(TypeNameInSig(v.Typ))
+                .Append(TypeNameInSig(v.Att.TypGet))
                 .Append(" ")
                 .Append(Qk(v.Name))
                 .AppendLine();

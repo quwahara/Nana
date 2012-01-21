@@ -163,7 +163,7 @@ end
 
             Assert.IsTrue(2 == a.Exes.Count);
 
-            List<string> xs = a.Exes.ConvertAll<string>(delegate(IExecutable x) { return x.ToString(); });
+            List<string> xs = a.Exes.ConvertAll<string>(delegate(Sema x) { return x.ToString(); });
             Assert.IsTrue(xs[0].EndsWith("}:CallAction"));
 
             Typ typ2 = App.FindByNamePath("T102_Class1Func1P0") as Typ;

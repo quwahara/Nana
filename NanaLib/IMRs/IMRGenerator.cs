@@ -54,7 +54,7 @@ namespace Nana.IMRs
         public IMR(C c, Variable v) : this(c) { VariableV = v; }
         public IMR(C c, Typ v) : this(c) { TypV = v; }
         public IMR(C c, Typ v, Typ v2) : this(c) { TypV = v; TypV2 = v2; }
-        public IMR(C c, IValuable v) : this(c) { ValuableV = v; }
+        //public IMR(C c, IValuable v) : this(c) { ValuableV = v; }
         public IMR(C c, string s, Typ t) : this(c) { StringV = s; TypV = t; }
 
         public string StringV;
@@ -63,7 +63,7 @@ namespace Nana.IMRs
         public Variable VariableV;
         public Typ TypV;
         public Typ TypV2;
-        public IValuable ValuableV;
+        //public IValuable ValuableV;
     }
 
     public class IMRGenerator : List<IMR>
@@ -82,7 +82,7 @@ namespace Nana.IMRs
 
             foreach (Actn a in app.FindDownAll(pred))
             {
-                foreach (IExecutable x in a.Exes)
+                foreach (Sema x in a.Exes)
                 { x.Exec(this); }
                 a.Instructions.AddRange(this);
                 Clear();
