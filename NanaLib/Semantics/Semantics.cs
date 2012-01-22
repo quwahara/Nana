@@ -261,11 +261,11 @@ namespace Nana.Semantics
             return BeAMember(new Nsp(ns, true, this)); ;
         }
 
-        public ActnOvld NewActnOvld(string name)
+        public Ovld NewOvld(string name)
         {
             if (Members_.Exists(GetNamePredicate<Nmd>(name)))
             { throw new SyntaxError("The name is already defined: " + name); }
-            ActnOvld ovl = new ActnOvld(new Token(name), this);
+            Ovld ovl = new Ovld(new Token(name), this);
             BeAMember(ovl);
             return ovl;
         }
@@ -292,39 +292,39 @@ namespace Nana.Semantics
         }
     }
 
-    public class ActnOvld : Nsp
+    public class Ovld : Nsp
     {
-        public List<Actn> Actns = new List<Actn>();
+        public List<Fun> Funs = new List<Fun>();
 
-        public ActnOvld(Token seed, Env env)
+        public Ovld(Token seed, Env env)
             : base(seed, env)
         {
         }
 
-        public Actn NewFctn(Token seed, List<Variable> params_, Typ returnTyp)
+        public Fun NewFctn(Token seed, List<Variable> params_, Typ returnTyp)
         {
-            Actn f = new Actn(seed, params_, returnTyp, E);
-            Actns.Add(f);
+            Fun f = new Fun(seed, params_, returnTyp, E);
+            Funs.Add(f);
             return BeAMember(f);
         }
 
-        public Actn NewFctn(MethodBase mb)
+        public Fun NewFctn(MethodBase mb)
         {
-            Actn f = new Actn(mb, E);
-            Actns.Add(f);
+            Fun f = new Fun(mb, E);
+            Funs.Add(f);
             return BeAMember(f);
         }
 
-        public Actn GetActnOf(Typ ty, Typ[] argtyps, Typ ert, Actn caller)
+        public Fun GetFunOf(Typ ty, Typ[] argtyps, Typ ert, Fun caller)
         {
-            List<Actn> cand = CreateCandidateActnList(ty, argtyps);
+            List<Fun> cand = CreateCandidateFunList(ty, argtyps);
 
             //  TODO  remove candidate with accessibility
-            Predicate<Actn> canAccess = delegate(Actn callee_) { return AccessControl.CanAccess(ert, caller, ty, callee_); };
+            Predicate<Fun> canAccess = delegate(Fun callee_) { return AccessControl.CanAccess(ert, caller, ty, callee_); };
 
-            List<Actn> sel = new List<Actn>();
-            Actn callee;
-            foreach (Actn c in cand)
+            List<Fun> sel = new List<Fun>();
+            Fun callee;
+            foreach (Fun c in cand)
             {
                 if (c.IsSameSignature(argtyps) == false) { continue; }
                 sel.Add(c);
@@ -348,7 +348,7 @@ namespace Nana.Semantics
             }
 
             sel.Clear();
-            foreach (Actn c in cand)
+            foreach (Fun c in cand)
             {
                 if (c.IsAssignableSignature(argtyps) == false) { continue; }
                 sel.Add(c);
@@ -373,30 +373,30 @@ namespace Nana.Semantics
             return callee;
         }
 
-        public List<Actn> CreateCandidateActnList(Typ ty, Typ[] argtyps)
+        public List<Fun> CreateCandidateFunList(Typ ty, Typ[] argtyps)
         {
-            List<Actn> candidates = new List<Actn>();
+            List<Fun> candidates = new List<Fun>();
 
             //  inheritance hierarchy into list
             List<Typ> typs = Cty.ByNext<Typ>(delegate(Typ y) { return y.BaseTyp; }, ty);
             //  go up hierarchy and find same name ActnOvld
-            List<ActnOvld> ovlds2 = typs.FindAll(delegate(Typ y) { return null != y.FindActnOvld(this.Name); })
-                .ConvertAll<ActnOvld>(delegate(Typ y) { return y.FindActnOvld(this.Name); });
+            List<Ovld> ovlds2 = typs.FindAll(delegate(Typ y) { return null != y.FindFunOvld(this.Name); })
+                .ConvertAll<Ovld>(delegate(Typ y) { return y.FindFunOvld(this.Name); });
 
-            //  collect same name Actn
-            List<Actn> srclst = new List<Actn>(this.Actns);
-            foreach (ActnOvld ovld in ovlds2)
+            //  collect same name Fun
+            List<Fun> srclst = new List<Fun>(this.Funs);
+            foreach (Ovld ovld in ovlds2)
             {
-                srclst.AddRange(ovld.Actns);
+                srclst.AddRange(ovld.Funs);
             }
 
             //  collect Actn that has same signature or assignalbe signature but not in candidate list
-            foreach (Actn a in srclst)
+            foreach (Fun f in srclst)
             {
-                if (a.Params.Count != argtyps.Length) { continue; }
-                if (a.IsAssignableSignature(argtyps) == false) { continue; }
-                if (candidates.Exists(delegate(Actn a_) { return a_.IsSameSignature(a.Signature); })) { continue; }
-                candidates.Add(a);
+                if (f.Params.Count != argtyps.Length) { continue; }
+                if (f.IsAssignableSignature(argtyps) == false) { continue; }
+                if (candidates.Exists(delegate(Fun a_) { return a_.IsSameSignature(f.Signature); })) { continue; }
+                candidates.Add(f);
             }
 
             return candidates;
@@ -404,10 +404,10 @@ namespace Nana.Semantics
 
         public bool Contains(Typ[] signature)
         {
-            Actn a;
+            Fun a;
             for (int i = 0; i < Members.Count; ++i)
             {
-                if (null == (a = (Members[i] as Actn)))
+                if (null == (a = (Members[i] as Fun)))
                 { continue; }
                 if (a.IsSameSignature(signature))
                 { return true; }
@@ -422,7 +422,7 @@ namespace Nana.Semantics
         List<IMR> Instructions { get; }
     }
 
-    public class Actn : Nsp, IInstructionsHolder
+    public class Fun : Nsp, IInstructionsHolder
     {
         static public readonly string EntryPointNameDefault = "Main";
         static public readonly string EntryPointNameImplicit = "'0'";
@@ -472,7 +472,7 @@ namespace Nana.Semantics
             set { _Intermediates = value; ; }
         }
 
-        public Actn(Token seed, List<Variable> params_, Typ returnTyp, Env env)
+        public Fun(Token seed, List<Variable> params_, Typ returnTyp, Env env)
             : base(seed, env)
         {
             if (params_ == null) { return; }
@@ -487,7 +487,7 @@ namespace Nana.Semantics
 
         public MethodBase Mb;
 
-        public Actn(MethodBase mb, Env env)
+        public Fun(MethodBase mb, Env env)
             : base(new Token(mb.Name), env)
         {
             Mb = mb;
@@ -599,7 +599,7 @@ namespace Nana.Semantics
 
     }
 
-    public class Typ : Actn
+    public class Typ : Fun
     {
         public Typ BaseTyp;
         public TypeAttributes TypAttributes;
@@ -616,7 +616,7 @@ namespace Nana.Semantics
         public bool IsGeneric = false;
         public bool IsGenericInstance = false;
 
-        public List<ActnOvld> Ovlds = new List<ActnOvld>();
+        public List<Ovld> Ovlds = new List<Ovld>();
 
         public List<Nmd> DebuggerDisplayMembers { get { return Members_; } }
 
@@ -641,22 +641,22 @@ namespace Nana.Semantics
             BaseTyp = baseTyp;
         }
 
-        public ActnOvld FindOrNewActnOvld(string name)
+        public Ovld FindOrNewOvld(string name)
         {
-            return FindActnOvld(name) ?? NewActnOvld(name);
+            return FindFunOvld(name) ?? NewOvld(name);
         }
 
-        public ActnOvld FindActnOvld(string name)
+        public Ovld FindFunOvld(string name)
         {
             EnsureMembers();
-            return Ovlds.Find(GetNamePredicate<ActnOvld>(name));
+            return Ovlds.Find(GetNamePredicate<Ovld>(name));
         }
 
-        public ActnOvld NewActnOvld(string name)
+        public Ovld NewOvld(string name)
         {
             if (Members_.Exists(GetNamePredicate<Nmd>(name)))
             { throw new SyntaxError("The name is already defined: " + name); }
-            ActnOvld ovl = new ActnOvld(new Token(name), E);
+            Ovld ovl = new Ovld(new Token(name), E);
             Ovlds.Add(ovl);
             BeAMember(ovl);
             return ovl;
@@ -743,9 +743,9 @@ namespace Nana.Semantics
             EnsureMembersList.Add(EnsureGenericMembersN);
         }
 
-        public Actn NewActn(MethodBase mb)
+        public Fun NewFun(MethodBase mb)
         {
-            ActnOvld ovld = FindOrNewActnOvld(mb.Name);
+            Ovld ovld = FindOrNewOvld(mb.Name);
             return ovld.NewFctn(mb);
         }
 
@@ -789,7 +789,7 @@ namespace Nana.Semantics
             
             ms.AddRange(refType.GetConstructors(flags_));
             ms.AddRange(refType.GetMethods(flags_));
-            ms.ConvertAll<Actn>(self.NewActn);
+            ms.ConvertAll<Fun>(self.NewFun);
 
             new List<PropertyInfo>(refType.GetProperties(flags_))
                 .ConvertAll<Prop>(self.NewProp);
@@ -807,11 +807,11 @@ namespace Nana.Semantics
 
             Typ gt = self.GenericType;
             gt.EnsureMembers();
-            foreach (ActnOvld gao in gt.Ovlds)
+            foreach (Ovld gao in gt.Ovlds)
             {
-                ActnOvld sao = self.FindOrNewActnOvld(gao.Name);
+                Ovld sao = self.FindOrNewOvld(gao.Name);
                 List<Variable> svs = new List<Variable>();
-                foreach (Actn ga in gao.Actns)
+                foreach (Fun ga in gao.Funs)
                 {
                     Variable sv; Typ st; int genericIndex;
                     svs.Clear();
@@ -922,11 +922,11 @@ namespace Nana.Semantics
 
     }
 
-    public class Prop : ActnOvld
+    public class Prop : Ovld
     {
         public PropertyInfo P;
-        public Actn Setter;
-        public Actn Getter;
+        public Fun Setter;
+        public Fun Getter;
 
         public Prop(PropertyInfo p, Env env)
             : base(new Token(p.Name), env)
@@ -937,13 +937,13 @@ namespace Nana.Semantics
             Getter = null;
             if (m != null)
             {
-                Getter = BeAMember<Actn>(new Actn(m, env));
+                Getter = BeAMember<Fun>(new Fun(m, env));
             }
             Setter = null;
             m = p.GetSetMethod(/* nonPublic:*/ true);
             if (m != null)
             {
-                Setter = BeAMember<Actn>(new Actn(m, env));
+                Setter = BeAMember<Fun>(new Fun(m, env));
             }
             Att.TypGet = env.FindOrNewRefType(p.PropertyType);
         }
@@ -1132,15 +1132,15 @@ namespace Nana.Semantics
         public bool RDS { get { return true; } }
     }
 
-    public class CallAction : Sema
+    public class CallFunction : Sema
     {
         public Typ CalleeTy;
-        public Actn Callee;
+        public Fun Callee;
         public Sema Instance;
         public Sema[] Args;
         public bool IsNewObj;
 
-        public CallAction(Typ calleety, Actn callee, Sema instance, Sema[] args, bool isNewObj)
+        public CallFunction(Typ calleety, Fun callee, Sema instance, Sema[] args, bool isNewObj)
         {
             CalleeTy = calleety;
             Callee = callee;
@@ -1179,7 +1179,7 @@ namespace Nana.Semantics
             }
             else
             {
-                gen.CallAction(CalleeTy, Callee);
+                gen.CallFunction(CalleeTy, Callee);
             }
         }
 
@@ -1224,7 +1224,7 @@ namespace Nana.Semantics
         {
             if (Prop.Getter == null)
             { throw new SyntaxError("Cannot get value from the property"); }
-            CallAction cf = new CallAction(CalleeTy, Prop.Getter, Instance, new Sema[0], /*isNewObj:*/ false);
+            CallFunction cf = new CallFunction(CalleeTy, Prop.Getter, Instance, new Sema[0], /*isNewObj:*/ false);
             cf.Give(gen);
         }
 
@@ -1669,7 +1669,7 @@ namespace Nana.Semantics
             }
         }
 
-        static public bool CanAccess(Typ ert, Actn er, Typ eet, Actn ee)
+        static public bool CanAccess(Typ ert, Fun er, Typ eet, Fun ee)
         {
             bool identAssembly;
             identAssembly = ert.AssemblyName == eet.AssemblyName;

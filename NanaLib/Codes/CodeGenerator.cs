@@ -199,7 +199,7 @@ namespace Nana.CodeGeneration
             if (t == typeof(App)) { b.Append(BeginApp(n as App)); }
             if (t == typeof(Nsp)) { b.Append(BeginNsp(n)); }
             if (t == typeof(Typ)) { b.Append(BeginTyp(n as Typ)); }
-            if (t == typeof(Actn)) { b.Append(BeginActn(n as Actn)); }
+            if (t == typeof(Fun)) { b.Append(BeginActn(n as Fun)); }
             return b.ToString();
         }
 
@@ -211,7 +211,7 @@ namespace Nana.CodeGeneration
             if (t == typeof(App)) { b.Append(EndApp(n as App)); }
             if (t == typeof(Nsp)) { b.Append(EndNsp(n)); }
             if (t == typeof(Typ)) { b.Append(EndTyp(n as Typ)); }
-            if (t == typeof(Actn)) { b.Append(EndActn(n as Actn)); }
+            if (t == typeof(Fun)) { b.Append(EndActn(n as Fun)); }
             return b.ToString();
         }
 
@@ -337,7 +337,7 @@ namespace Nana.CodeGeneration
             return GetCurrentIndent() + "}" + Environment.NewLine;
         }
 
-        public string BeginActn(Actn f)
+        public string BeginActn(Fun f)
         {
             if (f.IsReferencing) { return ""; }
 
@@ -395,9 +395,9 @@ namespace Nana.CodeGeneration
             return b.ToString();
         }
 
-        public string EndActn(Actn d)
+        public string EndActn(Fun f)
         {
-            if (d.IsReferencing) { return ""; }
+            if (f.IsReferencing) { return ""; }
             IndentDepth -= 1;
             return GetCurrentIndent() + "}" + Environment.NewLine;
         }
@@ -416,8 +416,8 @@ namespace Nana.CodeGeneration
                 case C.StVariable: return StoreVariable(imr.VariableV);
                 case C.LdArrayElement: return LdArrayElement(imr);
                 case C.StArrayElement: return StArrayElement(imr);
-                case C.NewObject: return NewObject(imr.TypV, imr.ActnV);
-                case C.CallAction: return CallAction(imr.TypV, imr.ActnV);
+                case C.NewObject: return NewObject(imr.TypV, imr.FunV);
+                case C.CallFunction: return CallAction(imr.TypV, imr.FunV);
                 case C.Br: return Br(imr);
                 case C.BrFalse: return BrFalse(imr);
                 case C.PutLabel: return PutLabel(imr);
@@ -555,22 +555,22 @@ namespace Nana.CodeGeneration
             throw new NotSupportedException();
         }
 
-        public static string NewObject(Typ t, Actn a)
+        public static string NewObject(Typ t, Fun f)
         {
-            return S(OpCodes.Newobj) + " instance " + Body(t, a);
+            return S(OpCodes.Newobj) + " instance " + Body(t, f);
         }
 
-        public static string CallAction(Typ t, Actn a)
+        public static string CallAction(Typ t, Fun f)
         {
-            if (a.IsConstructor) return S(OpCodes.Call) + " instance " + Body(t, a); ;
-            if (a.IsStatic) return S(OpCodes.Call) + " " + Body(t, a);
-            return S(OpCodes.Callvirt) + " instance " + Body(t, a);
+            if (f.IsConstructor) return S(OpCodes.Call) + " instance " + Body(t, f); ;
+            if (f.IsStatic) return S(OpCodes.Call) + " " + Body(t, f);
+            return S(OpCodes.Callvirt) + " instance " + Body(t, f);
         }
 
-        public static string Body(Typ t, Actn a)
+        public static string Body(Typ t, Fun f)
         {
             StringBuilder b = new StringBuilder();
-            Typ retti = false == a.IsConstructor && a.Att.CanGet ? a.Att.TypGet : null;
+            Typ retti = false == f.IsConstructor && f.Att.CanGet ? f.Att.TypGet : null;
             b.Append(TypeFullName(retti));
 
             if (t != null && t.GetType() == typeof(Typ))
@@ -588,18 +588,18 @@ namespace Nana.CodeGeneration
             }
 
             string nm;
-            if (MethodAttributes.SpecialName != (a.MthdAttrs & MethodAttributes.SpecialName))
+            if (MethodAttributes.SpecialName != (f.MthdAttrs & MethodAttributes.SpecialName))
             {
-                nm = a.Name;
+                nm = f.Name;
             }
             else
             {
-                nm = a.SpecialName;
+                nm = f.SpecialName;
             }
             b.Append(Qk(nm));
 
             b.Append("(");
-            List<Variable> prms = a.Params;
+            List<Variable> prms = f.Params;
             if (prms.Count > 0)
             {
                 b.Append(

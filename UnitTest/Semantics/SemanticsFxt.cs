@@ -106,8 +106,8 @@ end
             Assert.IsNotNull(app);
 
             Typ typ = Env.FindByNamePath(ModuleFilename + @"/Class1Func0") as Typ;
-            ActnOvld ao = Env.FindByNamePath(ModuleFilename + @"/Class1Func0/.ctor") as ActnOvld;
-            Actn a = ao.GetActnOf(typ, new Typ[] { }, typ, typ);
+            Ovld ao = Env.FindByNamePath(ModuleFilename + @"/Class1Func0/.ctor") as Ovld;
+            Fun a = ao.GetFunOf(typ, new Typ[] { }, typ, typ);
 
             Assert.IsTrue(2 == a.Exes.Count);
             string s = a.Exes[0].ToString();
@@ -123,10 +123,10 @@ end
         }:Variable
     , Callee={
         Name=.ctor
-        }:Actn
+        }:Fun
     , Args={}
     , IsNewObj=False
-    }:CallAction"
+    }:CallFunction"
 )
                 , a.Exes[0].ToString());
         }
@@ -158,21 +158,18 @@ end
             Analyze();
 
             Typ typ = App.FindByNamePath("T102_Class1Func1P0") as Typ;
-            ActnOvld ao = typ.FindByNamePath(@".ctor") as ActnOvld;
-            Actn a = ao.GetActnOf(typ, new Typ[] { }, typ, typ);
+            Ovld ao = typ.FindByNamePath(@".ctor") as Ovld;
+            Fun a = ao.GetFunOf(typ, new Typ[] { }, typ, typ);
 
             Assert.IsTrue(2 == a.Exes.Count);
 
             List<string> xs = a.Exes.ConvertAll<string>(delegate(Sema x) { return x.ToString(); });
-            Assert.IsTrue(xs[0].EndsWith("}:CallAction"));
+            Assert.IsTrue(xs[0].EndsWith("}:CallFunction"));
 
             Typ typ2 = App.FindByNamePath("T102_Class1Func1P0") as Typ;
 
-            Actn main = (typ2.FindByNamePath(@"Main") as ActnOvld).GetActnOf(typ2, new Typ[] { }, typ2, typ2);
-            Actn ctor = (typ2.FindByNamePath(@".ctor") as ActnOvld).GetActnOf(typ2, new Typ[] { }, typ2, typ2);
-
-
-
+            Fun main = (typ2.FindByNamePath(@"Main") as Ovld).GetFunOf(typ2, new Typ[] { }, typ2, typ2);
+            Fun ctor = (typ2.FindByNamePath(@".ctor") as Ovld).GetFunOf(typ2, new Typ[] { }, typ2, typ2);
 
         }
 

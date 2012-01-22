@@ -36,7 +36,7 @@ namespace Nana.IMRs
         NewObject,
         NewArray,
 
-        CallAction,
+        CallFunction,
 
         Ope,
 
@@ -49,7 +49,7 @@ namespace Nana.IMRs
         public IMR() { }
         public IMR(C c) { C = c; }
         public IMR(C c, string v) : this(c) { StringV = v; }
-        public IMR(C c, Typ vt, Actn va) : this(c) { TypV = vt; ActnV = va; }
+        public IMR(C c, Typ vt, Fun vf) : this(c) { TypV = vt; FunV = vf; }
         public IMR(C c, Literal v) : this(c) { LiteralV = v; }
         public IMR(C c, Variable v) : this(c) { VariableV = v; }
         public IMR(C c, Typ v) : this(c) { TypV = v; }
@@ -57,7 +57,7 @@ namespace Nana.IMRs
         public IMR(C c, string s, Typ t) : this(c) { StringV = s; TypV = t; }
 
         public string StringV;
-        public Actn ActnV;
+        public Fun FunV;
         public Literal LiteralV;
         public Variable VariableV;
         public Typ TypV;
@@ -76,13 +76,13 @@ namespace Nana.IMRs
         public void GenerateIMR(App app)
         {
             Predicate<Nmd> pred = delegate(Nmd n)
-            { return n.GetType() == typeof(Actn); };
+            { return n.GetType() == typeof(Fun); };
 
-            foreach (Actn a in app.FindDownAll(pred))
+            foreach (Fun f in app.FindDownAll(pred))
             {
-                foreach (Sema x in a.Exes)
+                foreach (Sema x in f.Exes)
                 { x.Exec(this); }
-                a.Instructions.AddRange(this);
+                f.Instructions.AddRange(this);
                 Clear();
             }
         }
@@ -114,9 +114,9 @@ namespace Nana.IMRs
 
         public IMR StArrayElement(Typ t, Typ t2) { return Append(new IMR(C.StArrayElement, t, t2)); }
 
-        public IMR NewObject(Typ t, Actn a) { return Append(new IMR(C.NewObject, t, a)); }
+        public IMR NewObject(Typ t, Fun f) { return Append(new IMR(C.NewObject, t, f)); }
 
-        public IMR CallAction(Typ t, Actn a) { return Append(new IMR(C.CallAction, t, a)); }
+        public IMR CallFunction(Typ t, Fun f) { return Append(new IMR(C.CallFunction, t, f)); }
 
         public IMR Br(string label) { return Append(new IMR(C.Br, label)); }
         public IMR BrFalse(string label) { return Append(new IMR(C.BrFalse, label)); }

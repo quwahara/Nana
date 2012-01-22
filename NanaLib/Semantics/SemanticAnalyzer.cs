@@ -74,7 +74,7 @@ namespace Nana.Semantics
         public Stack<Literal> Breaks;
         public Stack<Literal> Continues;
         public Env Env;
-        public Actn Actn;
+        public Fun Fun;
         public TmpVarGenerator TmpVarGen;
         public bool IsInFctn;
 
@@ -94,14 +94,14 @@ namespace Nana.Semantics
         public void AnalyzeLine()
         {
             ThisTyp = AboveBlock.ThisTyp;
-            Actn = FindUpTypeIs<ActnAnalyzer>().Actn;
-            IsInFctn = Actn.Att.CanGet;
-            Env = Actn.E;
-            TmpVarGen = new TmpVarGenerator(Env.GetTempName, Actn.NewVar);
+            Fun = FindUpTypeIs<FunAnalyzer>().Fun;
+            IsInFctn = Fun.Att.CanGet;
+            Env = Fun.E;
+            TmpVarGen = new TmpVarGenerator(Env.GetTempName, Fun.NewVar);
             if (AboveBlock.RequiredReturnValue.Count == 0)
             {
                 Sema exe = RequireExec(Seed);
-                Actn.Exes.Add(exe);
+                Fun.Exes.Add(exe);
             }
             else
             {
@@ -242,7 +242,7 @@ namespace Nana.Semantics
             }
             if (tu.GetType() == typeof(Nmd))
             {
-                tu = Actn.NewVar((tu as Nmd).Seed.Value, gv2.Att.TypGet);
+                tu = Fun.NewVar((tu as Nmd).Seed.Value, gv2.Att.TypGet);
             }
 
             return new Assign(gv2, tu as Sema);
@@ -266,7 +266,7 @@ namespace Nana.Semantics
             Nmd id = obj as Nmd;
             Typ ty = RequireTyp(t.Follows[0]);
 
-            return Actn.NewVar(id.Seed.Value, ty);
+            return Fun.NewVar(id.Seed.Value, ty);
         }
 
         public object Ope(Token t)
@@ -328,8 +328,8 @@ namespace Nana.Semantics
                 if (ope == "+")
                 {
                     Typ ts = Env.BTY.String;
-                    Actn concat = ts.FindActnOvld("Concat").GetActnOf(ts, new Typ[] { ts, ts }, ThisTyp, Actn);
-                    return new CallAction(tp, concat, /* instance */ null, new Sema[] { lv, rv }, /* isNewObj */ false);
+                    Fun concat = ts.FindFunOvld("Concat").GetFunOf(ts, new Typ[] { ts, ts }, ThisTyp, Fun);
+                    return new CallFunction(tp, concat, /* instance */ null, new Sema[] { lv, rv }, /* isNewObj */ false);
                 }
                 else
                 {
@@ -504,43 +504,43 @@ namespace Nana.Semantics
             { throw new SyntaxError("It is not a function or constructor", t.First); }
             firstty = first.GetType();
 
-            if (firstty != typeof(Member) && firstty != typeof(ActnOvld) && firstty != typeof(Typ))
+            if (firstty != typeof(Member) && firstty != typeof(Ovld) && firstty != typeof(Typ))
             { throw new SyntaxError("It is not a function or constructor", t.First); }
 
-            ActnOvld actovl = null;
+            Ovld ovl = null;
             Member mbr = null;
             Typ calleetyp = null;
             if (firstty == typeof(Member))
             {
                 mbr = first as Member;
-                if (mbr.Value.GetType() != typeof(ActnOvld))
+                if (mbr.Value.GetType() != typeof(Ovld))
                 { throw new NotImplementedException(); }
 
                 calleetyp = mbr.Ty;
-                actovl = mbr.Value as ActnOvld;
+                ovl = mbr.Value as Ovld;
             }
-            if (firstty == typeof(ActnOvld))
+            if (firstty == typeof(Ovld))
             {
-                actovl = first as ActnOvld;
+                ovl = first as Ovld;
             }
             bool isNewObj = false;
             if (firstty == typeof(Typ))
             {
                 calleetyp = first as Typ;
                 isNewObj = true;
-                actovl = calleetyp.FindActnOvld(Nana.IMRs.IMRGenerator.InstCons);
+                ovl = calleetyp.FindFunOvld(Nana.IMRs.IMRGenerator.InstCons);
             }
-            Debug.Assert(actovl != null);
+            Debug.Assert(ovl != null);
 
-            Actn sig = null;
+            Fun sig = null;
 
-            sig = actovl.GetActnOf(calleetyp, argtyps.ToArray(), ThisTyp, Actn);
+            sig = ovl.GetFunOf(calleetyp, argtyps.ToArray(), ThisTyp, Fun);
             if (sig == null) { throw new SyntaxError("It is not a member", t.First); }
 
             Sema instance = mbr == null ? null : mbr.Instance;
 
 
-            return new CallAction(calleetyp, sig, instance, argvals.ToArray(), isNewObj);
+            return new CallFunction(calleetyp, sig, instance, argvals.ToArray(), isNewObj);
         }
 
         public object Dot(Token t)
@@ -838,7 +838,7 @@ namespace Nana.Semantics
 
         public void AnalyzeBlock()
         {
-            Nsp = FindUpTypeIs<ActnAnalyzer>().Actn;
+            Nsp = FindUpTypeIs<FunAnalyzer>().Fun;
             foreach (SemanticAnalyzer a in Subs)
             {
                 if (a.GetType() != typeof(LineAnalyzer))
@@ -878,16 +878,16 @@ namespace Nana.Semantics
         }
     }
 
-    public class ActnAnalyzer : BlockAnalyzer
+    public class FunAnalyzer : BlockAnalyzer
     {
-        public Actn Actn_;
-        public Actn Actn
+        public Fun Fun_;
+        public Fun Fun
         {
-            get { return Actn_; }
-            set { Nsp = Actn_ = value; }
+            get { return Fun_; }
+            set { Nsp = Fun_ = value; }
         }
 
-        public ActnAnalyzer(Token seed, BlockAnalyzer above)
+        public FunAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
         { }
 
@@ -899,7 +899,7 @@ namespace Nana.Semantics
             ConstructSubsAll();
         }
 
-        public void AnalyzeActn()
+        public void AnalyzeFun()
         {
             Token t = Seed;
             bool isStatic, isCtor;
@@ -915,7 +915,7 @@ namespace Nana.Semantics
                 ?? FindUpTypeOf<AppAnalyzer>()
                 ;
             Debug.Assert(typazr2 != null);
-            ActnOvld ovld = typazr2.Typ.FindOrNewActnOvld(nameasm);
+            Ovld ovld = typazr2.Typ.FindOrNewOvld(nameasm);
 
             List<Token> prms = new List<Token>();
             Token prmpre = t.Find("@PrmDef");
@@ -953,19 +953,19 @@ namespace Nana.Semantics
             if (ovld.Contains(signature.ToArray()))
             { throw new SemanticError("The function is already defined. Function name:" + nameasm, t); }
 
-            Actn = ovld.NewFctn(new Token(nameasm), prmls, returnType);
+            Fun = ovld.NewFctn(new Token(nameasm), prmls, returnType);
 
-            base.Nsp = Actn;
+            base.Nsp = Fun;
 
-            Actn.MthdAttrs = attrs;
+            Fun.MthdAttrs = attrs;
 
             //  generate instance variable
-            if (Actn.IsInstance)
+            if (Fun.IsInstance)
             {
                 TypAnalyzer typazr = FindUpTypeOf<TypAnalyzer>();
                 if (typazr == null)
                 { throw new SyntaxError("Cannot define instance constructor in this sapce", t); }
-                Actn.NewThis(typazr.Typ);
+                Fun.NewThis(typazr.Typ);
             }
         }
 
@@ -994,7 +994,7 @@ namespace Nana.Semantics
             return nameasm;
         }
 
-        static public void EnusureReturn(Actn a)
+        static public void EnusureReturn(Fun a)
         {
             bool rds = false;
             foreach (Sema x in a.Exes)
@@ -1016,13 +1016,13 @@ namespace Nana.Semantics
 
     }
 
-    public class TypAnalyzer : ActnAnalyzer
+    public class TypAnalyzer : FunAnalyzer
     {
         public Typ Typ_;
         public Typ Typ
         {
             get { return Typ_; }
-            set { base.Actn = Typ_ = value; }
+            set { base.Fun = Typ_ = value; }
         }
 
         public TypAnalyzer(Token seed, BlockAnalyzer above)
@@ -1032,7 +1032,7 @@ namespace Nana.Semantics
         public override void ConstructSubs()
         {
             foreach (Token t in Seed.Select("@TypeBody/@Func"))
-            { Subs.AddLast(new ActnAnalyzer(t, this)); }
+            { Subs.AddLast(new FunAnalyzer(t, this)); }
             ConstructSubsAll();
         }
 
@@ -1049,7 +1049,7 @@ namespace Nana.Semantics
             { throw new SemanticError("The type is already defined. Type name:" + name.Value, name); }
             Typ = app.NewTyp(name);
 
-            base.Nsp = base.Actn = Typ;
+            base.Nsp = base.Fun = Typ;
         }
         
         public void AnalyzeBaseTyp()
@@ -1070,7 +1070,7 @@ namespace Nana.Semantics
             if (n == null)
             { return null; }
             Type nt = n.GetType();
-            if (nt == typeof(ActnOvld))
+            if (nt == typeof(Ovld))
             { return new Member(Typ, n, null); }
             return n;
         }
@@ -1096,7 +1096,7 @@ namespace Nana.Semantics
                 switch (t.Group)
                 {
                     case "TypeDef": a = new TypAnalyzer(t, this); break;
-                    case "Func": a = new ActnAnalyzer(t, this); break;
+                    case "Func": a = new FunAnalyzer(t, this); break;
                     default: a = new LineAnalyzer(t, this); break;
                 }
                 Subs.AddLast(a);
@@ -1220,7 +1220,7 @@ namespace Nana.Semantics
         public void AddBuiltInFunction(string built_in_function_name, string actualname, Type holdertype)
         {
             Typ hty = Env.FindOrNewRefType(holdertype);
-            ActnOvld actualao = hty.FindMemeber(actualname) as ActnOvld;
+            Ovld actualao = hty.FindMemeber(actualname) as Ovld;
             BuiltInFunctions.Add(
                 built_in_function_name
                 , new Member(hty, actualao, null)
@@ -1233,7 +1233,7 @@ namespace Nana.Semantics
             AnalyzeSrcAll();
             AnalyzeTypAll();
             AnalyzeBaseTypAll();
-            AnalyzeActnAll();
+            AnalyzeFunAll();
             EnsureTypAll();
             EnsureBaseInstanceConstructorCallAll();
             AnalyzeBlockAll();
@@ -1243,7 +1243,7 @@ namespace Nana.Semantics
         {
             EnsureAppExe();
             EnsureEntryPoint();
-            EnsureActnReturnAll();
+            EnsureFunctionReturnAll();
             RemoveReferencingType(Env);
         }
 
@@ -1270,10 +1270,10 @@ namespace Nana.Semantics
             { a.AnalyzeBaseTyp(); }
         }
 
-        public void AnalyzeActnAll()
+        public void AnalyzeFunAll()
         {
-            foreach (ActnAnalyzer a in CollectTypeOf<ActnAnalyzer>())
-            { a.AnalyzeActn(); }
+            foreach (FunAnalyzer a in CollectTypeOf<FunAnalyzer>())
+            { a.AnalyzeFun(); }
         }
 
         public void EnsureTypAll()
@@ -1282,17 +1282,17 @@ namespace Nana.Semantics
             {
                 Typ y = ta.Typ;
                 if (y.Ovlds
-                    .Exists(delegate(ActnOvld ao_)
+                    .Exists(delegate(Ovld ao_)
                     {
-                        return ao_.Actns
-                            .Exists(delegate(Actn a) { return a.IsInherited == false && a.Name == ".ctor"; });
+                        return ao_.Funs
+                            .Exists(delegate(Fun f) { return f.IsInherited == false && f.Name == ".ctor"; });
                     }))
                 { continue; }
 
                 Token t = GenFuncToken("cons", /* name */ null, /* returnType */ null);
-                ActnAnalyzer aa = new ActnAnalyzer(t, ta);
+                FunAnalyzer aa = new FunAnalyzer(t, ta);
                 ta.Subs.AddLast(aa);
-                aa.AnalyzeActn();
+                aa.AnalyzeFun();
             }
         }
 
@@ -1323,20 +1323,20 @@ namespace Nana.Semantics
 
         public void EnsureBaseInstanceConstructorCallAll()
         {
-            foreach (ActnAnalyzer aa in CollectTypeOf<ActnAnalyzer>())
+            foreach (FunAnalyzer aa in CollectTypeOf<FunAnalyzer>())
             {
                 Typ mytyp
                     = (aa.FindUpTypeOf<TypAnalyzer>()
                     ?? aa.FindUpTypeOf<AppAnalyzer>()
                     ).Typ
                     ;
-                Actn actn = aa.Actn;
-                if (false == Nana.IMRs.IMRGenerator.IsInstCons(actn.Name))
+                Fun fun = aa.Fun;
+                if (false == Nana.IMRs.IMRGenerator.IsInstCons(fun.Name))
                 { continue; }
                 Typ bty = mytyp.BaseTyp;
-                Actn callee = bty.FindActnOvld(".ctor").GetActnOf(bty, new Typ[] { }, mytyp, actn);
-                Sema instance = actn.FindVar("this");
-                actn.Exes.Add(new CallAction(bty, callee, instance, new Sema[] { }, false /*:isNewObj*/));
+                Fun callee = bty.FindFunOvld(".ctor").GetFunOf(bty, new Typ[] { }, mytyp, fun);
+                Sema instance = fun.FindVar("this");
+                fun.Exes.Add(new CallFunction(bty, callee, instance, new Sema[] { }, false /*:isNewObj*/));
             }
         }
 
@@ -1384,10 +1384,10 @@ namespace Nana.Semantics
             App app = appaz.App;
             if (app.Exes.Count == 0) { return; }
 
-            Token t = GenFuncToken("scons", Actn.EntryPointNameImplicit, "void");
-            ActnAnalyzer actaz = new ActnAnalyzer(t, appaz);
-            actaz.AnalyzeActn();
-            Actn cctor = actaz.Actn;
+            Token t = GenFuncToken("scons", Fun.EntryPointNameImplicit, "void");
+            FunAnalyzer funaz = new FunAnalyzer(t, appaz);
+            funaz.AnalyzeFun();
+            Fun cctor = funaz.Fun;
             cctor.Exes.AddRange(app.Exes);
             app.Exes.Clear();
         }
@@ -1396,27 +1396,27 @@ namespace Nana.Semantics
         {
             AppAnalyzer aa = CollectTypeOf<AppAnalyzer>().First.Value;
             App app = aa.App;
-            List<Nmd> actns = app.FindDownAll(delegate(Nmd n) { return n is Actn; });
-            List<Nmd> founds = actns.FindAll(delegate(Nmd a) { return  (a as Actn).IsEntryPoint; });
+            List<Nmd> funs = app.FindDownAll(delegate(Nmd n) { return n is Fun; });
+            List<Nmd> founds = funs.FindAll(delegate(Nmd f) { return  (f as Fun).IsEntryPoint; });
             if (founds.Count > 1)
             { throw new SyntaxError("Specify one entry point. There were two entry points or more."); }
             if (founds.Count == 1)
             { return; }
 
-            Token t = GenFuncToken("sfun", Actn.EntryPointNameImplicit, "void");
-            (new ActnAnalyzer(t, aa)).AnalyzeActn();
+            Token t = GenFuncToken("sfun", Fun.EntryPointNameImplicit, "void");
+            (new FunAnalyzer(t, aa)).AnalyzeFun();
         }
 
-        public void EnsureActnReturnAll()
+        public void EnsureFunctionReturnAll()
         {
             AppAnalyzer aa = CollectTypeOf<AppAnalyzer>().First.Value;
             App app = aa.App;
 
             Predicate<Nmd> pred = delegate(Nmd n)
-            { return n.GetType() == typeof(Actn); };
+            { return n.GetType() == typeof(Fun); };
 
-            foreach (Actn a in app.FindDownAll(pred))
-            { ActnAnalyzer.EnusureReturn(a); }
+            foreach (Fun a in app.FindDownAll(pred))
+            { FunAnalyzer.EnusureReturn(a); }
         }
 
         public static void RemoveReferencingType(Env env)
