@@ -64,11 +64,6 @@ namespace Nana.Semantics
         public string Name { get { return Name_; } set { Name_ = value; } }
     }
 
-    public interface ITyped
-    {
-        Typ Typ { get; }
-    }
-
     public class Nsp : Nmd
     {
         public List<Nmd> Members_ = new List<Nmd>();
@@ -448,7 +443,7 @@ namespace Nana.Semantics
         {
             get
             {
-                return Params.ConvertAll<Typ>(delegate(Variable v) { return v.Typ; }).ToArray();
+                return Params.ConvertAll<Typ>(delegate(Variable v) { return v.Att.TypGet; }).ToArray();
             }
         }
 
@@ -585,17 +580,14 @@ namespace Nana.Semantics
 
     }
 
-    public class Fctn : Actn, ITyped
+    public class Fctn : Actn
     {
         public Typ ReturnTyp;
-        public Typ Typ_;
-        public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
 
         public Fctn(Token seed, List<Variable> params_, Typ returnTyp, Env env)
             : base(seed, params_, env)
         {
             ReturnTyp = returnTyp;
-            Typ_ = returnTyp;
             Att.TypGet = returnTyp;
         }
 
@@ -605,7 +597,6 @@ namespace Nana.Semantics
             Type t = mb.IsConstructor && (mb.IsStatic == false)
                 ? mb.DeclaringType
                 : (mb as MethodInfo).ReturnType;
-            Typ_ = env.FindOrNewRefType(t);
             Att.TypGet = env.FindOrNewRefType(t);
 
         }
@@ -845,10 +836,10 @@ namespace Nana.Semantics
                         {
                             continue;
                         }
-                        st = TransGenericType(self, gv.Typ);
+                        st = TransGenericType(self, gv.Att.TypGet);
                         sv = new Variable(gv.Name, st, Variable.VariableKind.Param);
-                        genericIndex = self.GenericDic.ContainsKey(gv.Typ.Name)
-                            ? Array.IndexOf(self.GenericTypeParams, self.GenericDic[gv.Typ.Name])
+                        genericIndex = self.GenericDic.ContainsKey(gv.Att.TypGet.Name)
+                            ? Array.IndexOf(self.GenericTypeParams, self.GenericDic[gv.Att.TypGet.Name])
                             : -1;
                         sv.GenericIndex = genericIndex;
                         if (genericIndex >= 0)
@@ -861,7 +852,7 @@ namespace Nana.Semantics
                     if (ga is Fctn)
                     {
                         Fctn gf = ga as Fctn;
-                        Typ rettyp = TransGenericType(self, gf.Typ);
+                        Typ rettyp = TransGenericType(self, gf.Att.TypGet);
                         sao.NewFctn(new Token(ga.Name), svs, rettyp);
                     }
                     else
@@ -948,12 +939,11 @@ namespace Nana.Semantics
 
     }
 
-    public class Prop : ActnOvld, ITyped
+    public class Prop : ActnOvld
     {
         public PropertyInfo P;
         public Actn Setter;
         public Fctn Getter;
-        public Typ Typ_;
 
         public Prop(PropertyInfo p, Env env)
             : base(new Token(p.Name), env)
@@ -972,11 +962,9 @@ namespace Nana.Semantics
             {
                 Setter = BeAMember<Actn>(new Actn(m, env));
             }
-            Typ_ = env.FindOrNewRefType(p.PropertyType);
             Att.TypGet = env.FindOrNewRefType(p.PropertyType);
         }
 
-        public Typ Typ { get { return Typ_; } }
     }
 
     //  Return Determinacy State (It's doubtful to make sense in English.)
@@ -1002,7 +990,6 @@ namespace Nana.Semantics
     public class Literal : Sema
     {
         public object Value;
-        public Typ Typ_;
         public TmpVarGenerator TmpVarGen;
 
         public Literal(object value, Typ typ)
@@ -1013,7 +1000,6 @@ namespace Nana.Semantics
         public Literal(object value, Typ typ, TmpVarGenerator tmpVarGen)
         {
             Value = value;
-            Typ_ = typ;
             TmpVarGen = tmpVarGen;
             Att.TypGet = typ;
         }
@@ -1034,7 +1020,6 @@ namespace Nana.Semantics
             gen.Pop();
         }
 
-        public Typ Typ { get { return Typ_; } }
     }
 
     public class Ret : Sema, IReturnDeterminacyState
@@ -1058,7 +1043,7 @@ namespace Nana.Semantics
         }
     }
 
-    public class Variable : Nmd, ITyped
+    public class Variable : Nmd
     {
         public enum VariableKind
         {
@@ -1068,14 +1053,10 @@ namespace Nana.Semantics
         public VariableKind VarKind;
         public int GenericIndex = -1;
 
-        public Typ Typ_;
-        public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
-
         public Variable(string name, Typ typ, VariableKind varKind)
             : base()
         {
             Name_ = name;
-            Typ_ = typ;
             VarKind = varKind;
 
             Att.TypGet = typ;
@@ -1096,20 +1077,19 @@ namespace Nana.Semantics
 
         public override void Addr(IMRGenerator gen)
         {
-            if (Typ.IsValueType) { gen.LoadAVariable(this); }
+            if (Att.TypGet.IsValueType) { gen.LoadAVariable(this); }
             else { gen.LoadVariable(this); }
         }
 
         public override string ToString()
         {
             Func<string, object, string> nv = Sty.Nv;
-            return Sty.Curly(Sty.Csv(nv("Name", Name), nv("Typ", Typ), nv("VarKind", VarKind))) + ":" + GetType().Name;
+            return Sty.Curly(Sty.Csv(nv("Name", Name), nv("Typ", Att.TypGet), nv("VarKind", VarKind))) + ":" + GetType().Name;
         }
     }
 
     public class Assign : Sema
     {
-        public Typ Typ { [DebuggerNonUserCode]get { return TakeVar.Att.TypSet; } }
         public Sema GiveVal;
         public Sema TakeVar;
 
@@ -1214,7 +1194,7 @@ namespace Nana.Semantics
 
     }
 
-    public class CallFunction : CallAction, ITyped
+    public class CallFunction : CallAction
     {
         public Fctn CalleeFctn { get { return Callee as Fctn; } }
 
@@ -1223,8 +1203,6 @@ namespace Nana.Semantics
         {
             Att.TypGet = callee.Att.TypGet;
         }
-
-        public Typ Typ { get { return CalleeFctn.Typ; } }
 
         public override void Give(IMRGenerator gen)
         {
@@ -1250,7 +1228,6 @@ namespace Nana.Semantics
     public class CallPropInfo : Sema
     {
         public Typ CalleeTy;
-        public Typ Typ { [DebuggerNonUserCode] get { return Prop.Typ; } }
         public Prop Prop;
         public Sema Instance;
 
@@ -1260,7 +1237,7 @@ namespace Nana.Semantics
             Prop = prop;
             Instance = instance;
 
-            Att.TypGet = prop.Typ;
+            Att.TypGet = prop.Att.TypGet;
         }
 
         public override void Give(IMRGenerator gen)
@@ -1289,14 +1266,12 @@ namespace Nana.Semantics
         public string Sign;
         public Sema Lv;
         public Sema Rv;
-        public Typ Typ_;
 
         public CalcInfo(string sign, Sema lv, Sema rv, Typ typ)
         {
             Sign = sign;
             Lv = lv;
             Rv = rv;
-            Typ_ = typ;
             Att.TypGet = typ;
         }
 
@@ -1304,7 +1279,7 @@ namespace Nana.Semantics
         {
             Lv.Give(gen);
             Rv.Give(gen);
-            gen.Ope(Sign, Typ_);
+            gen.Ope(Sign, Att.TypGet);
         }
 
         public override void Addr(IMRGenerator gen)
@@ -1318,7 +1293,6 @@ namespace Nana.Semantics
             gen.Pop();
         }
 
-        public Typ Typ { get { return Typ_; } }
     }
 
     public class IfInfo : Sema, IReturnDeterminacyState
@@ -1438,12 +1412,9 @@ namespace Nana.Semantics
         // prepare for over twice referenced instatication
         public IMR PlaceHolder;
         public Variable TmpVar;
-        public Typ Typ_;
-        public Typ Typ { [DebuggerNonUserCode]get { return Typ_; } }
 
         public ArrayInstatiation(Typ typ, Sema[] lens, TmpVarGenerator tmpVarGen)
         {
-            Typ_ = typ;
             Lens = lens;
             TmpVarGen = tmpVarGen;
             Att.TypGet = typ;
@@ -1470,13 +1441,13 @@ namespace Nana.Semantics
             foreach (Sema v in Lens)
             { v.Give(gen); }
 
-            PlaceHolder = gen.NewArray(Typ);
+            PlaceHolder = gen.NewArray(Att.TypGet);
         }
 
         public void GiveSubsequent(IMRGenerator gen)
         {
             if (TmpVar == null)
-            { TmpVar = TmpVarGen.Insert(Typ, gen, PlaceHolder); }
+            { TmpVar = TmpVarGen.Insert(Att.TypGet, gen, PlaceHolder); }
             TmpVar.Give(gen);
         }
 
@@ -1530,12 +1501,8 @@ namespace Nana.Semantics
         public Sema Val;
         public Sema[] Indices;
 
-        public Typ Typ_;
-        public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
-
         public ArrayAccessInfo(Sema val, Sema[] indices)
         {
-            Typ_ = val.Att.TypGet.ArrayType;
             Val = val;
             Indices = indices;
 
@@ -1570,18 +1537,14 @@ namespace Nana.Semantics
         public ArrayAccessInfo ArrayAccess;
         public Sema GiveVal;
 
-        public Typ Typ_;
-        public Typ Typ { [DebuggerNonUserCode] get { return Typ_; } }
-
         public ArraySetInfo(ArrayAccessInfo arrayAccess, Sema giveVal)
         {
             Debug.Assert(arrayAccess != null && arrayAccess.Val != null && arrayAccess.Val.Att.TypGet != null);
 
-            Typ_ = arrayAccess.Typ;
             ArrayAccess = arrayAccess;
             GiveVal = giveVal;
 
-            Att.TypGet = arrayAccess.Typ;
+            Att.TypGet = arrayAccess.Att.TypGet;
         }
 
         public override void Give(IMRGenerator gen)
@@ -1607,7 +1570,7 @@ namespace Nana.Semantics
          
             if (t.IsVector)
             {
-                t2 = Typ_;
+                t2 = Att.TypGet;
             }
             else if (t.IsArray)
             {

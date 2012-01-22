@@ -354,7 +354,7 @@ namespace Nana.CodeGeneration
             string ind1 = GetCurrentIndent(1);
             string ind2 = GetCurrentIndent(2);
 
-            Typ returnType = f.IsConstructor == false && f is Fctn ? (f as Fctn).Typ : null;
+            Typ returnType = f.IsConstructor == false && f is Fctn ? (f as Fctn).Att.TypGet : null;
             b.Append(ind0);
             b.Append(".method ");
             b.Append(FromMethodAttributes(f.MthdAttrs).ToLower());
@@ -366,7 +366,7 @@ namespace Nana.CodeGeneration
                 string.Join(", "
                 , f.Params
                 .ConvertAll<string>(delegate(Variable v)
-                { return TypeFullName(v.Typ) + " " + Qk(v.Name); })
+                { return TypeFullName(v.Att.TypGet) + " " + Qk(v.Name); })
                 .ToArray()
                 )
                 );
@@ -389,7 +389,7 @@ namespace Nana.CodeGeneration
                     string.Join(Environment.NewLine  + ind2 + ", "
                     , vars
                     .ConvertAll<string>(delegate(Variable v)
-                    { return lf(v.Typ) + " " + v.Name; })
+                    { return lf(v.Att.TypGet) + " " + v.Name; })
                     .ToArray()
                     )
                     );
@@ -443,7 +443,7 @@ namespace Nana.CodeGeneration
 
         public static string LoadLiteral(Literal l)
         {
-            Typ t = l.Typ;
+            Typ t = l.Att.TypGet;
             if (t.RefType == typeof(bool))      /**/ return ((bool)l.Value) ? S(OpCodes.Ldc_I4_1) : S(OpCodes.Ldc_I4_0);
             if (t.RefType == typeof(string))    /**/ return S(OpCodes.Ldstr, @"""" + l.Value + @"""");
             if (t.RefType == typeof(int))       /**/ return S(OpCodes.Ldc_I4, l.Value);
@@ -458,8 +458,8 @@ namespace Nana.CodeGeneration
                 case Variable.VariableKind.This: return OpCodes.Ldarg_0.ToString();
                 case Variable.VariableKind.Param: return S(OpCodes.Ldarg, Qk(v.Name));
                 case Variable.VariableKind.Local: return S(OpCodes.Ldloc, Qk(v.Name));
-                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsfld, TypeNameInSig(v.Typ) + " " + Qk(v.Name));
-                case Variable.VariableKind.Vector: return S(OpCodes.Ldelem, TypeNameInSig(v.Typ));
+                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsfld, TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name));
+                case Variable.VariableKind.Vector: return S(OpCodes.Ldelem, TypeNameInSig(v.Att.TypGet));
             }
             throw new NotSupportedException();
         }
@@ -496,7 +496,7 @@ namespace Nana.CodeGeneration
                     }
                     return S(OpCodes.Ldarga, Qk(v.Name));
                 case Variable.VariableKind.Local: return S(OpCodes.Ldloca, Qk(v.Name));
-                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsflda, TypeNameInSig(v.Typ) + " " + Qk(v.Name));
+                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsflda, TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name));
             }
             throw new NotSupportedException();
         }
@@ -508,7 +508,7 @@ namespace Nana.CodeGeneration
             {
                 case Nana.Semantics.Variable.VariableKind.Param: return S(OpCodes.Starg, Qk(v.Name));
                 case Nana.Semantics.Variable.VariableKind.Local: return S(OpCodes.Stloc, Qk(v.Name));
-                case Nana.Semantics.Variable.VariableKind.StaticField: return S(OpCodes.Stsfld, TypeNameInSig(v.Typ) + " " + Qk(v.Name));
+                case Nana.Semantics.Variable.VariableKind.StaticField: return S(OpCodes.Stsfld, TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name));
             }
             throw new NotSupportedException();
         }
@@ -582,7 +582,7 @@ namespace Nana.CodeGeneration
         public static string Body(Typ t, Actn a)
         {
             StringBuilder b = new StringBuilder();
-            Typ retti = a is ITyped && a.IsConstructor == false ? (a as ITyped).Typ : null;
+            Typ retti = false == a.IsConstructor && a.Att.CanGet ? a.Att.TypGet : null;
             b.Append(TypeFullName(retti));
 
             if (t != null && t.GetType() == typeof(Typ))
@@ -619,7 +619,7 @@ namespace Nana.CodeGeneration
                     , prms.ConvertAll<string>(delegate(Variable v)
                     {
                         return v.VarKind == Variable.VariableKind.ParamGeneric
-                            ? "!" + v.GenericIndex : TypeNameInSig(v.Typ);
+                            ? "!" + v.GenericIndex : TypeNameInSig(v.Att.TypGet);
                     })
                     .ToArray()
                     ));
