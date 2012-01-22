@@ -76,7 +76,7 @@ namespace Nana.IMRs
         public void GenerateIMR(App app)
         {
             Predicate<Nmd> pred = delegate(Nmd n)
-            { return n.GetType() == typeof(Actn) || n.GetType() == typeof(Fctn); };
+            { return n.GetType() == typeof(Actn); };
 
             foreach (Actn a in app.FindDownAll(pred))
             {

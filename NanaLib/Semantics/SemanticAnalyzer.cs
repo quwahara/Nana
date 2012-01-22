@@ -75,7 +75,6 @@ namespace Nana.Semantics
         public Stack<Literal> Continues;
         public Env Env;
         public Actn Actn;
-        public Fctn Fctn;
         public TmpVarGenerator TmpVarGen;
         public bool IsInFctn;
 
@@ -96,8 +95,7 @@ namespace Nana.Semantics
         {
             ThisTyp = AboveBlock.ThisTyp;
             Actn = FindUpTypeIs<ActnAnalyzer>().Actn;
-            IsInFctn = Actn is Fctn;
-            Fctn = IsInFctn ? Actn as Fctn : null;
+            IsInFctn = Actn.Att.CanGet;
             Env = Actn.E;
             TmpVarGen = new TmpVarGenerator(Env.GetTempName, Actn.NewVar);
             if (AboveBlock.RequiredReturnValue.Count == 0)
@@ -330,7 +328,7 @@ namespace Nana.Semantics
                 if (ope == "+")
                 {
                     Typ ts = Env.BTY.String;
-                    Fctn concat = ts.FindActnOvld("Concat").GetActnOf(ts, new Typ[] { ts, ts }, ThisTyp, Actn) as Fctn;
+                    Actn concat = ts.FindActnOvld("Concat").GetActnOf(ts, new Typ[] { ts, ts }, ThisTyp, Actn);
                     return new CallAction(tp, concat, /* instance */ null, new Sema[] { lv, rv }, /* isNewObj */ false);
                 }
                 else
@@ -541,13 +539,8 @@ namespace Nana.Semantics
 
             Sema instance = mbr == null ? null : mbr.Instance;
 
-            if (sig.GetType() == typeof(Actn))
-            { return new CallAction(calleetyp, sig, instance, argvals.ToArray(), false /*:isNewObj*/); }
 
-            if (sig.GetType() == typeof(Fctn))
-            { return new CallAction(calleetyp, sig as Fctn, instance, argvals.ToArray(), isNewObj); }
-
-            throw new NotImplementedException();
+            return new CallAction(calleetyp, sig, instance, argvals.ToArray(), isNewObj);
         }
 
         public object Dot(Token t)
@@ -960,9 +953,7 @@ namespace Nana.Semantics
             if (ovld.Contains(signature.ToArray()))
             { throw new SemanticError("The function is already defined. Function name:" + nameasm, t); }
 
-            Actn = returnType == voidtyp
-                ? ovld.NewActn(new Token(nameasm), prmls)
-                : ovld.NewFctn(new Token(nameasm), prmls, returnType);
+            Actn = ovld.NewFctn(new Token(nameasm), prmls, returnType);
 
             base.Nsp = Actn;
 
@@ -1011,7 +1002,7 @@ namespace Nana.Semantics
                 if (x is IReturnDeterminacyState)
                 { rds |= (x as IReturnDeterminacyState).RDS; }
             }
-            if (a.IsConstructor == false && a is Fctn)
+            if (a.IsConstructor == false && a.Att.CanGet)
             {
                 if (false == rds)
                 { throw new SyntaxError("Function doesn't return value"); }
@@ -1422,7 +1413,7 @@ namespace Nana.Semantics
             App app = aa.App;
 
             Predicate<Nmd> pred = delegate(Nmd n)
-            { return n.GetType() == typeof(Actn) || n.GetType() == typeof(Fctn); };
+            { return n.GetType() == typeof(Actn); };
 
             foreach (Actn a in app.FindDownAll(pred))
             { ActnAnalyzer.EnusureReturn(a); }

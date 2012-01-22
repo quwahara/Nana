@@ -200,7 +200,6 @@ namespace Nana.CodeGeneration
             if (t == typeof(Nsp)) { b.Append(BeginNsp(n)); }
             if (t == typeof(Typ)) { b.Append(BeginTyp(n as Typ)); }
             if (t == typeof(Actn)) { b.Append(BeginActn(n as Actn)); }
-            if (t == typeof(Fctn)) { b.Append(BeginFctn(n as Fctn)); }
             return b.ToString();
         }
 
@@ -213,7 +212,6 @@ namespace Nana.CodeGeneration
             if (t == typeof(Nsp)) { b.Append(EndNsp(n)); }
             if (t == typeof(Typ)) { b.Append(EndTyp(n as Typ)); }
             if (t == typeof(Actn)) { b.Append(EndActn(n as Actn)); }
-            if (t == typeof(Fctn)) { b.Append(EndFctn(n as Fctn)); }
             return b.ToString();
         }
 
@@ -339,11 +337,6 @@ namespace Nana.CodeGeneration
             return GetCurrentIndent() + "}" + Environment.NewLine;
         }
 
-        public string BeginFctn(Fctn f)
-        {
-            return BeginActn(f);
-        }
-
         public string BeginActn(Actn f)
         {
             if (f.IsReferencing) { return ""; }
@@ -354,7 +347,7 @@ namespace Nana.CodeGeneration
             string ind1 = GetCurrentIndent(1);
             string ind2 = GetCurrentIndent(2);
 
-            Typ returnType = f.IsConstructor == false && f is Fctn ? (f as Fctn).Att.TypGet : null;
+            Typ returnType = f.IsConstructor == false && f.Att.CanGet ? f.Att.TypGet : null;
             b.Append(ind0);
             b.Append(".method ");
             b.Append(FromMethodAttributes(f.MthdAttrs).ToLower());
@@ -407,11 +400,6 @@ namespace Nana.CodeGeneration
             if (d.IsReferencing) { return ""; }
             IndentDepth -= 1;
             return GetCurrentIndent() + "}" + Environment.NewLine;
-        }
-
-        public string EndFctn(Fctn d)
-        {
-            return EndActn(d);
         }
 
         public static string FromIMR(IMR imr, out string[] extra)

@@ -301,30 +301,16 @@ namespace Nana.Semantics
         {
         }
 
-        public Actn NewActn(Token seed, List<Variable> params_)
+        public Actn NewFctn(Token seed, List<Variable> params_, Typ returnTyp)
         {
-            Actn a = new Actn(seed, params_, E);
-            Actns.Add(a);
-            return BeAMember(a);
-        }
-
-        public Actn NewActn(MethodBase mb)
-        {
-            Actn a = new Actn(mb, E);
-            Actns.Add(a);
-            return BeAMember(a);
-        }
-
-        public Fctn NewFctn(Token seed, List<Variable> params_, Typ returnTyp)
-        {
-            Fctn f = new Fctn(seed, params_, returnTyp, E);
+            Actn f = new Actn(seed, params_, returnTyp, E);
             Actns.Add(f);
             return BeAMember(f);
         }
 
-        public Fctn NewFctn(MethodBase mb)
+        public Actn NewFctn(MethodBase mb)
         {
-            Fctn f = new Fctn(mb, E);
+            Actn f = new Actn(mb, E);
             Actns.Add(f);
             return BeAMember(f);
         }
@@ -486,7 +472,7 @@ namespace Nana.Semantics
             set { _Intermediates = value; ; }
         }
 
-        public Actn(Token seed, List<Variable> params_, Env env)
+        public Actn(Token seed, List<Variable> params_, Typ returnTyp, Env env)
             : base(seed, env)
         {
             if (params_ == null) { return; }
@@ -495,6 +481,8 @@ namespace Nana.Semantics
                 Params.Add(v);
                 BeAMember(v);
             });
+
+            Att.TypGet = returnTyp;
         }
 
         public MethodBase Mb;
@@ -509,6 +497,30 @@ namespace Nana.Semantics
             MthdAttrs = mb.Attributes;
             if (MethodAttributes.SpecialName == (mb.Attributes & MethodAttributes.SpecialName))
             { SpecialName = mb.Name; }
+
+            if (mb.IsConstructor && (mb.IsStatic == false))
+            { }
+            else
+            {
+                if (null == (mb as MethodInfo))
+                {
+                    string x = "";
+                }
+
+            }
+
+            Type tt = null;
+
+            if (mb is MethodInfo)
+            {
+                tt = (mb as MethodInfo).ReturnType;
+            }
+            if (mb is ConstructorInfo)
+            {
+                if (mb.IsStatic)        /**/ { tt = typeof(void); }
+                else                    /**/ { tt = (mb as ConstructorInfo).DeclaringType; }
+            }
+            Att.TypGet = env.FindOrNewRefType(tt);
         }
 
         public Variable NewThis(Typ typ)
@@ -587,28 +599,6 @@ namespace Nana.Semantics
 
     }
 
-    public class Fctn : Actn
-    {
-        public Typ ReturnTyp;
-
-        public Fctn(Token seed, List<Variable> params_, Typ returnTyp, Env env)
-            : base(seed, params_, env)
-        {
-            ReturnTyp = returnTyp;
-            Att.TypGet = returnTyp;
-        }
-
-        public Fctn(MethodBase mb, Env env)
-            : base(mb, env)
-        {
-            Type t = mb.IsConstructor && (mb.IsStatic == false)
-                ? mb.DeclaringType
-                : (mb as MethodInfo).ReturnType;
-            Att.TypGet = env.FindOrNewRefType(t);
-
-        }
-    }
-
     public class Typ : Actn
     {
         public Typ BaseTyp;
@@ -631,7 +621,7 @@ namespace Nana.Semantics
         public List<Nmd> DebuggerDisplayMembers { get { return Members_; } }
 
         public Typ(Token seed, Env env, App app)
-            : base(seed, null, env)
+            : base(seed, null, null, env)
         {
             if (app != null) { AssemblyName = app.AssemblyName; }
             _FullName = Name;
@@ -675,7 +665,7 @@ namespace Nana.Semantics
         public Type RefType = null;
 
         public Typ(Type refType, Env env)
-            : base(new Token(refType.FullName ?? refType.Name), null, env)
+            : base(new Token(refType.FullName ?? refType.Name), null, null, env)
         {
             RefType = refType;
             IsValueType = refType.IsValueType;
@@ -707,7 +697,7 @@ namespace Nana.Semantics
         }
 
         public Typ(Typ typ, Env env, int dimension)
-            : base(new Token(typ._FullName + "[" + dimension + "]"), null, env)
+            : base(new Token(typ._FullName + "[" + dimension + "]"), null, null, env)
         {
             Dimension = dimension;
             IsVector = dimension == 1;
@@ -722,7 +712,7 @@ namespace Nana.Semantics
         public Dictionary<string, Typ> GenericDic = null;
 
         public Typ(Typ genericTyp, Env env, Typ[] genericTypeParams)
-            : base(new Token(genericTyp.Name), null, env)
+            : base(new Token(genericTyp.Name), null, null, env)
         {
             GenericType = genericTyp;
             GenericTypeParams = genericTypeParams;
@@ -756,19 +746,7 @@ namespace Nana.Semantics
         public Actn NewActn(MethodBase mb)
         {
             ActnOvld ovld = FindOrNewActnOvld(mb.Name);
-            if (mb is MethodInfo)
-            {
-                Type returnType = (mb as MethodInfo).ReturnType;
-                if (returnType
-                    == typeof(void))    /**/ { return ovld.NewActn(mb); }
-                else                    /**/ { return ovld.NewFctn(mb); }
-            }
-            if (mb is ConstructorInfo)
-            {
-                if (mb.IsStatic)        /**/ { return ovld.NewActn(mb); }
-                else                    /**/ { return ovld.NewFctn(mb); }
-            }
-            return null;
+            return ovld.NewFctn(mb);
         }
 
         public Prop NewProp(PropertyInfo p)
@@ -856,15 +834,13 @@ namespace Nana.Semantics
                         svs.Add(sv);
                     }
 
-                    if (ga is Fctn)
+
                     {
-                        Fctn gf = ga as Fctn;
-                        Typ rettyp = TransGenericType(self, gf.Att.TypGet);
+                        Typ rettyp = ga.Att.CanGet
+                            ? TransGenericType(self, ga.Att.TypGet)
+                            : self.E.BTY.Void
+                            ;
                         sao.NewFctn(new Token(ga.Name), svs, rettyp);
-                    }
-                    else
-                    {
-                        sao.NewActn(new Token(ga.Name), svs);
                     }
                 }
             }
@@ -950,7 +926,7 @@ namespace Nana.Semantics
     {
         public PropertyInfo P;
         public Actn Setter;
-        public Fctn Getter;
+        public Actn Getter;
 
         public Prop(PropertyInfo p, Env env)
             : base(new Token(p.Name), env)
@@ -961,7 +937,7 @@ namespace Nana.Semantics
             Getter = null;
             if (m != null)
             {
-                Getter = BeAMember<Fctn>(new Fctn(m, env));
+                Getter = BeAMember<Actn>(new Actn(m, env));
             }
             Setter = null;
             m = p.GetSetMethod(/* nonPublic:*/ true);
@@ -1031,6 +1007,11 @@ namespace Nana.Semantics
 
     public class Ret : Sema, IReturnDeterminacyState
     {
+        public Ret()
+        {
+            Att.CanExec_ = true;
+        }
+
         public override void Exec(IMRGenerator gen)
         {
             gen.Ret();
@@ -1104,7 +1085,8 @@ namespace Nana.Semantics
         {
             GiveVal = give;
             TakeVar = take;
-            Att_ = take.Att_;
+            Att_.TypGet = take.Att_.TypGet;
+            Att_.TypSet = take.Att_.TypSet;
         }
 
         public override void Take(IMRGenerator gen)

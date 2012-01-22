@@ -123,7 +123,7 @@ end
         }:Variable
     , Callee={
         Name=.ctor
-        }:Fctn
+        }:Actn
     , Args={}
     , IsNewObj=False
     }:CallAction"
