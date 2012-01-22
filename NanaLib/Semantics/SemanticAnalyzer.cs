@@ -331,7 +331,7 @@ namespace Nana.Semantics
                 {
                     Typ ts = Env.BTY.String;
                     Fctn concat = ts.FindActnOvld("Concat").GetActnOf(ts, new Typ[] { ts, ts }, ThisTyp, Actn) as Fctn;
-                    return new CallFunction(tp, concat, /* instance */ null, new Sema[] { lv, rv }, /* isNewObj */ false);
+                    return new CallAction(tp, concat, /* instance */ null, new Sema[] { lv, rv }, /* isNewObj */ false);
                 }
                 else
                 {
@@ -545,7 +545,7 @@ namespace Nana.Semantics
             { return new CallAction(calleetyp, sig, instance, argvals.ToArray(), false /*:isNewObj*/); }
 
             if (sig.GetType() == typeof(Fctn))
-            { return new CallFunction(calleetyp, sig as Fctn, instance, argvals.ToArray(), isNewObj); }
+            { return new CallAction(calleetyp, sig as Fctn, instance, argvals.ToArray(), isNewObj); }
 
             throw new NotImplementedException();
         }

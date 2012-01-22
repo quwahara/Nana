@@ -15,8 +15,15 @@ namespace Nana.Semantics
     {
         public bool CanExec_ = false;
         public bool CanExec { get { return CanExec_ || CanGet || CanSet; } }
-        public bool CanGet { get { return TypGet != null; } }
-        public bool CanSet { get { return TypSet != null; } }
+        public bool CanGet { get { return CanDo(TypGet); } }
+        public bool CanSet { get { return CanDo(TypSet); } }
+        public bool CanDo(Typ t)
+        {
+            return t != null
+                && (t.IsReferencing == false
+                || t.RefType != typeof(void)
+                );
+        }
         public Typ TypGet = null;
         public Typ TypSet = null;
     }
@@ -1159,6 +1166,7 @@ namespace Nana.Semantics
             Args = args;
             IsNewObj = isNewObj;
             Att.CanExec_ = true;
+            Att.TypGet = callee.Att.TypGet;
         }
 
         public void LoadInstance(IMRGenerator gen)
@@ -1179,48 +1187,38 @@ namespace Nana.Semantics
             foreach (Sema v in Args) { v.Give(gen); }
         }
 
-        public override void Exec(IMRGenerator gen)
+        public override void Give(IMRGenerator gen)
         {
             LoadInstance(gen);
             LoadArgs(gen);
-            gen.CallAction(CalleeTy, Callee);
+            if (IsNewObj)
+            {
+                gen.NewObject(CalleeTy, Callee);
+            }
+            else
+            {
+                gen.CallAction(CalleeTy, Callee);
+            }
+        }
+
+        public override void Addr(IMRGenerator gen)
+        {
+            if (false == Att.CanGet) { return; }
+            Give(gen);
+        }
+
+        public override void Exec(IMRGenerator gen)
+        {
+            Give(gen);
+            if (false == Att.CanGet || Callee.IsConstructor)
+            { return; }
+            gen.Pop();
         }
 
         public override string ToString()
         {
             Func<string, object, string> nv = Sty.Nv;
             return Sty.Curly(Sty.Csv(nv("Instance", Instance), nv("Callee", Callee), nv("Args", Sty.Curly(Sty.Csv(Args))), nv("IsNewObj", IsNewObj))) + ":" + GetType().Name;
-        }
-
-    }
-
-    public class CallFunction : CallAction
-    {
-        public Fctn CalleeFctn { get { return Callee as Fctn; } }
-
-        public CallFunction(Typ calleety, Fctn callee, Sema instance, Sema[] args, bool isNewObj)
-            : base(calleety, callee, instance, args, isNewObj)
-        {
-            Att.TypGet = callee.Att.TypGet;
-        }
-
-        public override void Give(IMRGenerator gen)
-        {
-            LoadInstance(gen);
-            LoadArgs(gen);
-            if (IsNewObj) { gen.NewObject(CalleeTy, Callee); }
-            else { gen.CallAction(CalleeTy, Callee); }
-        }
-
-        public override void Addr(IMRGenerator gen)
-        {
-            Give(gen);
-        }
-
-        public override void Exec(IMRGenerator gen)
-        {
-            Give(gen);
-            gen.Pop();
         }
 
     }
@@ -1244,7 +1242,7 @@ namespace Nana.Semantics
         {
             if (Prop.Getter == null)
             { throw new SyntaxError("Cannot get value from the property"); }
-            CallFunction cf = new CallFunction(CalleeTy, Prop.Getter, Instance, new Sema[0], /*isNewObj:*/ false);
+            CallAction cf = new CallAction(CalleeTy, Prop.Getter, Instance, new Sema[0], /*isNewObj:*/ false);
             cf.Give(gen);
         }
 
