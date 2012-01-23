@@ -76,7 +76,7 @@ namespace Nana.Semantics
         public Env Env;
         public Fun Fun;
         public TmpVarGenerator TmpVarGen;
-        public bool IsInFctn;
+        public bool IsInFun;
 
         public LineAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
@@ -95,7 +95,7 @@ namespace Nana.Semantics
         {
             ThisTyp = AboveBlock.ThisTyp;
             Fun = FindUpTypeIs<FunAnalyzer>().Fun;
-            IsInFctn = Fun.Att.CanGet;
+            IsInFun = Fun.Att.CanGet;
             Env = Fun.E;
             TmpVarGen = new TmpVarGenerator(Env.GetTempName, Fun.NewVar);
             if (AboveBlock.RequiredReturnValue.Count == 0)
@@ -159,7 +159,7 @@ namespace Nana.Semantics
 
         public object Ret(Token t)
         {
-            if (IsInFctn)
+            if (IsInFun)
             {
                 ReturnValue rv = new ReturnValue();
                 AboveBlock.RequiredReturnValue.Push(rv);
@@ -953,7 +953,7 @@ namespace Nana.Semantics
             if (ovld.Contains(signature.ToArray()))
             { throw new SemanticError("The function is already defined. Function name:" + nameasm, t); }
 
-            Fun = ovld.NewFctn(new Token(nameasm), prmls, returnType);
+            Fun = ovld.NewFun(new Token(nameasm), prmls, returnType);
 
             base.Nsp = Fun;
 

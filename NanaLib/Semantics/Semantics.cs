@@ -301,14 +301,14 @@ namespace Nana.Semantics
         {
         }
 
-        public Fun NewFctn(Token seed, List<Variable> params_, Typ returnTyp)
+        public Fun NewFun(Token seed, List<Variable> params_, Typ returnTyp)
         {
             Fun f = new Fun(seed, params_, returnTyp, E);
             Funs.Add(f);
             return BeAMember(f);
         }
 
-        public Fun NewFctn(MethodBase mb)
+        public Fun NewFun(MethodBase mb)
         {
             Fun f = new Fun(mb, E);
             Funs.Add(f);
@@ -736,7 +736,7 @@ namespace Nana.Semantics
         public Fun NewFun(MethodBase mb)
         {
             Ovld ovld = FindOrNewOvld(mb.Name);
-            return ovld.NewFctn(mb);
+            return ovld.NewFun(mb);
         }
 
         public Prop NewProp(PropertyInfo p)
@@ -830,7 +830,7 @@ namespace Nana.Semantics
                             ? TransGenericType(self, ga.Att.TypGet)
                             : self.E.BTY.Void
                             ;
-                        sao.NewFctn(new Token(ga.Name), svs, rettyp);
+                        sao.NewFun(new Token(ga.Name), svs, rettyp);
                     }
                 }
             }
