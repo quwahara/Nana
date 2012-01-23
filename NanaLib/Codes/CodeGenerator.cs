@@ -143,8 +143,8 @@ namespace Nana.CodeGeneration
             
             b.Append(CallBegin(d));
             
-            if (d is IInstructionsHolder)
-            { b.Append(CallMiddle(d as IInstructionsHolder)); }
+            if (d is Fun)
+            { b.Append(CallMiddle(d as Fun)); }
 
             d.Members
                 .FindAll(delegate(Nmd n)
@@ -158,13 +158,13 @@ namespace Nana.CodeGeneration
             return b.ToString();
         }
 
-        public string CallMiddle(IInstructionsHolder h)
+        public string CallMiddle(Fun f)
         {
             StringBuilder b = new StringBuilder();
 
             string[] extra;
             string s;
-            foreach (IMR imr in h.Instructions)
+            foreach (IMR imr in f.IMRs)
             {
                 s = FromIMR(imr, out extra);
                 if (false == string.IsNullOrEmpty(s))

@@ -417,12 +417,7 @@ namespace Nana.Semantics
 
     }
 
-    public interface IInstructionsHolder
-    {
-        List<IMR> Instructions { get; }
-    }
-
-    public class Fun : Nsp, IInstructionsHolder
+    public class Fun : Nsp
     {
         static public readonly string EntryPointNameDefault = "Main";
         static public readonly string EntryPointNameImplicit = "'0'";
@@ -465,12 +460,7 @@ namespace Nana.Semantics
 
         public List<Sema> Exes = new List<Sema>();
 
-        public List<IMR> _Intermediates = new List<IMR>();
-        public List<IMR> Instructions
-        {
-            get { return _Intermediates; }
-            set { _Intermediates = value; ; }
-        }
+        public List<IMR> IMRs = new List<IMR>();
 
         public Fun(Token seed, List<Variable> params_, Typ returnTyp, Env env)
             : base(seed, env)

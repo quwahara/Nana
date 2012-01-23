@@ -82,7 +82,7 @@ namespace Nana.IMRs
             {
                 foreach (Sema x in f.Exes)
                 { x.Exec(this); }
-                f.Instructions.AddRange(this);
+                f.IMRs.AddRange(this);
                 Clear();
             }
         }
