@@ -68,7 +68,7 @@ t           Id
 @"0Source
 +---[0]:
     +---[F]a
-    +---[0]t
+    +---[S]t
 ";
             Test();
         }
@@ -88,10 +88,11 @@ gt          Id
 @"0Source
 +---[0]:
     +---[F]a
-    +---[0]t
-        +---[0]{
-            +---[0]gt
-            +---[1]}
+    +---[S]{
+        +---[F]t
+        +---[S]
+        |   +---[0]gt
+        +---[T]}
 ";
             Test();
         }
@@ -110,9 +111,10 @@ t           Id
 @"0Source
 +---[0]:
     +---[F]a
-    +---[0]t
-        +---[0][
-            +---[0]]
+    +---[S][
+        +---[F]t
+        +---[S]
+        +---[T]]
 ";
             Test();
         }
@@ -132,35 +134,11 @@ t           Id
 @"0Source
 +---[0]:
     +---[F]a
-    +---[0]t
-        +---[0][
-            +---[0],
-            +---[1]]
-";
-            Test();
-        }
-
-        [Test]
-        public void T103_Typ_arr3()
-        {
-            Inp = @"
-a           Id
-:           Typ
-t           Id
-[
-,           _End_Cma_
-,           _End_Cma_
-]
-";
-            Epc =
-@"0Source
-+---[0]:
-    +---[F]a
-    +---[0]t
-        +---[0][
-            +---[0],
-            +---[1],
-            +---[2]]
+    +---[S][
+        +---[F]t
+        +---[S]
+        |   +---[0],
+        +---[T]]
 ";
             Test();
         }
@@ -181,11 +159,13 @@ t           Id
 @"0Source
 +---[0]:
     +---[F]a
-    +---[0]t
-        +---[0][
-            +---[0]]
-            +---[1][
-                +---[0]]
+    +---[S][
+        +---[F][
+        |   +---[F]t
+        |   +---[S]
+        |   +---[T]]
+        +---[S]
+        +---[T]]
 ";
             Test();
         }
@@ -208,13 +188,16 @@ t           Id
 @"0Source
 +---[0]:
     +---[F]a
-    +---[0]t
-        +---[0][
-            +---[0]]
-            +---[1][
-                +---[0]]
-                +---[1][
-                    +---[0]]
+    +---[S][
+        +---[F][
+        |   +---[F][
+        |   |   +---[F]t
+        |   |   +---[S]
+        |   |   +---[T]]
+        |   +---[S]
+        |   +---[T]]
+        +---[S]
+        +---[T]]
 ";
             Test();
         }
@@ -236,12 +219,14 @@ gt          Id
 @"0Source
 +---[0]:
     +---[F]a
-    +---[0]t
-        +---[0]{
-        |   +---[0]gt
-        |   +---[1]}
-        +---[1][
-            +---[0]]
+    +---[S][
+        +---[F]{
+        |   +---[F]t
+        |   +---[S]
+        |   |   +---[0]gt
+        |   +---[T]}
+        +---[S]
+        +---[T]]
 ";
             Test();
         }
@@ -632,96 +617,6 @@ void        Id
         }
 
         [Test]
-        public void T109_0prmdec()
-        {
-            Inp = @"
-0prmdec
-";
-            Epc =
-@"0prmdec
-";
-            Test();
-        }
-
-        [Test]
-        public void T110_0prmdec()
-        {
-            Inp = @"
-0prmdec
-a           Id
-:
-int         Id
-";
-            Epc =
-@"0prmdec
-+---[0]a
-    +---[0]:
-        +---[0]int
-";
-            Test();
-        }
-
-        [Test]
-        public void T111_0prmdec()
-        {
-            Inp = @"
-0prmdec
-a           Id
-:
-int         Id
-,
-b           Id
-:
-string      Id
-";
-            Epc =
-@"0prmdec
-+---[0]a
-    +---[0]:
-    |   +---[0]int
-    +---[1],
-        +---[0]b
-            +---[0]:
-                +---[0]string
-";
-            Test();
-        }
-
-        [Test]
-        public void T112_0prmdec()
-        {
-            Inp = @"
-0prmdec
-a           Id
-:
-int         Id
-,
-b           Id
-:
-string      Id
-,
-c           Id
-:
-int         Id
-";
-            Epc =
-@"0prmdec
-+---[0]a
-    +---[0]:
-    |   +---[0]int
-    +---[1],
-    |   +---[0]b
-    |       +---[0]:
-    |           +---[0]string
-    +---[2],
-        +---[0]c
-            +---[0]:
-                +---[0]int
-";
-            Test();
-        }
-
-        [Test]
         public void T113_0attrdec()
         {
             Inp = @"
@@ -904,220 +799,6 @@ end     End
         }
 
         [Test]
-        public void T122_class()
-        {
-            Inp = @"
-class
-Nana        Id
-->
-Object      Id
-,
-Interface   Id
-begin       Bgn
-end         End
-";
-            Epc =
-@"class
-+---[0]Nana
-+---[1]->
-|   +---[0]Object
-|   +---[1],
-|       +---[0]Interface
-+---[2]begin
-+---[3]end
-";
-            Test();
-        }
-
-        [Test]
-        public void T123_class()
-        {
-            Inp = @"
-class
-Nana        Id
-->
-Object      Id
-,
-Interface1  Id
-,
-Interface2  Id
-begin       Bgn
-end         End
-";
-            Epc =
-@"class
-+---[0]Nana
-+---[1]->
-|   +---[0]Object
-|   +---[1],
-|   |   +---[0]Interface1
-|   +---[2],
-|       +---[0]Interface2
-+---[2]begin
-+---[3]end
-";
-            Test();
-        }
-
-        [Test]
-        public void T124_0prmdec_NoType()
-        {
-            Inp = @"
-0prmdec
-a           Id
-";
-            Epc =
-@"0prmdec
-+---[0]a
-";
-            Test();
-        }
-
-        [Test]
-        public void T125_0prmdec_NoType()
-        {
-            Inp = @"
-0prmdec
-a           Id
-,
-b           Id
-";
-            Epc =
-@"0prmdec
-+---[0]a
-    +---[0],
-        +---[0]b
-";
-            Test();
-        }
-
-        [Test]
-        public void T126_0prmdec_NoType()
-        {
-            Inp = @"
-0prmdec
-a           Id
-,
-b           Id
-,
-c           Id
-";
-            Epc =
-@"0prmdec
-+---[0]a
-    +---[0],
-    |   +---[0]b
-    +---[1],
-        +---[0]c
-";
-            Test();
-        }
-
-        [Test]
-        public void T127_0prmdec_NoType()
-        {
-            Inp = @"
-0prmdec
-a           Id
-,
-b           Id
-:
-string      Id
-";
-            Epc =
-@"0prmdec
-+---[0]a
-    +---[0],
-        +---[0]b
-            +---[0]:
-                +---[0]string
-";
-            Test();
-        }
-
-        [Test]
-        public void T128_0prmdec_NoType()
-        {
-            Inp = @"
-0prmdec
-a           Id
-:
-int         Id
-,
-b           Id
-";
-            Epc =
-@"0prmdec
-+---[0]a
-    +---[0]:
-    |   +---[0]int
-    +---[1],
-        +---[0]b
-";
-            Test();
-        }
-
-        [Test]
-        public void T129_0prmdec_NoType()
-        {
-            Inp = @"
-0prmdec
-a           Id
-:
-int         Id
-,
-b           Id
-,
-c           Id
-:
-int         Id
-";
-            Epc =
-@"0prmdec
-+---[0]a
-    +---[0]:
-    |   +---[0]int
-    +---[1],
-    |   +---[0]b
-    +---[2],
-        +---[0]c
-            +---[0]:
-                +---[0]int
-";
-            Test();
-        }
-
-        [Test]
-        public void T130_0prmdec_NoType()
-        {
-            Inp = @"
-0prmdec
-a           Id
-:
-int         Id
-,
-b           Id
-:
-string      Id
-,
-c           Id
-";
-            Epc =
-@"0prmdec
-+---[0]a
-    +---[0]:
-    |   +---[0]int
-    +---[1],
-    |   +---[0]b
-    |       +---[0]:
-    |           +---[0]string
-    +---[2],
-        +---[0]c
-";
-            Test();
-        }
-
-        [Test]
         public void T131_0funcdec_NoType()
         {
             Inp = @"
@@ -1157,40 +838,6 @@ end     End
 +---[0]name
 +---[1](
 |   +---[0]a
-+---[2])
-+---[3]:
-|   +---[0]void
-+---[4]begin
-|   +---[0](rbp)
-+---[5]end
-";
-            Test();
-        }
-
-        [Test]
-        public void T133_sfunc()
-        {
-            Inp = @"
-sfunc   Fnc
-name    Id
-(
-a       Id
-,
-b       Id
-)
-:
-void    Id
-begin   Bgn
-(rbp)
-end     End
-";
-            Epc =
-@"sfunc
-+---[0]name
-+---[1](
-|   +---[0]a
-|       +---[0],
-|           +---[0]b
 +---[2])
 +---[3]:
 |   +---[0]void

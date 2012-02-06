@@ -68,13 +68,33 @@ namespace Nana.Semantics
 
     public class LineAnalyzer : SemanticAnalyzer
     {
-        public Typ ThisTyp;
+        public Typ ThisTyp_ = null;
+        public Typ ThisTyp
+        {
+            get
+            {
+                if (ThisTyp_ == null)
+                {
+                    TypAnalyzer ta
+                        = FindUpTypeOf<TypAnalyzer>()
+                        ?? FindUpTypeOf<AppAnalyzer>()
+                        ;
+                    ThisTyp_ = ta.Typ;
+                }
+                return ThisTyp_;
+            }
+        }
         public BlockAnalyzer AboveBlock;
 
         public Stack<Literal> Breaks;
         public Stack<Literal> Continues;
         public Env Env;
-        public Fun Fun;
+        public Fun Fun_;
+        public Fun Fun
+        {
+            get { return Fun_; }
+            set { Fun_ = value; }
+        }
         public TmpVarGenerator TmpVarGen;
         public bool IsInFun;
 
@@ -86,18 +106,31 @@ namespace Nana.Semantics
             AboveBlock = above;
         }
 
-        public Typ RequireTyp(Token t)
+        public virtual Typ RequireTyp(Token t)
         {
-            return AboveBlock.RequireTyp(t);
+            object obj = Gate(t);
+            if (obj == null
+                || obj.GetType() != typeof(Typ)
+                )
+            {
+                throw new NotImplementedException(
+                    TokenEx.ToTree(t, delegate(Token t_) { return t_.Value + "@" + t_.Group; }));
+            }
+
+            return obj as Typ;
+        }
+
+        virtual public Variable NewVar(string name, Typ typ)
+        {
+            return Fun.NewVar(name, typ);
         }
 
         public void AnalyzeLine()
         {
-            ThisTyp = AboveBlock.ThisTyp;
             Fun = FindUpTypeIs<FunAnalyzer>().Fun;
             IsInFun = Fun.Att.CanGet;
             Env = Fun.E;
-            TmpVarGen = new TmpVarGenerator(Env.GetTempName, Fun.NewVar);
+            TmpVarGen = new TmpVarGenerator(Env.GetTempName, NewVar);
             if (AboveBlock.RequiredReturnValue.Count == 0)
             {
                 Sema exe = RequireExec(Seed);
@@ -131,6 +164,9 @@ namespace Nana.Semantics
 
         public object Gate(Token t)
         {
+            if (t == null)
+            { return EmptyS; }
+
             object u = null;
             switch (t.Group)
             {
@@ -151,10 +187,29 @@ namespace Nana.Semantics
                 case "Typ":         /**/ u = DefineVariable(t); break;
                 case "Ret":         /**/ u = Ret(t); break;
                 case "Nop":         /**/ u = new DoNothing(); break;
+                case "_End_Cma_":   /**/ u = Cma(t); break;
                 default:
                     throw new SyntaxError(@"Could not process the sentence: " + t.Group, t);
             }
             return u;
+        }
+
+        public object Cma(Token t)
+        {
+            if (Regex.IsMatch(t.Value, @",,+") == false)
+            {
+                return new Chain(Gate(t.First), Gate(t.Second));
+            }
+            else
+            {
+                Chain c = new Chain(EmptyS);
+                foreach (char chr in t.Value)
+                {
+                    c = new Chain(c, EmptyS);
+                }
+                return c;
+            }
+            //return new Chain(Gate(t.First), Gate(t.Second));
         }
 
         public object Ret(Token t)
@@ -242,7 +297,7 @@ namespace Nana.Semantics
             }
             if (tu.GetType() == typeof(Nmd))
             {
-                tu = Fun.NewVar((tu as Nmd).Seed.Value, gv2.Att.TypGet);
+                tu = NewVar((tu as Nmd).Seed.Value, gv2.Att.TypGet);
             }
 
             return new Assign(gv2, tu as Sema);
@@ -257,16 +312,14 @@ namespace Nana.Semantics
         {
             Debug.Assert(t.First != null);
             Debug.Assert(t.First.Group == "Id");
-            Debug.Assert(t.Follows != null);
-            Debug.Assert(t.Follows.Length == 1);
 
             object obj = Gate(t.First);
             if (obj.GetType() != typeof(Nmd))
             { throw new SemanticError("The variable is already defined. Variable name:" + t.First.Value, t.First); }
             Nmd id = obj as Nmd;
-            Typ ty = RequireTyp(t.Follows[0]);
+            Typ ty = RequireTyp(t.Second);
 
-            return Fun.NewVar(id.Seed.Value, ty);
+            return NewVar(id.Seed.Value, ty);
         }
 
         public object Ope(Token t)
@@ -477,26 +530,17 @@ namespace Nana.Semantics
             // arguments
             if (t.Second.Follows.Length > 0)
             {
-                Token[] args = t.Second.Follows;
-                if ((args.Length % 2) != 1)
+                object obj = Gate(t.Second.Follows[0]);
+                Chain argschain = obj is Chain ? obj as Chain : new Chain(obj);
+                foreach (object a in argschain)
                 {
-                    throw new SyntaxError("The argument count must be odd", t);
-                }
-                for (int i = 1; i < args.Length; i += 2)
-                {
-                    if (args[i].Value != ",")
-                    {
-                        throw new SyntaxError("No comma is between arguments", t);
-                    }
-                }
-                for (int i = 0; i < args.Length; i += 2)
-                {
-                    Token argt = args[i];
-                    Sema v;
-                    v = Require<Sema>(argt);
+                    if (false == (a is Sema))
+                    { throw new SemanticError("Cannot be an argument", t.Second.Follows[0]); }
+                    Sema v = a as Sema;
                     argvals.Add(v);
                     argtyps.Add(v.Att.TypGet);
                 }
+
             }
 
             first = Gate(t.First);
@@ -589,6 +633,7 @@ namespace Nana.Semantics
 
         static public readonly Token Empty = new Token("(Empty)", "Empty");
         static public readonly Token Comma = new Token(",", "Factor");
+        static public readonly Sema EmptyS = new Sema();
 
         /// <summary>
         /// collect separated tokens in circumfixes by commas
@@ -647,108 +692,120 @@ namespace Nana.Semantics
 
         public object Bracket(Token t)
         {
-            Token r;                                        // root of "[]" syntax
-            List<Token> rs = new List<Token>();                                        // root of "[]" syntax
-            Token[] cirfxd;                                 // contents in "[]"
-            List<Token[]> cirfxdlst = new List<Token[]>();  // list of cirfxd
+            //  Bracket can be translated to one of in:
+            //      type, array instantiation, array accessing
 
-            // collect circumfixed
-            r = t;
-            while (r.Group == "Expr" && r.Value == "[")
-            {
-                if (r.First == null) { throw new SyntaxError("not specified identifier in front of '[]'", r); }
-                rs.Add(r);
-                cirfxd = Circumfixed(r.Second);
-                cirfxdlst.Add(cirfxd);
-                r = r.First;
-            }
+            //  (First)             (Second)                    (Translation)
+            //  Typ                 Empty or Empty Chain        type
+            //  Typ                 Index or Index Chain    =>  array instantiation
+            //  ArrayInstatiation   Empty or Empty Chain        array instantiation
+            //  array instance      Index or Index Chain        array accessing
 
-            // <contents are:>                          --> <meaning can be:>
-            // all empty                                --> type
-            // 1st has length, follows are all empty    --> instantiation
-            // all has indices                          --> accessing array
-            // (not above)                              --> error
-
-            Predicate<Token>    /**/ tprd = delegate(Token t_) { return t_ == Empty; };
-            Predicate<Token[]>  /**/ tsprd = delegate(Token[] ts_) { return Array.TrueForAll<Token>(ts_, tprd); };
-
-            bool isFirstEmpty = tsprd(cirfxdlst[cirfxdlst.Count - 1]);
-            bool isFollowEmpty = cirfxdlst.GetRange(0, cirfxdlst.Count - 1).TrueForAll(tsprd);
-
-            // resolve the spec(ifier) that specifies meaning of "[]" syntax is type or array access
-            object spec;
-            Typ typ = null;
+            object f = Gate(t.First);
+            ArrayInstatiation arins = null;
+            Typ ty = null;
             Sema val = null;
-            spec = Gate(r);
-
-            if (spec.GetType() == typeof(Typ))
+            if (f.GetType() == typeof(ArrayInstatiation))
             {
-                typ = spec as Typ;
-                for (int i = 0; i < rs.Count; ++i)
-                { typ = Env.FindOrNewArrayTyp(typ, cirfxdlst[i].Length); }
+                arins = f as ArrayInstatiation;
             }
-            else if (spec is Sema)
+            if (f.GetType() == typeof(Typ))
+            { 
+                ty = f as Typ; 
+            }
+            if (ty == null && f is Sema)
             {
-                val = spec as Sema;
+                val = f as Sema;
                 if (val.Att.TypGet.IsVectorOrArray == false)
-                { throw new SyntaxError("require an array value in front of '[]'", r); }
+                { throw new SemanticError("require an array value in front of '[]'", t.First); }
             }
-            else
+            if (ty == null && val == null)
+            { throw new SemanticError("require a type or  an array value in front of '[]'", t.First); }
+
+            object s = t.Second.Follows == null || t.Second.Follows.Length < 1
+                ? EmptyS
+                : Gate(t.Second.Follows[0])
+                ;
+            Chain contents = s is Chain ? s as Chain : new Chain(s);
+
+            bool isEmpty = true;
+            foreach (object c in contents)
             {
-                throw new SyntaxError("require an arrya type or value in front of '[]'", r);
-            }
-
-            // meaning: type
-            if (typ != null && isFirstEmpty && isFollowEmpty)
-            { return typ; }
-
-            // meaning: instantiation
-            if (typ != null)
-            {
-                if (isFirstEmpty)
-                { throw new SyntaxError("not specified array lenght", r); }
-
-                if (isFollowEmpty == false)
-                { throw new SyntaxError("cannot specify lenght", r); }
-
-                // get array length
-                Sema len;
-                List<Sema> lens = new List<Sema>();
-                foreach (Token c in cirfxdlst[cirfxdlst.Count - 1])
+                if (false == (c is Sema))
                 {
-                    len = Require<Sema>(c);
-                    Typ y = len.Att.TypGet;
-                    if (y.IsReferencing == false || y.RefType != typeof(int))
-                    { throw new TypeError("specified not int value to array lenght", c); }
-                    lens.Add(len);
+                    isEmpty = false;
+                    break;
                 }
+                if ((c as Sema) != EmptyS)
+                {
+                    isEmpty = false;
+                    break;
+                }
+            }
 
-                ArrayInstatiation ins = new ArrayInstatiation(typ, lens.ToArray(), TmpVarGen);
+            bool isIndex = false;
+            if (false == isEmpty)
+            {
+                isIndex = true;
+                foreach (object c in contents)
+                {
+                    if (false == (c is Sema))
+                    {
+                        isIndex = false;
+                        break;
+                    }
+                    Typ y = (c as Sema).Att.TypGet;
+                    if (y.IsReferencing == false || y.RefType != typeof(int))
+                    {
+                        isIndex = false;
+                        break;
+                    }
+                }
+            }
+
+            if (ty != null && isEmpty)
+            {
+                Typ typ = Env.FindOrNewArrayTyp(ty, contents.Count);
+                return typ;
+            }
+
+            if (ty != null && isIndex)
+            {
+                Typ typ = Env.FindOrNewArrayTyp(ty, contents.Count);
+
+                Sema[] indexes = new List<object>(contents)
+                    .ConvertAll<Sema>(delegate(object c) { return c as Sema; })
+                    .ToArray();
+
+                ArrayInstatiation ins = new ArrayInstatiation(typ, indexes, TmpVarGen);
                 return ins;
             }
 
-            // meaning: accessing array
+            if (arins != null && isEmpty)
             {
-                ArrayAccessInfo acc = null;
-                List<Token[]> rev = new List<Token[]>(cirfxdlst);
-                rev.Reverse();
-                foreach (Token[] cf_ in rev)
-                {
-                    Sema idx;
-                    List<Sema> idcs = new List<Sema>();
-                    foreach (Token c in cf_)
-                    {
-                        idx = Require<Sema>(c);
-                        Typ y = idx.Att.TypGet;
-                        if (y.IsReferencing == false || y.RefType != typeof(int))
-                        { throw new TypeError("specified not int value to array lenght", c); }
-                        idcs.Add(idx);
-                    }
-                    acc = new ArrayAccessInfo(val, idcs.ToArray());
-                    val = acc;
-                }
+                Typ typ = Env.FindOrNewArrayTyp(arins.Att.TypGet, contents.Count);
+
+                Sema[] indexes = new List<object>(contents)
+                    .ConvertAll<Sema>(delegate(object c) { return c as Sema; })
+                    .ToArray();
+                ;
+
+                ArrayInstatiation ins = new ArrayInstatiation(typ, arins.Lens, TmpVarGen);
+                return ins;
+            }
+
+            if (val != null && isIndex)
+            {
+                Sema[] indexes = new List<object>(contents)
+                    .ConvertAll<Sema>(delegate(object c) { return c as Sema; })
+                    .ToArray();
+                ;
+
+                ArrayAccessInfo acc = new ArrayAccessInfo(val, indexes);
                 return acc;
             }
+
+            return null;
         }
 
         public object Curly(Token t)
@@ -815,10 +872,8 @@ namespace Nana.Semantics
 
     }
 
-    public class BlockAnalyzer : SemanticAnalyzer
+    public class BlockAnalyzer : LineAnalyzer
     {
-        public BlockAnalyzer AboveBlock;
-
         public Nsp Nsp;
         public Stack<ReturnValue> RequiredReturnValue = new Stack<ReturnValue>();
 
@@ -857,36 +912,10 @@ namespace Nana.Semantics
             return Find(t) ?? (AboveBlock != null ? AboveBlock.FindUp(t) : null);
         }
 
-        public virtual Typ RequireTyp(Token t)
-        { return AboveBlock == null ? null : AboveBlock.RequireTyp(t); }
-
-        public Typ ThisTyp_ = null;
-        public Typ ThisTyp
-        {
-            get
-            {
-                if (ThisTyp_ == null)
-                {
-                    TypAnalyzer ta
-                        = FindUpTypeOf<TypAnalyzer>()
-                        ?? FindUpTypeOf<AppAnalyzer>()
-                        ;
-                    ThisTyp_ = ta.Typ;
-                }
-                return ThisTyp_;
-            }
-        }
     }
 
     public class FunAnalyzer : BlockAnalyzer
     {
-        public Fun Fun_;
-        public Fun Fun
-        {
-            get { return Fun_; }
-            set { Nsp = Fun_ = value; }
-        }
-
         public FunAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
         { }
@@ -898,6 +927,8 @@ namespace Nana.Semantics
             Subs.AddLast(new BlockAnalyzer(block, this));
             ConstructSubsAll();
         }
+
+        public List<Variable> prmls = new List<Variable>();
 
         public void AnalyzeFun()
         {
@@ -915,29 +946,16 @@ namespace Nana.Semantics
                 ?? FindUpTypeOf<AppAnalyzer>()
                 ;
             Debug.Assert(typazr2 != null);
+            base.Env = typazr2.Typ.E;
+
             Ovld ovld = typazr2.Typ.FindOrNewOvld(nameasm);
 
             List<Token> prms = new List<Token>();
             Token prmpre = t.Find("@PrmDef");
-            Token prm;
-            while (prmpre != null && (prm = prmpre.Find("@Prm")) != null)
-            {
-                prms.Add(prm);
-                prmpre = prm.Find("@Separator");
-            }
+            if (prmpre.Follows != null && prmpre.Follows.Length > 0)
+            { Gate(prmpre.Follows[0]); }
 
-            List<Variable> prmls = new List<Variable>();
-            List<Typ> signature = new List<Typ>();
             Token ty;
-            foreach (Token p in prms)
-            {
-                ty = p.Find("@TypeSpec/@TypeSpec2");
-                Typ typ = RequireTyp(ty);
-                Debug.Assert(typ != null);
-                Debug.Assert(string.IsNullOrEmpty(p.Value) == false);
-                prmls.Add(new Variable(p.Value, typ, Variable.VariableKind.Param));
-                signature.Add(typ);
-            }
 
             Typ voidtyp = FindUpTypeOf<EnvAnalyzer>().Env.BTY.Void;
             Typ returnType = voidtyp;
@@ -949,6 +967,8 @@ namespace Nana.Semantics
             {
                 returnType = RequireTyp(ty);
             }
+
+            List<Typ> signature = prmls.ConvertAll<Typ>(delegate(Variable v) { return v.Att.TypGet; });
 
             if (ovld.Contains(signature.ToArray()))
             { throw new SemanticError("The function is already defined. Function name:" + nameasm, t); }
@@ -967,6 +987,13 @@ namespace Nana.Semantics
                 { throw new SyntaxError("Cannot define instance constructor in this sapce", t); }
                 Fun.NewThis(typazr.Typ);
             }
+        }
+
+        public override Variable NewVar(string name, Typ typ)
+        {
+            Variable v = new Variable(name, typ, Variable.VariableKind.Param);
+            prmls.Add(v);
+            return v;
         }
 
         public string ResolveFuncType(string func, bool isInTypDecl)
@@ -1057,10 +1084,7 @@ namespace Nana.Semantics
             Token t = Seed;
             Token baseTypeDef = t.Find("@BaseTypeDef");
             if (baseTypeDef == null)
-            {
-                baseTypeDef = new Token();
-                baseTypeDef.FlwsAdd("System.Object", "Id");
-            }
+            { return; }
             Typ.BaseTyp = RequireTyp(baseTypeDef.Follows[0]);
         }
 
@@ -1108,33 +1132,6 @@ namespace Nana.Semantics
         {
             base.Typ = FindUpTypeOf<AppAnalyzer>().Typ;
         }
-
-        public override Typ RequireTyp(Token t)
-        {
-            Token last = SpecifiedTypAnalyzer.GoToLastIdAndBuildName(t);
-            Typ typ = AboveBlock.RequireTyp(last);
-            int i = 0;
-            while (typ == null && i < Usings.Count)
-            {
-                typ = AboveBlock.RequireTyp(new Token(Usings[i] + "." + last.ValueImplicit));
-                ++i;
-            }
-            if (typ == null) { return null; }
-
-            Token array = last;
-            Env env = FindUpTypeOf<EnvAnalyzer>().Env;
-            while (array != null && SpecifiedTypAnalyzer.IsArray(array.Follows))
-            {
-                int dim = SpecifiedTypAnalyzer.GetDimension(array.Follows);
-                typ = env.NewArrayTyp(typ, dim);
-                array = array.Follows != null && array.Follows.Length > 0
-                    ? array.Follows[array.Follows.Length - 1]
-                    : null;
-            }
-
-            return typ;
-        }
-
     }
 
     public class AppAnalyzer : SrcAnalyzer
@@ -1161,16 +1158,6 @@ namespace Nana.Semantics
         {
             App = FindUpTypeOf<EnvAnalyzer>().Env.NewApp(Seed);
         }
-
-        public override Typ RequireTyp(Token t)
-        {
-            Typ y = (App.Find(t.Value) as Typ)
-                ?? (App.Find(t.ValueImplicit) as Typ)
-                ;
-            if (y != null) { return y; }
-            return AboveBlock.RequireTyp(t);
-        }
-
     }
 
     public class EnvAnalyzer : AppAnalyzer
@@ -1346,11 +1333,6 @@ namespace Nana.Semantics
             { a.AnalyzeBlock(); }
             foreach (BlockAnalyzer a in CollectTypeOf<BlockAnalyzer>())
             { a.AnalyzeBlock(); }
-        }
-
-        public override Typ RequireTyp(Token t)
-        {
-            return Find(t) as Typ;
         }
 
         public override object Find(Token t)

@@ -65,6 +65,7 @@ namespace Nana.Syntaxes
 
         static public readonly string InfixBpsTxt = @"
             300 .
+            290 :
             280 *   /   %
             270 +   -
             260 <   >   <=  >=
@@ -73,6 +74,7 @@ namespace Nana.Syntaxes
             220 xor
             210 or
             110 ->
+            100 ,
             -1  ;
             -1  return
             ";
@@ -88,7 +90,6 @@ namespace Nana.Syntaxes
             ";
 
         static public readonly string SuffixBpsTxt = @"
-            290 :
             ";
 
         static public readonly string FactorsTxt = @"
@@ -328,7 +329,7 @@ namespace Nana.Syntaxes
 
 
 
-            class.@0    Id.g@2 _( ->.?@3    0type.r    _(  ,.* 0type.r _)  _) _( Bgn.g@1    Expr.s* _)  End.g -- TypeDef    TypeBody   Name  BaseTypeDef
+            class.@0    Id.g@2 _( ->.?@3    Expr.s  _) _( Bgn.g@1    Expr.s* _)  End.g -- TypeDef    TypeBody   Name  BaseTypeDef
 
                 0iddotdec   _( Id.g _( ..* Id.g _) _)
 
@@ -343,13 +344,11 @@ namespace Nana.Syntaxes
                 0conscall   _(  base.?@0    _(  (.@1    Expr.s* _)  )   _)  -- ConsCall Expr
 
 
-            cons.@0     _(  (.@1    0prmdec.r   _)  )   0conscall.r 0attrdec.r  0bodydec.r      -- Func PrmDef
-
-                0prmdec     _(  Id.g?@0 0typedec.r      _(  ,.*@1   _(  Id.g@0  0typedec.r  _) _) _)    -- Prm Separator
+            cons.@0     _(  (.@1    Expr.s? _)  )   0conscall.r 0attrdec.r  0bodydec.r      -- Func PrmDef
 
             Fnc.g@0     Id.g 0funcdec.r          -- Func
 
-                0funcdec    _(  (.@0    0prmdec.r   _)  ) 0typedec.r 0attrdec.r 0bodydec.r          -- PrmDef
+                0funcdec    _(  (.@0    Expr.s? _)  ) 0typedec.r 0attrdec.r 0bodydec.r          -- PrmDef
                 0typedec    _(  :.?@0   0type.r _)                                                  --  TypeSpec
 
             Typ.g       0type.r

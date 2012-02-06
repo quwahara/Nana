@@ -52,6 +52,35 @@ namespace Nana.Semantics
         }
     }
 
+    public class Chain : LinkedList<object>
+    {
+        public Chain(object a)
+        {
+            Add(a);
+        }
+
+        public Chain(object a, object b)
+        {
+            Add(a);
+            Add(b);
+        }
+
+        public Chain Add(object v)
+        {
+            if (v is Chain)
+            {
+                foreach (object o in v as Chain)
+                { AddLast(o); }
+            }
+            else
+            {
+                AddLast(v);
+            }
+            return this;
+        }
+
+    }
+
     public class Nmd : Sema
     {
         public Token Seed;
@@ -624,6 +653,7 @@ namespace Nana.Semantics
                 ;
 
             IsValueType = false;
+            BaseTyp = env.BTY.Object;
         }
 
         public void SetBaseTyp(Typ baseTyp)

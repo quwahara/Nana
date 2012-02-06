@@ -62,15 +62,6 @@ namespace UnitTest.Syntaxes
         }
 
         [Test]
-        public void T105_PrmDecDef()
-        {
-            Inp = GetDef(@"0prmdec");
-            Epc = @"0prmdec:ValueClause:1:(Id:GroupClause:?:Prm:(0typedec:Refer:1, ,:ValueClause:*:Separator:(Id:GroupClause:1:Prm:(0typedec:Refer:1))))";
-
-            Test();
-        }
-
-        [Test]
         public void T106_AttrDecDef()
         {
             Inp = GetDef(@"0attrdec");
@@ -91,7 +82,7 @@ namespace UnitTest.Syntaxes
         public void T108_FuncDecDef()
         {
             Inp = GetDef(@"0funcdec");
-            Epc = @"0funcdec:ValueClause:1:(\(:ValueClause:1:PrmDef:(0prmdec:Refer:1), \):Value:1, 0typedec:Refer:1, 0attrdec:Refer:1, 0bodydec:Refer:1)";
+            Epc = @"0funcdec:ValueClause:1:(\(:ValueClause:1:PrmDef:(Expr:Expr:?:())), \):Value:1, 0typedec:Refer:1, 0attrdec:Refer:1, 0bodydec:Refer:1)";
             Test();
         }
 
