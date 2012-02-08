@@ -528,9 +528,9 @@ namespace Nana.Semantics
             Type firstty;
 
             // arguments
-            if (t.Second.Follows.Length > 0)
+            object obj = Gate(t.Second);
+            if (obj != EmptyS)
             {
-                object obj = Gate(t.Second.Follows[0]);
                 Chain argschain = obj is Chain ? obj as Chain : new Chain(obj);
                 foreach (object a in argschain)
                 {
@@ -540,7 +540,6 @@ namespace Nana.Semantics
                     argvals.Add(v);
                     argtyps.Add(v.Att.TypGet);
                 }
-
             }
 
             first = Gate(t.First);
@@ -722,10 +721,7 @@ namespace Nana.Semantics
             if (ty == null && val == null)
             { throw new SemanticError("require a type or  an array value in front of '[]'", t.First); }
 
-            object s = t.Second.Follows == null || t.Second.Follows.Length < 1
-                ? EmptyS
-                : Gate(t.Second.Follows[0])
-                ;
+            object s = Gate(t.Second);
             Chain contents = s is Chain ? s as Chain : new Chain(s);
 
             bool isEmpty = true;
@@ -810,41 +806,28 @@ namespace Nana.Semantics
 
         public object Curly(Token t)
         {
-            //System.Collections.Generic.List`1
-
-            // get the contents
-            Token spc = t.First;
-            Token[] cts = t.Second.Follows;
-            if (cts == null || cts.Length == 0)
+            // get type parameters
+            List<Typ> tprms = new List<Typ>();
             {
-                throw new SyntaxError("No type parameter(s) for generic type", t);
-            }
-            if (cts.Length % 2 != 1)
-            {
-                throw new SyntaxError("Type parameter(s) is bad format", t);
-            }
-
-            List<Token> contents = new List<Token>();
-            contents.Add(cts[0]);
-            for (int i = 1; i < cts.Length; i += 2)
-            {
-                if (cts[i].Value != "," || cts[i].Group != "Id")
+                foreach (object o in new Chain(Gate(t.Second)))
                 {
-                    throw new SyntaxError("Type parameter(s) is bad format", t);
+                    if (o == null || o.GetType() != typeof(Typ))
+                    { throw new SyntaxError("specified not type in type parameter", t.Second); }
+                    tprms.Add(o as Typ);
                 }
-                contents.Add(cts[i + 1]);
             }
 
             Typ tp = null;
             {
                 // get type or valuable
+                Token spc = t.First;
                 object specsem = Gate(spc);
                 if (specsem.GetType() != typeof(Nmd))
                 { throw new SyntaxError("Not a generic type", spc); }
                 //  Generic type name consists of name, "`" and count of type parameter.
                 Token ttt = (specsem as Nmd).Seed;
                 //ttt.Value += "`" + contents.Count.ToString();
-                ttt.ValueImplicit += "`" + contents.Count.ToString();
+                ttt.ValueImplicit += "`" + tprms.Count.ToString();
                 tp = RequireTyp(ttt);
                 //TODO  require style get
                 //tp = Gate(ttt) as Typ2;
@@ -852,24 +835,11 @@ namespace Nana.Semantics
                 { throw new SyntaxError("Unkown generic type:" + ttt.ValueImplicit, ttt); }
             }
 
-            // get type parameters
-            List<Typ> tprms = new List<Typ>();
-            {
-                // get array length
-                foreach (Token c in contents)
-                {
-                    Typ s = RequireTyp(c);
-                    if (s == null)
-                    { throw new SyntaxError("specified not type in type parameter", c); }
-                    tprms.Add(s);
-                }
-            }
 
             //  find instance type
             Typ typinst = Env.FindOrNewGenericTypInstance(tp, tprms.ToArray());
             return typinst;
         }
-
     }
 
     public class BlockAnalyzer : LineAnalyzer

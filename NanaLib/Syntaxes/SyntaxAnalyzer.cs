@@ -266,27 +266,19 @@ namespace Nana.Syntaxes
             else if (CircumfixBps.ContainsKey   /**/ (infix.Value))
             {
                 if (CircumfixR.ContainsKey(infix.Value) == false)
-                {
-                    throw new InternalError(string.Format(
-                        @"Could not find end for '{0}'.", infix.Value), infix);
-                }
+                { throw new InternalError(string.Format(@"Could not find end for '{0}'.", infix.Value), infix); }
+
                 string begin = infix.Value;
                 string end = CircumfixR[begin];
-                List<Token> contents = new List<Token>();
-                bool ended = Cur.Value == end;
-                while (ended == false)
-                {
-                    if (Cur == Token.ZEnd) break;
-                    if (Cur == null) break;
-                    contents.Add(Expr(0));
-                    ended = Cur.Value == end;
-                }
-                if (ended == false) 
-                    throw new SyntaxError(string.Format(
-                        @"'{0}' was not closed. '{1}' was there.", begin, Cur.Value), Cur);
 
-                infix.Second = new Token();
-                infix.Second.Follows = contents.ToArray();
+                //  Does the circumfix have contents?
+                if (Cur.Value != end)
+                { infix.Second = Expr(0); }
+
+                //  Is the circumfix closed?
+                if (Cur.Value != end)
+                { throw new SyntaxError(string.Format(@"'{0}' was not closed. '{1}' was there.", begin, Cur.Value), Cur); }
+
                 infix.Third = Cur;
                 Tokens.Next();
             }
