@@ -57,7 +57,7 @@ namespace UnitTest.Syntaxes
         public void T104_TypeDecDef()
         {
             Inp = GetDef(@"0typedec");
-            Epc = @"0typedec:ValueClause:1:(\::ValueClause:?:TypeSpec:(0type:Refer:1))";
+            Epc = @"0typedec:ValueClause:1:(\::ValueClause:?:TypeSpec:(Expr:Expr:1))";
             Test();
         }
 

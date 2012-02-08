@@ -933,10 +933,14 @@ namespace Nana.Semantics
             {
                 returnType = FindUpTypeIs<TypAnalyzer>().Typ;
             }
-            else if (null != (ty = t.Find("@TypeSpec/@TypeSpec2")))
+            else if (null != (ty = t.Find("@TypeSpec")))
             {
-                returnType = RequireTyp(ty);
+                returnType = RequireTyp(ty.Follows[0]);
             }
+            //else if (null != (ty = t.Find("@TypeSpec/@TypeSpec2")))
+            //{
+            //    returnType = RequireTyp(ty);
+            //}
 
             List<Typ> signature = prmls.ConvertAll<Typ>(delegate(Variable v) { return v.Att.TypGet; });
 

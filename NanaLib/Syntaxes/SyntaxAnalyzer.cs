@@ -341,14 +341,8 @@ namespace Nana.Syntaxes
             Fnc.g@0     Id.g 0funcdec.r          -- Func
 
                 0funcdec    _(  (.@0    Expr.s? _)  ) 0typedec.r 0attrdec.r 0bodydec.r          -- PrmDef
-                0typedec    _(  :.?@0   0type.r _)                                                  --  TypeSpec
+                0typedec    _(  :.?@0   Expr.s  _)                                                  --  TypeSpec
 
-            Typ.g       0type.r
-                0type       _(  Id.g@0  0typegenprm.r  _(  ..? 0type.r  _)  0arrdec.r   _)  --  TypeSpec2
-                0typegenprm _(  {.? 0type.r    _(  ,.* 0type.r  _)  }   _)
-                    0arrdec     _(  [.? _(  Cma.g* _)  ]   0arrdec.r   _)
-
-            
             (.@0        Expr.s  )               --  Prior
             [.@0        Expr.s  ]               --  Prior
             
