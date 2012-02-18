@@ -234,7 +234,7 @@ namespace Nana.Semantics
                 case ":":   /**/ u = DefineVariable(t); break;
                 case "(":   /**/ u = CallFunc(t); break;
                 case "[":   /**/ u = Bracket(t); break;
-                case "{":   /**/ u = Curly(t); break;
+                case "<":   /**/ u = Generics(t); break;
 
                 default:
                     throw new InternalError(@"The operator is not supported: " + t.Value, t);
@@ -345,8 +345,8 @@ namespace Nana.Semantics
 
                     case "==":
                     case "!=":
-                    case "<":
-                    case ">":
+                    case "<_":
+                    case ">_":
                     case "<=":
                     case ">=":
                     case "and":
@@ -804,7 +804,7 @@ namespace Nana.Semantics
             return null;
         }
 
-        public object Curly(Token t)
+        public object Generics(Token t)
         {
             // get type parameters
             List<Typ> tprms = new List<Typ>();

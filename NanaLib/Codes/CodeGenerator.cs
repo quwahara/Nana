@@ -647,8 +647,10 @@ namespace Nana.CodeGeneration
                 case "%": return S(OpCodes.Rem);
                 case "==": return S(OpCodes.Ceq);
                 case "!=": extra = new string[] { S(OpCodes.Ceq), S(OpCodes.Neg) }; return null;
-                case "<": return S(OpCodes.Clt);
-                case ">": return S(OpCodes.Cgt);
+                case "<":
+                case "<_": return S(OpCodes.Clt);
+                case ">":
+                case ">_": return S(OpCodes.Cgt);
                 case "<=": extra = new string[] { S(OpCodes.Cgt), S(OpCodes.Neg) }; return null;
                 case ">=": extra = new string[] { S(OpCodes.Clt), S(OpCodes.Neg) }; return null;
                 case "and": return S(OpCodes.And);

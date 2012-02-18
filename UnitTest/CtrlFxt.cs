@@ -734,6 +734,43 @@ fun a() .. ,,
             Test();
         }
 
+        [Test]
+        public void TC0211_RRR()
+        {
+            Inp = @"
+a = b = c = 1
+";
+            EpcSyn = @"0Source
++---[0]=
+    +---[F]a
+    +---[S]=
+        +---[F]b
+        +---[S]=
+            +---[F]c
+            +---[S]1
+";
+            Test();
+        }
+
+//        [Test]
+//        public void ZZZ_a()
+//        {
+//            Inp = @"
+//a < b >
+//a < b , d > d
+//
+////a < b.c >
+////a < b . c , d . e >
+//
+////c < d
+////f > g
+////Substring(1, 3)
+//";
+//            EpcSyn = @"aa";
+//            EpcIL = @"";
+//            Test();
+//        }
+
         public void Test()
         {
             Func<TestCase, string> f = delegate(TestCase c)
@@ -763,8 +800,15 @@ fun a() .. ,,
                             trace(TokenEx.ToTree(root_.Find("@Syntax").Follows[0]));
                         };
                     }
+                    //if (EpcIL != "")
+                    //{
+                    //    ctrl.Compile(root);
+                    //    trace(root.Find("@Code").Value);
+                    //}
+
                     ctrl.Compile(root);
-                    trace(root.Find("@Code").Value);
+                    if (EpcIL != "")
+                    { trace(root.Find("@Code").Value); }
                 }
                 catch (Nana.Infr.Error e)
                 {
@@ -782,7 +826,10 @@ fun a() .. ,,
             string epc;
             if (false == EpcIL.StartsWith("(ERROR)"))
             {
-                epc = EpcSyn + EpcILHeader + EpcIL;
+                epc = EpcSyn;
+                if (EpcIL != "")
+                { epc += EpcILHeader + EpcIL; }
+                //epc = EpcSyn + EpcILHeader + EpcIL;
             }
             else
             {

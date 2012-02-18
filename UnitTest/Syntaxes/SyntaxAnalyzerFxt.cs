@@ -221,6 +221,7 @@ gt          Id
             Test();
         }
     }
+
 }
 
 namespace UnitTest.Syntaxes.InfixAnalyzerFxts

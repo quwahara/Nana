@@ -68,7 +68,7 @@ namespace Nana.Syntaxes
             290 :
             280 *   /   %
             270 +   -
-            260 <   >   <=  >=
+            260 <_  >_  <=  >=
             240 ==  !=
             230 and
             220 xor
@@ -87,6 +87,7 @@ namespace Nana.Syntaxes
             300 (   )
             300 [   ]
             300 {   }
+            300 <   >
             ";
 
         static public readonly string SuffixBpsTxt = @"

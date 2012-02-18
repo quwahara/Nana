@@ -844,9 +844,9 @@ System.Console.WriteLine(i)
 System.Console.WriteLine(i)
 1 != 1 -> i
 System.Console.WriteLine(i)
-1 > 1 -> i
+1 >_ 1 -> i
 System.Console.WriteLine(i)
-1 < 1 -> i
+1 <_ 1 -> i
 System.Console.WriteLine(i)
 1 >= 1 -> i
 System.Console.WriteLine(i)
@@ -2659,7 +2659,7 @@ namespace UnitTest.Semantics.Generics
         public void T_List_string_1()
         {
             Inp = @"
-System.Collections.Generic.List{string}()
+System.Collections.Generic.List<string>()
 -> ls
 ls.IndexOf("""") -> i
 System.Console.WriteLine(i)

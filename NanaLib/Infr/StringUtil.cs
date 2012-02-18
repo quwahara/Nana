@@ -170,6 +170,12 @@ namespace Nana.Infr
         {
             return Regex.Replace(s, @"\s", "");
         }
+
+        static public List<string> SplitBySpaces(string s)
+        {
+            return new List<string>(Regex.Split(s, @"\s+"));
+        }
+
     }
 
     public class Bty
