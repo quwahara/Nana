@@ -103,12 +103,10 @@ namespace Nana.Semantics
     public class Nsp : Nmd
     {
         public List<Nmd> Members_ = new List<Nmd>();
-
         public List<Action<Nsp>> EnsureMembersList = new List<Action<Nsp>>();
-
         public bool IsReferencing = false;
-
         public Env E;
+        public LinkedList<Custom> Customs;
 
         public Nsp(string name, bool isReferencing, Env env)
         {
@@ -1582,6 +1580,32 @@ namespace Nana.Semantics
             }
             gen.StArrayElement(t, t2);
         }
+    }
+
+    public class Custom : Sema
+    {
+        public Typ CalleeTy;
+        public Fun Callee;
+        public Sema[] CtorArgs;
+        public FieldOrProp[] ForPs;
+
+        public class FieldOrProp
+        {
+            public char Kind;
+            public Typ Ty;
+            public Literal Val;
+        }
+
+        public Custom(Typ calleety, Fun callee, Sema[] ctorargs, FieldOrProp[] forps)
+        {
+            CalleeTy = calleety;
+            Callee = callee;
+            CtorArgs = ctorargs;
+            ForPs = forps;
+            Att.CanExec_ = true;
+            Att.TypGet = callee.Att.TypGet;
+        }
+
     }
 
     public class AccessControl

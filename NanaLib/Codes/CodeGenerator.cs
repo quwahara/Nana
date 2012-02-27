@@ -366,6 +366,12 @@ namespace Nana.CodeGeneration
 
             b.Append(") {").AppendLine();
 
+            if (f.Customs != null)
+            {
+                foreach (Custom c in f.Customs)
+                { b.Append(ind1).Append(DeclCustom(c)).AppendLine(); }
+            }
+
             if (f.IsEntryPoint) { b.Append(ind1).Append(".entrypoint").AppendLine(); }
 
             List<Variable> vars = new List<Variable>(f.Vars)
@@ -391,6 +397,28 @@ namespace Nana.CodeGeneration
             }
 
             IndentDepth += 1;
+
+            return b.ToString();
+        }
+
+        public string DeclCustom(Custom c)
+        {
+            Fun ctor = c.Callee;
+            StringBuilder b = new StringBuilder();
+            b.Append(".custom ").Append("instance void ")
+                .Append(TypeFullName(c.CalleeTy))
+                .Append("::").Append(ctor.Name)
+                .Append("(")
+                ;
+            b.Append(
+                string.Join(", "
+                , ctor.Params
+                .ConvertAll<string>(delegate(Variable p)
+                { return TypeFullName(p.Att.TypGet); }).ToArray()
+                ));
+            b.Append(")");
+
+            //TODO  implement value part
 
             return b.ToString();
         }

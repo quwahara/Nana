@@ -353,6 +353,8 @@ namespace Nana.Syntaxes
             
             
             0attrdec    _(  @.*@0   Expr.s _)       -- Attr
+            
+            @.@0    Expr.s  Expr.s          -- Cstm
             ";
         #endregion
 

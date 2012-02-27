@@ -106,6 +106,20 @@ namespace Nana.Semantics
             AboveBlock = above;
         }
 
+        public Token GetTargetWithCustom(Token t)
+        {
+            Token target = t.Follows[1];
+            if (target.Group == "Cstm")
+            { target = GetTargetWithCustom(target); }
+
+            Token holder = target;
+            while (holder.Custom != null)
+            { holder = holder.Custom; }
+            holder.Custom = t.Follows[0];
+
+            return target;
+        }
+
         public virtual Typ RequireTyp(Token t)
         {
             object obj = Gate(t);
@@ -851,6 +865,12 @@ namespace Nana.Semantics
             : base(seed, above)
         {
             AboveBlock = above;
+            Token c = Seed.Custom;
+            while (c != null)
+            {
+                Subs.AddLast(new CustomAnalyzer(c, this));
+                c = c.Custom;
+            }
         }
 
         public override void ConstructSubs()
@@ -1017,6 +1037,32 @@ namespace Nana.Semantics
 
     }
 
+    public class CustomAnalyzer : LineAnalyzer
+    {
+        public CustomAnalyzer(Token seed, BlockAnalyzer above)
+            : base(seed, above)
+        {
+        }
+
+        public void AnalyzeCustom()
+        {
+            Token t = Seed;
+            object o = Gate(t);
+            if (typeof(Typ) == o.GetType())
+            {
+                Typ calleetyp = o as Typ;
+                bool isNewObj = true;
+                Ovld ovl = calleetyp.FindFunOvld(Nana.IMRs.IMRGenerator.InstCons);
+                Fun f = ovl.GetFunOf(calleetyp, new Typ[] { }, ThisTyp, null);
+                if (f == null) { throw new SyntaxError("It is not a member", t.First); }
+                Nsp n = AboveBlock.Nsp;
+                if (n.Customs == null)
+                { n.Customs = new LinkedList<Custom>(); }
+                n.Customs.AddLast(new Custom(calleetyp, f, new Typ[] { }, new Custom.FieldOrProp[] { }));
+            }
+        }
+    }
+
     public class TypAnalyzer : FunAnalyzer
     {
         public Typ Typ_;
@@ -1091,11 +1137,13 @@ namespace Nana.Semantics
             SemanticAnalyzer a;
             foreach (Token t in Seed.Follows)
             {
-                switch (t.Group)
+                Token targ = t.Group != "Cstm" ? t : GetTargetWithCustom(t);
+
+                switch (targ.Group)
                 {
-                    case "TypeDef": a = new TypAnalyzer(t, this); break;
-                    case "Func": a = new FunAnalyzer(t, this); break;
-                    default: a = new LineAnalyzer(t, this); break;
+                    case "TypeDef": a = new TypAnalyzer(targ, this); break;
+                    case "Func": a = new FunAnalyzer(targ, this); break;
+                    default: a = new LineAnalyzer(targ, this); break;
                 }
                 Subs.AddLast(a);
             }
@@ -1136,7 +1184,6 @@ namespace Nana.Semantics
 
     public class EnvAnalyzer : AppAnalyzer
     {
-        public Env Env;
         public Dictionary<string, Member> BuiltInFunctions = new Dictionary<string, Member>();
 
         public EnvAnalyzer(Token seed)
@@ -1198,6 +1245,7 @@ namespace Nana.Semantics
             EnsureTypAll();
             EnsureBaseInstanceConstructorCallAll();
             AnalyzeBlockAll();
+            AnalyzeCustomAll();
         }
 
         public void Finale()
@@ -1307,6 +1355,12 @@ namespace Nana.Semantics
             { a.AnalyzeBlock(); }
             foreach (BlockAnalyzer a in CollectTypeOf<BlockAnalyzer>())
             { a.AnalyzeBlock(); }
+        }
+
+        public void AnalyzeCustomAll()
+        {
+            foreach (CustomAnalyzer a in CollectTypeOf<CustomAnalyzer>())
+            { a.AnalyzeCustom(); }
         }
 
         public override object Find(Token t)

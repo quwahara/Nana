@@ -165,16 +165,23 @@ namespace Nana.Infr
             SetUpNamespaces(mscorlib);
         }
 
-        public void LoadFrameworkClassLibraries(string[] assemblyFileNames)
+        public Assembly[] LoadFrameworkClassLibraries(string[] assemblyFileNames)
         {
-            string path;
+            List<Assembly> ls = new List<Assembly>();
             foreach (string fn in assemblyFileNames)
             {
-                path = LoadFrameworkClassLibrarie(fn);
+                ls.Add(LoadFrameworkClassLibrarie(fn));
             }
+            return ls.ToArray();
         }
 
-        public string LoadFrameworkClassLibrarie(string assemblyFileName)
+        public Assembly LoadFrameworkClassLibrarie(string assemblyFileName)
+        {
+            string path = FindLocation(assemblyFileName);
+            return Register(path);
+        }
+
+        public string FindLocation(string assemblyFileName)
         {
             string afn = assemblyFileName;
             string path = null;
@@ -199,12 +206,10 @@ namespace Nana.Infr
 
             if (path == null)
                 throw new FileNotFoundException("", assemblyFileName);
-
-            Register(path);
             return path;
         }
 
-        private void Register(string path)
+        public Assembly Register(string path)
         {
             Assembly asm = Assembly.LoadFile(path);
             if (this.Assemblies.Contains(asm) == false)
@@ -215,6 +220,8 @@ namespace Nana.Infr
             SetUpNamespaces(asm);
 
             this.Namespaces.Sort();
+
+            return asm;
         }
 
         private void SetUpNamespaces(Assembly asm)

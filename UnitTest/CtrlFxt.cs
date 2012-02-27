@@ -9,6 +9,7 @@ using System.Reflection;
 using System.IO;
 using Nana;
 using Nana.Tokens;
+using Nana.Infr;
 
 namespace UnitTest
 {
@@ -149,23 +150,18 @@ namespace UnitTest
     {
         public Token Root;
 
+        public List<string> References = new List<string>();
         public string Inp;
         public string EpcSyn;
-        public string EpcILHeader;
         public string EpcIL;
-
 
         [SetUp]
         public void SetUp()
         {
+            References.Clear();
             string asm = GetType().Name;
             Inp = "";
             EpcSyn = "";
-            EpcILHeader = @".assembly extern mscorlib {.ver 2:0:0:0 .publickeytoken = (B7 7A 5C 56 19 34 E0 89)}
-.assembly extern UnitTest {.ver 1:0:0:0}
-.assembly " + asm + @" { }
-.module " + asm + @".exe
-";
             EpcIL = "";
         }
 
@@ -752,6 +748,36 @@ a = b = c = 1
             Test();
         }
 
+        [Test]
+        public void TC0227_WindowsForm()
+        {
+            References.Add("system.windows.forms.dll");
+
+            Inp = @"
+@System.STAThreadAttribute
+fun Main():void
+..
+    System.Windows.Forms.Application.EnableVisualStyles()
+    System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false)
+    System.Windows.Forms.Application.Run(System.Windows.Forms.Form())
+,,
+        ";
+            EpcSyn = @"";
+            EpcIL = @".method static public void Main() {
+    .custom instance void [mscorlib]System.STAThreadAttribute::.ctor()
+    .entrypoint
+    call void [System.Windows.Forms]System.Windows.Forms.Application::EnableVisualStyles()
+    ldc.i4.0
+    call void [System.Windows.Forms]System.Windows.Forms.Application::SetCompatibleTextRenderingDefault(bool)
+    newobj instance void [System.Windows.Forms]System.Windows.Forms.Form::.ctor()
+    call void [System.Windows.Forms]System.Windows.Forms.Application::Run(class [System.Windows.Forms]System.Windows.Forms.Form)
+    ret
+}
+";
+            Test();
+        }
+
+
 //        [Test]
 //        public void ZZZ_a()
 //        {
@@ -779,11 +805,11 @@ a = b = c = 1
 
                 Assembly exeasmb = Assembly.GetExecutingAssembly();
                 string name = GetType().Name;
-                root.Find("@CompileOptions")
-                    .FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
-                    .FlwsAdd(Path.GetFileNameWithoutExtension(exeasmb.Location), "reference")
+                Token opt = root.Find("@CompileOptions");
+                opt.FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
                     .FlwsAdd(name + ".exe", "out")
                     ;
+                References.ForEach(delegate(string s) { opt.FlwsAdd(s, "reference"); });
                 root.Find("@Sources").FlwsAdd(c.Input, "SourceText");
 
                 Ctrl.Check(root);
@@ -800,12 +826,6 @@ a = b = c = 1
                             trace(TokenEx.ToTree(root_.Find("@Syntax").Follows[0]));
                         };
                     }
-                    //if (EpcIL != "")
-                    //{
-                    //    ctrl.Compile(root);
-                    //    trace(root.Find("@Code").Value);
-                    //}
-
                     ctrl.Compile(root);
                     if (EpcIL != "")
                     { trace(root.Find("@Code").Value); }
@@ -828,8 +848,19 @@ a = b = c = 1
             {
                 epc = EpcSyn;
                 if (EpcIL != "")
-                { epc += EpcILHeader + EpcIL; }
-                //epc = EpcSyn + EpcILHeader + EpcIL;
+                {
+                    string asm = GetType().Name;
+                    StringBuilder b = new StringBuilder();
+                    b.Append(".assembly extern mscorlib {.ver 2:0:0:0 .publickeytoken = (B7 7A 5C 56 19 34 E0 89)}").AppendLine();
+                    if (References.Count > 0)
+                    {
+                        TypeInAssemblyLoader ldr = new TypeInAssemblyLoader();
+                        References.ForEach(delegate(string s) { b.AppendLine(Nana.CodeGeneration.CodeGenerator.AssemblyExtern(ldr.LoadFrameworkClassLibrarie(s))); });
+                    }
+                    b.Append(".assembly ").Append(asm).Append(" { }").AppendLine();
+                    b.Append(".module ").Append(asm).Append(".exe").AppendLine();
+                    epc += b.ToString() + EpcIL;
+                }
             }
             else
             {
@@ -837,8 +868,6 @@ a = b = c = 1
             }
 
             new TestCase("", Inp, epc, f).Run();
-            //new TestCase("", Inp, EpcSyn + EpcILHeader + EpcIL, f).Run();
-            
         }
     }
 }
