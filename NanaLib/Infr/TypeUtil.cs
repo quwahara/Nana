@@ -205,7 +205,7 @@ namespace Nana.Infr
             }
 
             if (path == null)
-                throw new FileNotFoundException("", assemblyFileName);
+            { throw new FileNotFoundException("Could not find the assembly file:", assemblyFileName); }
             return path;
         }
 

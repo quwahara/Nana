@@ -637,7 +637,8 @@ namespace Nana.Semantics
 
             Nmd mbr = y.FindMemeber(t.Second.Value);
 
-            if (mbr == null) { throw new SyntaxError("It is not a member", t.Second); }
+            //if (mbr == null) { throw new SyntaxError("It is not a member", t.Second); }
+            if (mbr == null) { throw new SemanticError(string.Format("{0} is not a member of {1}", t.Second.Value, y._FullName), t.Second); }
 
             if (mbr is Prop) { return new CallPropInfo(y, mbr as Prop, v); };
 

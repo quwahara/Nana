@@ -15,6 +15,7 @@ namespace Nana
         static public readonly string[] Options = {
             "out"
             , "reference"
+            , "verbose"
             , "xxxsyntax"
             , "xxxil"
             , "xxxtrace"

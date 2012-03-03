@@ -136,6 +136,12 @@ namespace Nana
                 Ctrl.Check(root);
                 Ctrl c = new Ctrl();
 
+                if (root.Contains("@CompileOptions/@verbose"))
+                {
+                    foreach (Token t in root.Select("@CompileOptions"))
+                    { StdOut(t.Value + Environment.NewLine); }
+                }
+
                 if (root.Contains("@CompileOptions/@xxxsyntax"))
                 {
                     c.AfterSyntaxAnalyze = delegate(Token root_)
@@ -165,7 +171,7 @@ namespace Nana
             }
             catch (Exception e)
             {
-                StdErr(e.Message);
+                StdErr(e.Message + Environment.NewLine);
                 if (null != root && root.Contains("@CompileOptions/@xxxtrace"))
                 { StdErr(e.StackTrace); }
             }

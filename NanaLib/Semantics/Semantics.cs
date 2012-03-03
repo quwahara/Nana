@@ -225,6 +225,21 @@ namespace Nana.Semantics
             RefTyps.Add(t);
             BeAMember(t);
             t.EnsureMembersList.Add(Typ.EnsureMembers);
+            try
+            {
+                if (refType.BaseType != null)
+                {
+                    Typ bt = FindOrNewRefType(refType.BaseType);
+                    t.SetBaseTyp(bt);
+                }
+            }
+            catch (Exception ex)
+            {
+                string s = ex.ToString();
+                throw ex;
+            }
+
+
             return t;
         }
 
@@ -301,21 +316,23 @@ namespace Nana.Semantics
 
     public class BuiltInTyp
     {
-        public Typ Void;
         public Typ Object;
-        public Typ String;
+        public Typ ValueType;
+        public Typ Void;
         public Typ Bool;
         public Typ Int;
         public Typ Array;
+        public Typ String;
 
         public BuiltInTyp(Env e)
         {
-            Void = e.FindOrNewRefType(typeof(void));
-            Object = e.FindOrNewRefType(typeof(object));
-            String = e.FindOrNewRefType(typeof(string));
-            Bool = e.FindOrNewRefType(typeof(bool));
-            Int = e.FindOrNewRefType(typeof(int));
-            Array = e.FindOrNewRefType(typeof(System.Array));
+            this.Object = e.FindOrNewRefType(typeof(object));
+            this.ValueType = e.FindOrNewRefType(typeof(System.ValueType));
+            this.Void = e.FindOrNewRefType(typeof(void));
+            this.Bool = e.FindOrNewRefType(typeof(bool));
+            this.Int = e.FindOrNewRefType(typeof(int));
+            this.Array = e.FindOrNewRefType(typeof(System.Array));
+            this.String = e.FindOrNewRefType(typeof(string));
         }
     }
 
