@@ -36,6 +36,74 @@ namespace Nana
         public Action<Token> AfterSyntaxAnalyze = delegate(Token root) { };                     //  place holder
         public Action<Token, Env> AfterSemanticAnalyze = delegate(Token root, Env env) { };     //  place holder
 
+        public int StartCompile(string[] args)
+        {
+            UTF8Encoding utf8 = new UTF8Encoding(false /* no byte order mark */);
+            Action<string> prt = delegate(string s) { StdOut(s + Environment.NewLine); };
+            string nl = Environment.NewLine;
+            string ilpath;
+            string code;
+            Token root = null;
+            try
+            {
+                root = CmdLnArgs.GetCmdLnArgs(args);
+                root.Group = "Root";
+
+                if (args.Length == 0 || root.Contains("@CompileOptions/@help"))
+                {
+                    foreach (string opt in CmdLnArgs.Options)
+                    { StdErr(opt + nl); }
+                    return 0;
+                }
+
+                if (root.Contains("@CompileOptions/@verbose"))
+                {
+                    prt("Specified options:");
+                    foreach (Token t in root.Find("@CompileOptions").Follows)
+                    { prt(t.Group + (string.IsNullOrEmpty(t.Value) ? "" : ":" + t.Value)); }
+                }
+
+                Ctrl.Check(root);
+                Ctrl c = new Ctrl();
+
+                if (root.Contains("@CompileOptions/@xxxsyntax"))
+                {
+                    c.AfterSyntaxAnalyze = delegate(Token root_)
+                    {
+                        foreach (Token t in root_.Select("@Syntax/0Source"))
+                        {
+                            StdOut(TokenEx.ToTree(t));
+                        }
+                    };
+                }
+
+                c.Compile(root);
+
+                if (root.Contains("@CompileOptions/@xxxil"))
+                {
+                    StdOut(root.Find("@Code").Value);
+                }
+
+                ilpath = root.Find("@CompileOptions/@out").Value;
+                ilpath = Path.ChangeExtension(ilpath, ".il");
+                code = root.Find("@Code").Value;
+                File.WriteAllText(ilpath, code, utf8);
+
+                ILASMRunner r = new ILASMRunner();
+                r.DetectILASM();
+                r.Run(ilpath);
+                return 0;
+            }
+            catch (Exception e)
+            {
+                StdErr("Error:" + nl);
+                StdErr(e.Message + nl);
+                if (null != root && root.Contains("@CompileOptions/@xxxtrace"))
+                { StdErr(e.StackTrace); }
+                return -1;
+            }
+        }
+
         public static Token CreateRootTemplate()
         {
             return new Token("", "Root")
@@ -54,7 +122,7 @@ namespace Nana
             if (1 < root.Select("@CompileOptions").Length) { throw new ArgumentException("Too many @CompileOptions Token"); }
 
             if (0 == root.Select("@Sources").Length || 0 == root.Find("@Sources").Follows.Length)
-            { throw new ArgumentException("No @Sources Token"); }
+            { throw new ArgumentException("No source filename is specified to command line parameter"); }
 
             if (1 < root.Select("@Sources").Length) { throw new ArgumentException("Too many @Sources Token"); }
 
@@ -67,7 +135,7 @@ namespace Nana
                 }
             }
 
-            if (1 < root.Select("@CompileOptions/@out").Length) { throw new ArgumentException("Too many out option"); }
+            if (1 < root.Select("@CompileOptions/@out").Length) { throw new ArgumentException("Too many out options are specified to command line parameter"); }
 
             if (1 == root.Select("@Sources").Length)
             {
@@ -121,60 +189,6 @@ namespace Nana
                 if (f.Group == "SourceText") { synflw.Add(analyzer.Run(f.Value)); }
             }
             syntax.Follows = synflw.ToArray();
-        }
-
-        public void StartCompile(string[] args)
-        {
-            UTF8Encoding utf8 = new UTF8Encoding(false /* no byte order mark */);
-            string ilpath;
-            string code;
-            Token root = null;
-            try
-            {
-                root = CmdLnArgs.GetCmdLnArgs(args);
-                root.Group = "Root";
-                Ctrl.Check(root);
-                Ctrl c = new Ctrl();
-
-                if (root.Contains("@CompileOptions/@verbose"))
-                {
-                    foreach (Token t in root.Select("@CompileOptions"))
-                    { StdOut(t.Value + Environment.NewLine); }
-                }
-
-                if (root.Contains("@CompileOptions/@xxxsyntax"))
-                {
-                    c.AfterSyntaxAnalyze = delegate(Token root_)
-                    {
-                        foreach (Token t in root_.Select("@Syntax/0Source"))
-                        {
-                            StdOut(TokenEx.ToTree(t));
-                        }
-                    };
-                }
-
-                c.Compile(root);
-
-                if (root.Contains("@CompileOptions/@xxxil"))
-                {
-                    StdOut(root.Find("@Code").Value);
-                }
-
-                ilpath = root.Find("@CompileOptions/@out").Value;
-                ilpath = Path.ChangeExtension(ilpath, ".il");
-                code = root.Find("@Code").Value;
-                File.WriteAllText(ilpath, code, utf8);
-
-                ILASMRunner r = new ILASMRunner();
-                r.DetectILASM();
-                r.Run(ilpath);
-            }
-            catch (Exception e)
-            {
-                StdErr(e.Message + Environment.NewLine);
-                if (null != root && root.Contains("@CompileOptions/@xxxtrace"))
-                { StdErr(e.StackTrace); }
-            }
         }
 
         public void Compile(Token root)

@@ -1212,9 +1212,10 @@ namespace Nana.Semantics
                     case "include":     /**/ Env.TypeLdr.InAssembly.Includes.Add(opt.Value); break;
                     case "reference":   /**/ Env.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(opt.Value); break;
                     case "out":         /**/ Env.OutPath = opt.Value; break;
+                    case "verbose":     /**/ break;
                     default:
                         if (opt.Group.ToLower().StartsWith("xxx")) { break; }
-                        throw new InternalError("The compile option is not supported: " + opt.Value, opt);
+                        throw new InternalError("The compile option is not supported: " + opt.Group, opt);
                 }
             }
             ConstructSubs();

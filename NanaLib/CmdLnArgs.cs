@@ -14,6 +14,7 @@ namespace Nana
 
         static public readonly string[] Options = {
             "out"
+            , "help"
             , "reference"
             , "verbose"
             , "xxxsyntax"
@@ -93,17 +94,13 @@ namespace Nana
                 Pick(arg);
             }
 
-            //string a = string.Join(" ", args);
-            //if (srcs.Count <= 0)
-            //    throw new Exception(string.Format("No source file specified: {0}", a));
-
             Token srct = new Token("", "Sources");
             srct.Follows = srcs.ToArray();
 
             Token optt = new Token("", "CompileOptions");
             optt.Follows = opts.ToArray();
 
-            if (0 == optt.Select("@out").Length)
+            if (0 == optt.Select("@out").Length && srcs.Count > 0)
             {
                 string v = srcs[0].Value;
                 string dir = System.IO.Path.GetDirectoryName(v);
