@@ -29,9 +29,10 @@ namespace Nana.Syntaxes
             PrefixAzr.ExprF = InfixAzr.Expr;
         }
 
-        public void Init(string src){
+        public void Init(string src, string path)
+        {
             TokenizerBase tkz = new ScriptTokenizer();
-            LineBufferedReader r = LineBufferedReader.GetInstanceWithText(src);
+            LineBufferedReader r = LineBufferedReader.GetInstanceWithText(src, path);
             tkz.Init(r);
             Init(tkz);
         }
@@ -52,9 +53,9 @@ namespace Nana.Syntaxes
             return PrefixAzr.Analyze();
         }
 
-        public Token Run(string src)
+        public Token Run(string src, string path)
         {
-            Init(src);
+            Init(src, path);
             return Analyze();
         }
     }

@@ -780,32 +780,19 @@ fun Main():void
         //[Test]
         public void ZZZ()
         {
-            //References.Add("system.io");
-
-            Type p = typeof(object);
-            Type pp = typeof(ValueType);
-            Type tt = typeof(void);
-            Type y = typeof(int);
-            Type e = typeof(double);
-
-
-            Type[] ts = new Type[]{ typeof(void) };
-		foreach(Type t in ts)
-		{
-			Console.WriteLine("This:{0}, Base:{1}"
-				, t.Name
-				, t.BaseType != null ? t.BaseType.Name : "(null)"
-				 );
-		}
-
 
             Inp = @"
-fun Main(argv:string[]):void
-..
-    cont = System.IO.File.ReadAll(""li.nana"")
-//    cont = System.IO.File.ReadAllText(""li.nana"")
-    `p(cont)
-,,
+dir = ""..\\..\\..\\LICENSE""
+fs = System.IO.Directory.GetFiles(dir, ""*.cs"", System.IO.SearchOption.AllDirectories)
+//System.IO.SearchOption.AllDirectories   -> opt
+//fs = System.IO.Directory.GetFiles(dir, ""*.cs"", opt)
+
+//fun Main(argv:string[]):void
+//..
+////    cont = System.IO.File.ReadAll(""li.nana"")
+////    cont = System.IO.File.ReadAllText(""li.nana"")
+//    `p(cont)
+//,,
 ";
             EpcIL = @"x";
 

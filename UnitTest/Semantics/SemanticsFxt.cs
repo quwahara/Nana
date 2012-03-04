@@ -100,7 +100,7 @@ end
             Analyze();
 
             Assert.IsNotNull(Env);
-            Assert.AreEqual(1, Env.Members.Count);
+            Assert.AreEqual(3, Env.Members.Count);
 
             App app = Env.Members.Find(delegate(Nmd n_) { return n_ is App; }) as App;
             Assert.IsNotNull(app);

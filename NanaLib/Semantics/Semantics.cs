@@ -83,21 +83,16 @@ namespace Nana.Semantics
 
     public class Nmd : Sema
     {
+        public string Name_;
+        public string Name { get { return Name_; } set { Name_ = value; } }
         public Token Seed;
 
         public Nmd() { }
+        public Nmd(string name) { Name = name; }
         [DebuggerNonUserCode]
-        public Nmd(Token seed) { Seed = seed; }
-        public override string ToString()
-        {
-            return Seed.Value + ":" + typeof(Nmd).Name;
-        }
+        public Nmd(Token seed) : this(seed.Value) { Seed = seed; }
 
-        public Nmd(string name)
-        { Name = name; }
-
-        public string Name_;
-        public string Name { get { return Name_; } set { Name_ = value; } }
+        public override string ToString() { return Name_ + ":" + typeof(Nmd).Name; }
     }
 
     public class Nsp : Nmd
@@ -221,25 +216,25 @@ namespace Nana.Semantics
 
         public Typ NewRefTyp(Type refType)
         {
+            //Typ t;
+            //if (refType.IsArray)
+            //{
+            //    Typ aty = FindOrNewRefType(refType.GetElementType());
+            //    t = FindOrNewArrayTyp(aty, refType.GetArrayRank());
+            //}
+            //else
+            //{
+            //    t = new Typ(refType, this);
+            //}
             Typ t = new Typ(refType, this);
             RefTyps.Add(t);
             BeAMember(t);
             t.EnsureMembersList.Add(Typ.EnsureMembers);
-            try
+            if (refType.BaseType != null)
             {
-                if (refType.BaseType != null)
-                {
-                    Typ bt = FindOrNewRefType(refType.BaseType);
-                    t.SetBaseTyp(bt);
-                }
+                Typ bt = FindOrNewRefType(refType.BaseType);
+                t.SetBaseTyp(bt);
             }
-            catch (Exception ex)
-            {
-                string s = ex.ToString();
-                throw ex;
-            }
-
-
             return t;
         }
 
@@ -251,6 +246,11 @@ namespace Nana.Semantics
 
         public Typ FindOrNewRefType(Type refType)
         {
+            if (refType.IsArray)
+            {
+                Typ ety = FindOrNewRefType(refType.GetElementType());
+                return FindOrNewArrayTyp(ety, refType.GetArrayRank());
+            }
             return FindRefTyp(refType) ?? NewRefTyp(refType);
         }
 
@@ -902,6 +902,15 @@ namespace Nana.Semantics
         public Nmd FindMemeber(string name)
         {
             Typ typ = this;
+            if (typ.IsReferencing && typ.RefType.IsEnum)
+            {
+                Type rty = typ.RefType;
+                if (false == Enum.IsDefined(rty, name))
+                { return null; }
+                object v = Enum.Parse(rty, name);
+                return new Enu(name, typ);
+            }
+
             Nmd mem = typ.Find(name);
             while (typ != null && mem == null)
             {
@@ -1063,6 +1072,37 @@ namespace Nana.Semantics
         {
             RefType = refType;
             Name_ = refType.Name;
+        }
+    }
+
+    public class Enu : Nmd
+    {
+        public string Val;
+        public Enu(string val, Typ typ)
+            : base()
+        {
+            Val = val;
+            Att.TypGet = typ;
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            if (false == Att.TypGet.IsReferencing)
+            { throw new NotImplementedException(); }
+
+            Literal lt = new Literal((int)Enum.Parse(Att.TypGet.RefType, Val), Att.TypGet.E.BTY.Int);
+            gen.LoadLiteral(lt);
+        }
+
+        public override void Addr(IMRGenerator gen)
+        {
+            Give(gen);
+        }
+
+        public override void Exec(IMRGenerator gen)
+        {
+            Give(gen);
+            gen.Pop();
         }
     }
 

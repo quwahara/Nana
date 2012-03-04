@@ -171,7 +171,7 @@ V:4 G:Factor B:0 T:
 
             TokenizerBase tkz = new InlineTokenizer(startRx);
             Token t;
-            using (LineBufferedReader r = LineBufferedReader.GetInstanceWithText(c.Input))
+            using (LineBufferedReader r = LineBufferedReader.GetInstanceWithText(c.Input, ""))
             {
                 tkz.Init(r);
                 t = tkz.Cur;
@@ -273,7 +273,7 @@ V:4 G:Factor B:0 T:
             tkz = new BlockTokenizer(startRx, escRx, endRx, "Str");
 
             Token t;
-            using (LineBufferedReader r = LineBufferedReader.GetInstanceWithText(c.Input))
+            using (LineBufferedReader r = LineBufferedReader.GetInstanceWithText(c.Input, ""))
             {
                 tkz.Init(r);
                 t = tkz.Cur;
@@ -347,7 +347,7 @@ hij,/ G:Cmt B:0 T:/Pos=5";
             tkz = new BlockTokenizer(startRx, escRx, endRx, "Cmt");
 
             Token t;
-            using (LineBufferedReader r = LineBufferedReader.GetInstanceWithText(c.Input))
+            using (LineBufferedReader r = LineBufferedReader.GetInstanceWithText(c.Input, ""))
             {
                 tkz.Init(r);
                 t = tkz.Cur;
@@ -425,7 +425,7 @@ end
             TokenizerBase tkz = new ScriptTokenizer();
             Token t;
             StringBuilder b = new StringBuilder();
-            using (LineBufferedReader r = LineBufferedReader.GetInstanceWithText(c.Input))
+            using (LineBufferedReader r = LineBufferedReader.GetInstanceWithText(c.Input, ""))
             {
                 tkz.Init(r);
                 while (tkz.EOF == false)

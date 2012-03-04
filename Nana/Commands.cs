@@ -195,7 +195,7 @@ namespace Nana
             string src;
             src = Cty.ToText(lem.Lines);
             SyntaxAnalyzer p = new SyntaxAnalyzer();
-            p.Init(src);
+            p.Init(src, "");
 
             ITokenEnumerator tkz = p.Tokens;
             while (tkz.EOF == false)
@@ -211,7 +211,7 @@ namespace Nana
         static public void Parse(string[] args, Box<bool> quit, LineEditMode lem)
         {
             string src = Cty.ToText(lem.Lines);
-            Token t = (new SyntaxAnalyzer()).Run(src);
+            Token t = (new SyntaxAnalyzer()).Run(src, "");
             lem.CW.W(TokenEx.ToTree(t));
         }
 

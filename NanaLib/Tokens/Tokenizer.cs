@@ -394,15 +394,16 @@ namespace Nana.Tokens
         public int ReadCount;
         public string Path = "";
 
-        public LineBufferedReader(TextReader r)
+        public LineBufferedReader(TextReader r, string path)
         {
             R = r;
+            this.Path = path;
             ReadCount = -1;
         }
 
-        public static LineBufferedReader GetInstanceWithText(string text)
+        public static LineBufferedReader GetInstanceWithText(string text, string path)
         {
-            return new LineBufferedReader(new StringReader(text));
+            return new LineBufferedReader(new StringReader(text), path);
         }
 
         public bool BOF { get { return ReadCount < 0; } }

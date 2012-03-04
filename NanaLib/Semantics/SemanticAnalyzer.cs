@@ -548,6 +548,11 @@ namespace Nana.Semantics
                 Chain argschain = obj is Chain ? obj as Chain : new Chain(obj);
                 foreach (object a in argschain)
                 {
+                    if (a.GetType() == typeof(Nmd))
+                    {
+                        Nmd n = a as Nmd;
+                        throw new SemanticError(string.Format("Assign value to variable:'{0}' before reference it", n.Name), n.Seed);
+                    }
                     if (false == (a is Sema))
                     { throw new SemanticError("Cannot be an argument", t.Second.Follows[0]); }
                     Sema v = a as Sema;
@@ -639,7 +644,7 @@ namespace Nana.Semantics
 
             //if (mbr == null) { throw new SyntaxError("It is not a member", t.Second); }
             if (mbr == null) { throw new SemanticError(string.Format("{0} is not a member of {1}", t.Second.Value, y._FullName), t.Second); }
-
+            if (mbr is Enu) { return mbr; }
             if (mbr is Prop) { return new CallPropInfo(y, mbr as Prop, v); };
 
             return new Member(y, mbr, v);

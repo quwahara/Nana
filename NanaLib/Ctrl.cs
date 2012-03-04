@@ -97,7 +97,17 @@ namespace Nana
             catch (Exception e)
             {
                 StdErr("Error:" + nl);
-                StdErr(e.Message + nl);
+                StringBuilder b = new StringBuilder();
+                if (e is SemanticError)
+                {
+                    SemanticError se = e as SemanticError;
+                    b.Append(se.Path)
+                        .Append(":").Append(se.Row).Append(",").Append(se.Col)
+                        .Append(":");
+                }
+                b.Append(e.Message);
+                b.AppendLine();
+                StdErr(b.ToString());
                 if (null != root && root.Contains("@CompileOptions/@xxxtrace"))
                 { StdErr(e.StackTrace); }
                 return -1;
@@ -165,11 +175,17 @@ namespace Nana
             foreach (Token f in srcs.Follows)
             {
                 srcsflw.Add(f);
-                if (f.Group == "SourceText") { continue; }
+                if (f.Group == "SourceText")
+                {
+                    f.First = new Token("");
+                    continue;
+                }
                 if (f.Group == "SourcePath")
                 {
                     string text = File.ReadAllText(f.Value, utf8);
-                    srcsflw.Add(new Token(text, "SourceText"));
+                    Token txtt = new Token(text, "SourceText");
+                    txtt.First = f;
+                    srcsflw.Add(txtt);
                 }
             }
             srcs.Follows = srcsflw.ToArray();
@@ -186,7 +202,7 @@ namespace Nana
             foreach (Token f in srcs.Follows)
             {
                 if (f.Group == "SourcePath") { continue; }
-                if (f.Group == "SourceText") { synflw.Add(analyzer.Run(f.Value)); }
+                if (f.Group == "SourceText") { synflw.Add(analyzer.Run(f.Value, f.First.Value)); }
             }
             syntax.Follows = synflw.ToArray();
         }
