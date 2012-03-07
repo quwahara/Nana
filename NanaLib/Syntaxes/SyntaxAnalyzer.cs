@@ -311,7 +311,7 @@ namespace Nana.Syntaxes
 
             _#  meta-infomation
 
-            using.@0        0iddotdec.r                 --  Using
+            using.@0        Expr.s                      --  Using
 
             namespace.@0    0iddotdec2.r    0bodydec.r  --  Namespace
 

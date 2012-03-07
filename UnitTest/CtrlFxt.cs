@@ -782,8 +782,10 @@ fun Main():void
         {
 
             Inp = @"
+using System.IO
 dir = ""..\\..\\..\\LICENSE""
-fs = System.IO.Directory.GetFiles(dir, ""*.cs"", System.IO.SearchOption.AllDirectories)
+fs = Directory.GetFiles(dir, ""*.cs"", SearchOption.AllDirectories)
+//fs = System.IO.Directory.GetFiles(dir, ""*.cs"", System.IO.SearchOption.AllDirectories)
 //System.IO.SearchOption.AllDirectories   -> opt
 //fs = System.IO.Directory.GetFiles(dir, ""*.cs"", opt)
 
@@ -798,7 +800,6 @@ fs = System.IO.Directory.GetFiles(dir, ""*.cs"", System.IO.SearchOption.AllDirec
 
             Test();
         }
-
 
 //        [Test]
 //        public void ZZZ_a()

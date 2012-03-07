@@ -49,7 +49,7 @@ namespace UnitTest.Syntaxes
         public void T103_UsingDef()
         {
             Inp = GetDef(@"using");
-            Epc = @"using:ValueClause:1:Using:(0iddotdec:Refer:1)";
+            Epc = @"using:ValueClause:1:Using:(Expr:Expr:1)";
             Test();
         }
 

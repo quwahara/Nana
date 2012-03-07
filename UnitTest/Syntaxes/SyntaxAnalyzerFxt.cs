@@ -547,46 +547,6 @@ System      Id
         }
 
         [Test]
-        public void T106_using()
-        {
-            Inp = @"
-using
-System      Id
-.
-Windows     Id
-";
-            Epc =
-@"using
-+---[0]System
-    +---[0].
-        +---[0]Windows
-";
-            Test();
-        }
-
-        [Test]
-        public void T107_using()
-        {
-            Inp = @"
-using
-System      Id
-.
-Windows     Id
-.
-Forms       Id
-";
-            Epc =
-@"using
-+---[0]System
-    +---[0].
-    |   +---[0]Windows
-    +---[1].
-        +---[0]Forms
-";
-            Test();
-        }
-
-        [Test]
         public void T108_0typedec()
         {
             Inp = @"

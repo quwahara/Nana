@@ -203,7 +203,7 @@ namespace Nana.Semantics
                 case "Nop":         /**/ u = new DoNothing(); break;
                 case "_End_Cma_":   /**/ u = Cma(t); break;
                 default:
-                    throw new SyntaxError(@"Could not process the sentence: " + t.Group, t);
+                    throw new SemanticError(string.Format("Cannot write '{0}' in there", t.Value), t);
             }
             return u;
         }
@@ -635,7 +635,7 @@ namespace Nana.Semantics
             {
                 y = holder as Typ;
             }
-            if (y == null) { throw new SyntaxError("It has no member", t.First); }
+            if (y == null) { throw new SemanticError("It has no member", t.First); }
 
             //TODO load funcs automaticaly
             //y.GetActions();
@@ -900,6 +900,7 @@ namespace Nana.Semantics
 
         virtual public object Find(Token t)
         {
+            if (Nsp == null) { return null; }
             return Nsp.Find(t.Value);
         }
 
@@ -1129,6 +1130,9 @@ namespace Nana.Semantics
 
     public class SrcAnalyzer : TypAnalyzer
     {
+        public LinkedList<Token> UsingSeeds;
+        public LinkedList<Nsp> UsingNsp = new LinkedList<Nsp>();
+
         public List<string> Usings;
 
         public SrcAnalyzer(Token seed, BlockAnalyzer above)
@@ -1143,15 +1147,20 @@ namespace Nana.Semantics
             SemanticAnalyzer a;
             foreach (Token t in Seed.Follows)
             {
+                a = null;
                 Token targ = t.Group != "Cstm" ? t : GetTargetWithCustom(t);
-
                 switch (targ.Group)
                 {
                     case "TypeDef": a = new TypAnalyzer(targ, this); break;
                     case "Func": a = new FunAnalyzer(targ, this); break;
+                    case "Using":
+                        if (UsingSeeds == null) { UsingSeeds = new LinkedList<Token>(); }
+                        UsingSeeds.AddLast(targ);
+                        break;
                     default: a = new LineAnalyzer(targ, this); break;
                 }
-                Subs.AddLast(a);
+                if (a != null)
+                { Subs.AddLast(a); }
             }
             ConstructSubsAll();
         }
@@ -1159,6 +1168,35 @@ namespace Nana.Semantics
         public void AnalyzeSrc()
         {
             base.Typ = FindUpTypeOf<AppAnalyzer>().Typ;
+        }
+
+        public void AnalyzeUsing()
+        {
+            if (UsingSeeds == null) { return; }
+            foreach (Token s in UsingSeeds)
+            {
+                object o = Gate(s.Follows[0]);
+                if (o.GetType() != typeof(Nsp))
+                { throw new SemanticError("Specify namespace", s); }
+                UsingNsp.AddLast(o as Nsp);
+            }
+        }
+
+        public override object FindUp(Token t)
+        {
+            if (AboveBlock == null)
+            { return null; }
+
+            object o = AboveBlock.FindUp(t);
+            if (o != null) { return o; }
+            foreach (Nsp n in UsingNsp)
+            {
+                t.ValueImplicit = n.Name + "." + t.Value;
+                o = AboveBlock.FindUp(t);
+                t.ValueImplicit = "";
+                if (o != null) { return o; }
+            }
+            return null;
         }
     }
 
@@ -1186,6 +1224,12 @@ namespace Nana.Semantics
         {
             App = FindUpTypeOf<EnvAnalyzer>().Env.NewApp(Seed);
         }
+
+        override public object FindUp(Token t)
+        {
+            return Find(t) ?? (AboveBlock != null ? AboveBlock.FindUp(t) : null);
+        }
+
     }
 
     public class EnvAnalyzer : AppAnalyzer
@@ -1247,6 +1291,7 @@ namespace Nana.Semantics
             AnalyzeAppAll();
             AnalyzeSrcAll();
             AnalyzeTypAll();
+            AnalyzeUsingAll();
             AnalyzeBaseTypAll();
             AnalyzeFunAll();
             EnsureTypAll();
@@ -1272,6 +1317,12 @@ namespace Nana.Semantics
         {
             foreach (SrcAnalyzer a in CollectTypeOf<SrcAnalyzer>())
             { a.AnalyzeSrc(); }
+        }
+
+        public void AnalyzeUsingAll()
+        {
+            foreach (SrcAnalyzer a in CollectTypeOf<SrcAnalyzer>())
+            { a.AnalyzeUsing(); }
         }
 
         public void AnalyzeTypAll()
@@ -1381,15 +1432,17 @@ namespace Nana.Semantics
                 { return m; }
             }
 
+            bool imp = false == string.IsNullOrEmpty(t.ValueImplicit);
+
             Nmd n;
             if (null != (n = Env.Find(t.Value))) { return n; }
-            if (null != (n = Env.Find(t.ValueImplicit))) { return n; }
+            if (imp && null != (n = Env.Find(t.ValueImplicit))) { return n; }
 
-            if (Env.TypeLdr.IsNamespace(t.ValueImplicit))
+            if (imp && Env.TypeLdr.IsNamespace(t.ValueImplicit))
             { return Env.NewNsp(t.ValueImplicit); }
 
             Type type;
-            if (null != (type = Env.TypeLdr.GetTypeByName(t.ValueImplicit)))
+            if (imp && null != (type = Env.TypeLdr.GetTypeByName(t.ValueImplicit)))
             { return Env.FindOrNewRefType(type); }
 
             return null;
