@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2011 Mitsuaki Kuwahara
+ * Released under the MIT License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Text;

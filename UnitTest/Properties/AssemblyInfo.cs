@@ -1,10 +1,15 @@
-ï»¿using System.Reflection;
+/*
+ * Copyright (C) 2011 Mitsuaki Kuwahara
+ * Released under the MIT License.
+ */
+
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-// ã‚¢ã‚»ãƒ³ãƒ–ãƒªã«é–¢ã™ã‚‹ä¸€èˆ¬æƒ…å ±ã¯ä»¥ä¸‹ã®å±æ€§ã‚»ãƒƒãƒˆã‚’ã¨ãŠã—ã¦åˆ¶å¾¡ã•ã‚Œã¾ã™ã€‚ 
-// ã‚¢ã‚»ãƒ³ãƒ–ãƒªã«é–¢é€£ä»˜ã‘ã‚‰ã‚Œã¦ã„ã‚‹æƒ…å ±ã‚’å¤‰æ›´ã™ã‚‹ã«ã¯ã€
-// ã“ã‚Œã‚‰ã®å±æ€§å€¤ã‚’å¤‰æ›´ã—ã¦ãã ã•ã„ã€‚
+// ƒAƒZƒ“ƒuƒŠ‚ÉŠÖ‚·‚éˆê”Êî•ñ‚ÍˆÈ‰º‚Ì‘®«ƒZƒbƒg‚ğ‚Æ‚¨‚µ‚Ä§Œä‚³‚ê‚Ü‚·B 
+// ƒAƒZƒ“ƒuƒŠ‚ÉŠÖ˜A•t‚¯‚ç‚ê‚Ä‚¢‚éî•ñ‚ğ•ÏX‚·‚é‚É‚ÍA
+// ‚±‚ê‚ç‚Ì‘®«’l‚ğ•ÏX‚µ‚Ä‚­‚¾‚³‚¢B
 [assembly: AssemblyTitle("UnitTest")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
@@ -14,22 +19,22 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-// ComVisible ã‚’ false ã«è¨­å®šã™ã‚‹ã¨ã€ã“ã®ã‚¢ã‚»ãƒ³ãƒ–ãƒªå†…ã®å‹ã¯ COM ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã«ã¯ 
-// å‚ç…§ä¸å¯èƒ½ã«ãªã‚Šã¾ã™ã€‚COM ã‹ã‚‰ã“ã®ã‚¢ã‚»ãƒ³ãƒ–ãƒªå†…ã®å‹ã«ã‚¢ã‚¯ã‚»ã‚¹ã™ã‚‹å ´åˆã¯ã€ 
-// ãã®å‹ã® ComVisible å±æ€§ã‚’ true ã«è¨­å®šã—ã¦ãã ã•ã„ã€‚
+// ComVisible ‚ğ false ‚Éİ’è‚·‚é‚ÆA‚±‚ÌƒAƒZƒ“ƒuƒŠ“à‚ÌŒ^‚Í COM ƒRƒ“ƒ|[ƒlƒ“ƒg‚É‚Í 
+// QÆ•s‰Â”\‚É‚È‚è‚Ü‚·BCOM ‚©‚ç‚±‚ÌƒAƒZƒ“ƒuƒŠ“à‚ÌŒ^‚ÉƒAƒNƒZƒX‚·‚éê‡‚ÍA 
+// ‚»‚ÌŒ^‚Ì ComVisible ‘®«‚ğ true ‚Éİ’è‚µ‚Ä‚­‚¾‚³‚¢B
 [assembly: ComVisible(false)]
 
-// æ¬¡ã® GUID ã¯ã€ã“ã®ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ãƒˆãŒ COM ã«å…¬é–‹ã•ã‚Œã‚‹å ´åˆã®ã€typelib ã® ID ã§ã™
+// Ÿ‚Ì GUID ‚ÍA‚±‚ÌƒvƒƒWƒFƒNƒg‚ª COM ‚ÉŒöŠJ‚³‚ê‚éê‡‚ÌAtypelib ‚Ì ID ‚Å‚·
 [assembly: Guid("7e326d46-4b4d-4b04-9e8a-5690ed8a9f43")]
 
-// ã‚¢ã‚»ãƒ³ãƒ–ãƒªã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±ã¯ã€ä»¥ä¸‹ã® 4 ã¤ã®å€¤ã§æ§‹æˆã•ã‚Œã¦ã„ã¾ã™:
+// ƒAƒZƒ“ƒuƒŠ‚Ìƒo[ƒWƒ‡ƒ“î•ñ‚ÍAˆÈ‰º‚Ì 4 ‚Â‚Ì’l‚Å\¬‚³‚ê‚Ä‚¢‚Ü‚·:
 //
 //      Major Version
 //      Minor Version 
 //      Build Number
 //      Revision
 //
-// ã™ã¹ã¦ã®å€¤ã‚’æŒ‡å®šã™ã‚‹ã‹ã€ä¸‹ã®ã‚ˆã†ã« '*' ã‚’ä½¿ã£ã¦ãƒªãƒ“ã‚¸ãƒ§ãƒ³ãŠã‚ˆã³ãƒ“ãƒ«ãƒ‰ç•ªå·ã‚’ 
-// æ—¢å®šå€¤ã«ã™ã‚‹ã“ã¨ãŒã§ãã¾ã™:
+// ‚·‚×‚Ä‚Ì’l‚ğw’è‚·‚é‚©A‰º‚Ì‚æ‚¤‚É '*' ‚ğg‚Á‚ÄƒŠƒrƒWƒ‡ƒ“‚¨‚æ‚Ñƒrƒ‹ƒh”Ô†‚ğ 
+// Šù’è’l‚É‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·:
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
