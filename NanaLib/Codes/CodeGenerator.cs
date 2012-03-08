@@ -599,7 +599,7 @@ namespace Nana.CodeGeneration
         {
             StringBuilder b = new StringBuilder();
             Typ retti = false == f.IsConstructor && f.Att.CanGet ? f.Att.TypGet : null;
-            b.Append(TypeFullName(retti));
+            b.Append(TypeNameInSig(retti));
 
             if (t != null && t.GetType() == typeof(Typ))
             {
