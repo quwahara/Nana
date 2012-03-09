@@ -305,7 +305,6 @@ namespace Nana.Syntaxes
 
     public class PrefixAnalyzer
     {
-        //TODO  unify using and using2
         #region Defs
         static public readonly string DefsText = @"
 
@@ -332,9 +331,6 @@ namespace Nana.Syntaxes
 
                 0iddotdec   _( Id.g _( ..* Id.g _) _)
 
-
-            using2.@0   0iddotdec2.r            --  Using
-                
                 0iddotdec2  _( Id.g _( ..? 0iddotdec2.r _) _)
 
 
