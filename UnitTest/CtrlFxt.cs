@@ -782,29 +782,70 @@ fun Main():void
             Test();
         }
 
-        //[Test]
-        public void ZZZ()
+        [Test]
+        public void TC0311_SetPropety()
         {
+            References.Add("system.windows.forms.dll");
 
             Inp = @"
-using System.IO
-dir = ""..\\..\\..\\LICENSE""
-fs = Directory.GetFiles(dir, ""*.cs"", SearchOption.AllDirectories)
-//fs = System.IO.Directory.GetFiles(dir, ""*.cs"", System.IO.SearchOption.AllDirectories)
-//System.IO.SearchOption.AllDirectories   -> opt
-//fs = System.IO.Directory.GetFiles(dir, ""*.cs"", opt)
-
-//fun Main(argv:string[]):void
-//..
-////    cont = System.IO.File.ReadAll(""li.nana"")
-////    cont = System.IO.File.ReadAllText(""li.nana"")
-//    `p(cont)
-//,,
+using System.Windows.Forms
+@STAThreadAttribute
+fun Main():void
+..
+    Application.EnableVisualStyles()
+    Application.SetCompatibleTextRenderingDefault(false)
+    Form()  -> f
+    ""hoge"" -> f.Text
+    Application.Run(f)
+,,
+        ";
+            EpcSyn = @"";
+            EpcIL = @".method static public void Main() {
+    .entrypoint
+    .locals (
+        class [System.Windows.Forms]System.Windows.Forms.Form f
+    )
+    call void [System.Windows.Forms]System.Windows.Forms.Application::EnableVisualStyles()
+    ldc.i4.0
+    call void [System.Windows.Forms]System.Windows.Forms.Application::SetCompatibleTextRenderingDefault(bool)
+    newobj instance void [System.Windows.Forms]System.Windows.Forms.Form::.ctor()
+    stloc f
+    ldloc f
+    ldstr ""hoge""
+    callvirt instance void [System.Windows.Forms]System.Windows.Forms.Form::set_Text(string)
+    ldloc f
+    call void [System.Windows.Forms]System.Windows.Forms.Application::Run(class [System.Windows.Forms]System.Windows.Forms.Form)
+    ret
+}
 ";
-            EpcIL = @"x";
-
             Test();
         }
+
+        //        [Test]
+//        public void ZZZ()
+//        {
+
+//            Inp = @"
+//using System.IO
+//dir = ""..\\..\\..\\LICENSE""
+//fs = Directory.GetFiles(dir, ""*.cs"", SearchOption.AllDirectories)
+////fs = System.IO.Directory.GetFiles(dir, ""*.cs"", System.IO.SearchOption.AllDirectories)
+////System.IO.SearchOption.AllDirectories   -> opt
+////fs = System.IO.Directory.GetFiles(dir, ""*.cs"", opt)
+//
+////fun Main(argv:string[]):void
+////..
+//////    cont = System.IO.File.ReadAll(""li.nana"")
+//////    cont = System.IO.File.ReadAllText(""li.nana"")
+////    `p(cont)
+////,,
+//";
+//            Inp = @"try end";
+//            EpcSyn = "x";
+//            EpcIL = @"";
+
+//            Test();
+//        }
 
 //        [Test]
 //        public void ZZZ_a()

@@ -832,7 +832,7 @@ namespace Nana.Semantics
             ms.ConvertAll<Fun>(self.NewFun);
 
             new List<PropertyInfo>(refType.GetProperties(flags_))
-                .ConvertAll<Prop>(self.NewProp);
+                .ConvertAll<Ovld>(self.NewProp);
         }
 
         static public void EnsureGenericMembersN(Nsp self)
@@ -987,14 +987,15 @@ namespace Nana.Semantics
             if (m != null)
             {
                 Getter = BeAMember<Fun>(new Fun(m, env));
+                Att.TypGet = env.FindOrNewRefType(p.PropertyType);
             }
             Setter = null;
             m = p.GetSetMethod(/* nonPublic:*/ true);
             if (m != null)
             {
                 Setter = BeAMember<Fun>(new Fun(m, env));
+                Att.TypSet = Setter.Signature[0];
             }
-            Att.TypGet = env.FindOrNewRefType(p.PropertyType);
         }
 
     }
@@ -1298,6 +1299,7 @@ namespace Nana.Semantics
             Instance = instance;
 
             Att.TypGet = prop.Att.TypGet;
+            Att.TypSet = prop.Att.TypSet;
         }
 
         public override void Give(IMRGenerator gen)
@@ -1318,7 +1320,42 @@ namespace Nana.Semantics
             Give(gen);
             gen.Pop();
         }
+    }
 
+    public class PropSet : Sema
+    {
+        public CallPropInfo CP;
+        public Sema Value;
+
+        public PropSet(CallPropInfo cp, Sema value)
+        {
+            CP = cp;
+            Value = value;
+
+            Att_ = cp.Prop.Att;
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            if (CP.Prop.Getter == null)
+            { throw new SyntaxError("Cannot get value from the property"); }
+            Exec(gen);
+            CP.Give(gen);
+        }
+
+        public override void Addr(IMRGenerator gen)
+        {
+            Give(gen);
+        }
+
+        public override void Exec(IMRGenerator gen)
+        {
+            Fun setter = CP.Prop.Setter;
+            if (setter == null)
+            { throw new SyntaxError("Cannot set value to the property"); }
+            CallFunction cf = new CallFunction(CP.CalleeTy, setter, CP.Instance, new Sema[] { Value }, /*isNewObj:*/ false);
+            cf.Give(gen);
+        }
     }
 
     public class CalcInfo : Sema

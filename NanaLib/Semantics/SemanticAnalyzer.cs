@@ -208,7 +208,7 @@ namespace Nana.Semantics
                 case "Nop":         /**/ u = new DoNothing(); break;
                 case "_End_Cma_":   /**/ u = Cma(t); break;
                 default:
-                    throw new SemanticError(string.Format("Cannot write '{0}' in there", t.Value), t);
+                    throw new SemanticError(string.Format("'{0}' cannot be in there", t.Value), t);
             }
             return u;
         }
@@ -313,6 +313,10 @@ namespace Nana.Semantics
             if (tu is ArrayAccessInfo)
             {
                 return new ArraySetInfo(tu as ArrayAccessInfo, gv2);
+            }
+            if (tu.GetType() == typeof(CallPropInfo))
+            {
+                return new PropSet(tu as CallPropInfo, gv2);
             }
             if (tu.GetType() == typeof(Nmd))
             {
@@ -640,7 +644,7 @@ namespace Nana.Semantics
             {
                 y = holder as Typ;
             }
-            if (y == null) { throw new SemanticError("It has no member", t.First); }
+            if (y == null) { throw new SemanticError(string.Format("It has no member: {0}", t.Second.Value), t.Second); }
 
             //TODO load funcs automaticaly
             //y.GetActions();

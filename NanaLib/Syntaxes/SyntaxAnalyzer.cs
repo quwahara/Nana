@@ -352,6 +352,9 @@ namespace Nana.Syntaxes
             
             if.@0       Expr.s  _( then Expr.s* _)  _( elif.*@1 Expr.s  _( then Expr.s* _) _)   _( else.?@2 Expr.s* _)  end -- If Elif Else
             while.@0    Expr.s  _( Bgn.g    Expr.s* _)  End.g   -- While
+
+
+            try.@0      Expr.s* _( catch.*@1    Expr.s1 Bgn.g   _)  _( finally.?@2  Expr.s* _)  End.g   --  Try     Catch   Finally
             
             
             0attrdec    _(  @.*@0   Expr.s _)       -- Attr
