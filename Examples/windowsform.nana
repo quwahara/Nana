@@ -1,5 +1,5 @@
 //  command line to compile:
-//  >PATH_TO_NANA_EXE\nana.exe\nana windowsform.nana /reference:System.Windows.Forms.dll
+//  >PATH_TO_NANA_EXE\nana windowsform.nana /reference:System.Windows.Forms.dll
 
 using System.Windows.Forms
 @STAThreadAttribute
