@@ -1,0 +1,13 @@
+//  command line to compile:
+//  >PATH_TO_NANA_EXE\nana.exe\nana windowsform.nana /reference:System.Windows.Forms.dll
+
+using System.Windows.Forms
+@STAThreadAttribute
+fun Main():void
+..
+    Application.EnableVisualStyles()
+    Application.SetCompatibleTextRenderingDefault(false)
+    Form()  -> f
+    "hoge" -> f.Text
+    Application.Run(f)
+,,
