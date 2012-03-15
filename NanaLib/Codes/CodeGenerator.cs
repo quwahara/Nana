@@ -273,7 +273,7 @@ namespace Nana.CodeGeneration
             string name = "";
             if (ap.E.Seed.Contains("@CompileOptions/@out"))
             {
-                name = ap.E.Seed.Find("@CompileOptions/@out").Value;
+                name = Path.GetFileName(ap.E.Seed.Find("@CompileOptions/@out").Value);
             }
             else
             {
@@ -455,12 +455,24 @@ namespace Nana.CodeGeneration
                 case C.BrFalse: return BrFalse(imr);
                 case C.PutLabel: return PutLabel(imr);
                 case C.Ope: return Ope(imr, out extra);
+                case C.Try: return ".try {";
+                case C.Catch: return Catch(imr.TypV);
+                case C.Finally: return "} finally {";
+                case C.CloseTry: return "}";
+                case C.Leave: return OpCodes.Leave.ToString() + " " + imr.StringV;
+                case C.EndFinally: return OpCodes.Endfinally.ToString();
+
             }
             throw new NotSupportedException();
         }
 
         static public string S(OpCode c) { return c.ToString(); }
         static public string S(OpCode c, object opRnd) { return S(c) + " " + opRnd.ToString(); }
+
+        public static string Catch(Typ t)
+        {
+            return "} catch " + TypeFullName(t) + " {";
+        }
 
         public static string LoadLiteral(Literal l)
         {

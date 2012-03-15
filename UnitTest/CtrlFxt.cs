@@ -22,6 +22,18 @@ namespace UnitTest
     {
         private string Prv0()
         {
+            try
+            {
+            }
+            catch (Exception ex)
+            {
+                string ss = ex.ToString();
+            }
+            finally
+            {
+                string t = "x";
+            }
+
             int[,] a = new int[3,5];
             int b = a.Length;
 
@@ -801,6 +813,7 @@ fun Main():void
         ";
             EpcSyn = @"";
             EpcIL = @".method static public void Main() {
+    .custom instance void [mscorlib]System.STAThreadAttribute::.ctor()
     .entrypoint
     .locals (
         class [System.Windows.Forms]System.Windows.Forms.Form f
@@ -815,6 +828,164 @@ fun Main():void
     callvirt instance void [System.Windows.Forms]System.Windows.Forms.Form::set_Text(string)
     ldloc f
     call void [System.Windows.Forms]System.Windows.Forms.Application::Run(class [System.Windows.Forms]System.Windows.Forms.Form)
+    ret
+}
+";
+            Test();
+        }
+
+
+        [Test]
+        public void TC0315_ExceptionHandling()
+        {
+            Inp =
+@"
+try
+catch IndexOutOfRangeException do
+catch ex:Exception do
+finally
+end
+";
+            EpcSyn = @"0Source
++---[0]try
+    +---[0]catch
+    |   +---[0]IndexOutOfRangeException
+    |   +---[1]do
+    +---[1]catch
+    |   +---[0]:
+    |   |   +---[F]ex
+    |   |   +---[S]Exception
+    |   +---[1]do
+    +---[2]finally
+    +---[3]end
+";
+
+            EpcIL = @".field static class [mscorlib]System.Exception ex
+.method static public void .cctor() {
+    .try {
+    .try {
+    leave exitcatch$000001
+    } catch [mscorlib]System.IndexOutOfRangeException {
+    pop
+    leave exitcatch$000001
+    } catch [mscorlib]System.Exception {
+    stsfld class [mscorlib]System.Exception ex
+    leave exitcatch$000001
+    }
+exitcatch$000001:
+    leave exitfinally$000001
+    } finally {
+    endfinally
+    }
+exitfinally$000001:
+    ret
+}
+.method static public void '0'() {
+    .entrypoint
+    ret
+}
+";
+
+//            A: 0Source
+//+---[0]try
+//    +---[0]=
+//    |   +---[F]a
+//    |   +---[S]0
+//    +---[1]=
+//    |   +---[F]b
+//    |   +---[S]1
+//    +---[2]catch
+//    |   +---[0]:
+//    |   |   +---[F]ex
+//    |   |   +---[S]Exception
+//    |   +---[1]do
+//    |       +---[0]=
+//    |       |   +---[F]c
+//    |       |   +---[S]2
+//    |       +---[1]=
+//    |           +---[F]d
+//    |           +---[S]3
+//    +---[3]catch
+//    |   +---[0]:
+//    |   |   +---[F]ex
+//    |   |   +---[S]Exception
+//    |   +---[1]do
+//    |       +---[0]=
+//    |       |   +---[F]e
+//    |       |   +---[S]4
+//    |       +---[1]=
+//    |           +---[F]f
+//    |           +---[S]5
+//    +---[4]finally
+//    |   +---[0]=
+//    |   |   +---[F]g
+//    |   |   +---[S]6
+//    |   +---[1]=
+//    |       +---[F]h
+//    |       +---[S]7
+//    +---[5]end
+//'try' cannot be in there
+
+            Test();
+        }
+
+        [Test]
+        public void TC0315_List_string_1()
+        {
+            Inp =
+@"
+System.Collections.Generic.List<string>()
+-> ls
+ls.IndexOf("""") -> i
+System.Console.WriteLine(i)
+";
+            EpcSyn = @"0Source
++---[0]->
+|   +---[F](
+|   |   +---[F]<
+|   |   |   +---[F].
+|   |   |   |   +---[F].
+|   |   |   |   |   +---[F].
+|   |   |   |   |   |   +---[F]System
+|   |   |   |   |   |   +---[S]Collections
+|   |   |   |   |   +---[S]Generic
+|   |   |   |   +---[S]List
+|   |   |   +---[S]string
+|   |   |   +---[T]>
+|   |   +---[T])
+|   +---[S]ls
++---[1]->
+|   +---[F](
+|   |   +---[F].
+|   |   |   +---[F]ls
+|   |   |   +---[S]IndexOf
+|   |   +---[S]""""
+|   |   +---[T])
+|   +---[S]i
++---[2](
+    +---[F].
+    |   +---[F].
+    |   |   +---[F]System
+    |   |   +---[S]Console
+    |   +---[S]WriteLine
+    +---[S]i
+    +---[T])
+";
+            EpcIL = @".field static class [mscorlib]System.Collections.Generic.List`1<string> ls
+.field static int32 i
+.method static public void .cctor() {
+    newobj instance void class [mscorlib]System.Collections.Generic.List`1<string>::.ctor()
+    stsfld class [mscorlib]System.Collections.Generic.List`1<string> ls
+    ldsfld class [mscorlib]System.Collections.Generic.List`1<string> ls
+    ldstr """"
+    callvirt instance int32 class [mscorlib]System.Collections.Generic.List`1<string>::IndexOf(!0)
+    stsfld int32 i
+    ldsfld int32 i
+    call void [mscorlib]System.Console::WriteLine(int32)
+    ret
+}
+.method static public void '0'() {
+    .entrypoint
     ret
 }
 ";

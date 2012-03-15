@@ -105,7 +105,7 @@ end
             Analyze();
 
             Assert.IsNotNull(Env);
-            Assert.AreEqual(3, Env.Members.Count);
+            Assert.AreEqual(4, Env.Members.Count);
 
             App app = Env.Members.Find(delegate(Nmd n_) { return n_ is App; }) as App;
             Assert.IsNotNull(app);
@@ -2643,43 +2643,6 @@ namespace UnitTest.Semantics.Precedings
     add
     stsfld int32 a
     ldsfld int32 a
-    call void [mscorlib]System.Console::WriteLine(int32)
-    ret
-}
-.method static public void '0'() {
-    .entrypoint
-    ret
-}
-";
-            Test();
-        }
-    }
-}
-
-namespace UnitTest.Semantics.Generics
-{
-    public class GenericsFxt : UnitTest.Semantics.Root.RootFxt
-    {
-        [Test]
-        public void T_List_string_1()
-        {
-            Inp = @"
-System.Collections.Generic.List<string>()
--> ls
-ls.IndexOf("""") -> i
-System.Console.WriteLine(i)
-            ";
-            Epc +=
-@".field static class [mscorlib]System.Collections.Generic.List`1<string> ls
-.field static int32 i
-.method static public void .cctor() {
-    newobj instance void class [mscorlib]System.Collections.Generic.List`1<string>::.ctor()
-    stsfld class [mscorlib]System.Collections.Generic.List`1<string> ls
-    ldsfld class [mscorlib]System.Collections.Generic.List`1<string> ls
-    ldstr """"
-    callvirt instance int32 class [mscorlib]System.Collections.Generic.List`1<string>::IndexOf(!0)
-    stsfld int32 i
-    ldsfld int32 i
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }

@@ -207,6 +207,7 @@ namespace Nana.Semantics
                 case "Ret":         /**/ u = Ret(t); break;
                 case "Nop":         /**/ u = new DoNothing(); break;
                 case "_End_Cma_":   /**/ u = Cma(t); break;
+                case "Try":         /**/ u = Try(t); break;
                 default:
                     throw new SemanticError(string.Format("'{0}' cannot be in there", t.Value), t);
             }
@@ -447,6 +448,63 @@ namespace Nana.Semantics
             Breaks.Pop();
 
             return new WhileInfo(dolbl, endlbl, condv, lines);
+        }
+
+        public object Try(Token t)
+        {
+            List<Token> tryls = new List<Token>();
+            LinkedList<Token> catchls = new LinkedList<Token>();
+            Token finallyt = null;
+
+            foreach (Token f in t.Follows)
+            {
+                switch (f.Group)
+                {
+                    case "End": break;
+                    case "Catch": catchls.AddLast(f); break;
+                    case "Finally": finallyt = f; break;
+                    default: tryls.Add(f); break;
+                }
+            }
+
+            bool rds = true;
+            bool rdstmp;
+            Sema[] try_ = CreateBlock(tryls.ToArray(), out rdstmp);
+            rds &= rdstmp;
+            List<TryStmt.CatchStmt> catches = new List<TryStmt.CatchStmt>();
+            foreach (Token c in catchls)
+            {
+                TryStmt.CatchStmt cs = new TryStmt.CatchStmt();
+                object o = Gate(c.Follows[0]);
+                Typ ty = null;
+                Variable vr = null;
+                if (o != null)
+                {
+                    if (o.GetType() == typeof(Typ)) { ty = o as Typ; }
+                    else if (o.GetType() == typeof(Variable)) { vr = o as Variable; ty = vr.Att.TypGet; }
+                }
+                if (ty == null || false == ty.IsReferencing
+                    || (ty.RefType != typeof(Exception)
+                    && false == (ty.RefType.IsSubclassOf(typeof(Exception))))
+                    )
+                { throw new SemanticError("Did not specify exception", c.Follows[0]); }
+                cs.ExcpTyp = ty;
+                cs.ExcpVar = vr;
+                cs.Block = CreateBlock(c.Follows[1].Follows, out rdstmp);
+                catches.Add(cs);
+                rds &= rdstmp;
+            }
+
+            Sema[] finally_ = null;
+            if (finallyt != null)
+            {
+                finally_ = CreateBlock(finallyt.Follows, out rdstmp);
+                rds &= rdstmp;
+            }
+
+            string fix = Env.GetTempName();
+
+            return new TryStmt(fix, try_, catches.ToArray(), finally_, rds);
         }
 
         public object If(Token if_)
@@ -1142,12 +1200,9 @@ namespace Nana.Semantics
         public LinkedList<Token> UsingSeeds;
         public LinkedList<Nsp> UsingNsp = new LinkedList<Nsp>();
 
-        public List<string> Usings;
-
         public SrcAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
         {
-            Usings = new List<string>();
         }
 
         public override void ConstructSubs()
@@ -1177,6 +1232,7 @@ namespace Nana.Semantics
         public void AnalyzeSrc()
         {
             base.Typ = FindUpTypeOf<AppAnalyzer>().Typ;
+            UsingNsp.AddLast(base.Typ.E.FindOrNewNsp("System"));
         }
 
         public void AnalyzeUsing()
@@ -1198,11 +1254,12 @@ namespace Nana.Semantics
 
             object o = AboveBlock.FindUp(t);
             if (o != null) { return o; }
+            string valimpbk = t.ValueImplicit;
             foreach (Nsp n in UsingNsp)
             {
                 t.ValueImplicit = n.Name + "." + t.Value;
                 o = AboveBlock.FindUp(t);
-                t.ValueImplicit = "";
+                t.ValueImplicit = valimpbk;
                 if (o != null) { return o; }
             }
             return null;
@@ -1448,7 +1505,8 @@ namespace Nana.Semantics
             if (imp && null != (n = Env.Find(t.ValueImplicit))) { return n; }
 
             if (imp && Env.TypeLdr.IsNamespace(t.ValueImplicit))
-            { return Env.NewNsp(t.ValueImplicit); }
+            { return Env.FindOrNewNsp(t.ValueImplicit); }
+            //{ return Env.NewNsp(t.ValueImplicit); }
 
             Type type;
             if (imp && null != (type = Env.TypeLdr.GetTypeByName(t.ValueImplicit)))

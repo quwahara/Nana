@@ -305,7 +305,19 @@ namespace Nana.Semantics
 
         public Nsp NewNsp(string ns)
         {
+            EnsureMembers();
             return BeAMember(new Nsp(ns, true, this)); ;
+        }
+
+        public Nsp FindNsp(string ns)
+        {
+            EnsureMembers();
+            return Members_.Find(GetNamePredicate<Nmd>(ns)) as Nsp;
+        }
+
+        public Nsp FindOrNewNsp(string ns)
+        {
+            return FindNsp(ns) ?? NewNsp(ns);
         }
 
         public Ovld NewOvld(string name)
@@ -1388,6 +1400,71 @@ namespace Nana.Semantics
         {
             Give(gen);
             gen.Pop();
+        }
+
+    }
+
+    public class TryStmt : Sema, IReturnDeterminacyState
+    {
+        public class CatchStmt
+        {
+            public Typ ExcpTyp;
+            public Variable ExcpVar;
+            public Sema[] Block;
+        }
+
+        public string Fix;
+        public Sema[] Try;
+        public CatchStmt[] Catches;
+        public Sema[] Finally;
+        public bool RDS_;
+        public bool RDS { get { return RDS_; } }
+
+        public TryStmt(string uniqFix, Sema[] try_, CatchStmt[] catches, Sema[] finally_, bool rds)
+        {
+            Att.CanExec_ = true;
+            Fix = uniqFix;
+            Try = try_;
+            Catches = catches;
+            Finally = finally_;
+            RDS_ = rds;
+        }
+
+        public override void Exec(IMRGenerator gen)
+        {
+            string exitcatch = "exitcatch" + Fix;
+            string exitfinally = "exitfinally" + Fix;
+
+            bool isFinally = Finally != null;
+            if (isFinally)
+            { gen.Try(); }
+            
+            gen.Try();
+            foreach (Sema s in Try) { s.Exec(gen); }
+            gen.Leave(exitcatch);
+            foreach (CatchStmt ca in Catches)
+            {
+                gen.Catch(ca.ExcpTyp);
+                if (ca.ExcpVar != null)
+                { gen.StoreVariable(ca.ExcpVar); }
+                else
+                { gen.Pop(); }
+                foreach (Sema s in ca.Block) { s.Exec(gen); }
+                gen.Leave(exitcatch);
+            }
+            gen.CloseTry();
+            gen.PutLabel(exitcatch);
+            
+            if (isFinally)
+            {
+                gen.Leave(exitfinally);
+
+                gen.Finally();
+                foreach (Sema s in Finally) { s.Exec(gen); }
+                gen.EndFinally();
+                gen.CloseTry();
+                gen.PutLabel(exitfinally);
+            }
         }
 
     }

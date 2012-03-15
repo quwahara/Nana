@@ -1,0 +1,12 @@
+try
+    `p("a")
+    ar  = int[2]
+    v   = ar[3]     //  produce IndexOutOfRangeException
+    `p("b")
+catch iorx: IndexOutOfRangeException do
+    `p(iorx.ToString())
+catch ex:Exception do
+    `p(ex.ToString())
+finally
+    `p("fin")
+end
