@@ -1401,7 +1401,26 @@ namespace Nana.Semantics
             Give(gen);
             gen.Pop();
         }
+    }
 
+    public class ThrowStmt : Sema, IReturnDeterminacyState
+    {
+        public bool RDS_;
+        public bool RDS { get { return RDS_; } }
+        public Sema S;
+
+        public ThrowStmt(Sema s)
+        {
+            RDS_ = true;
+            S = s;
+            Att.CanExec_ = true;
+        }
+
+        public override void Exec(IMRGenerator gen)
+        {
+            S.Exec(gen);
+            gen.Throw();
+        }
     }
 
     public class TryStmt : Sema, IReturnDeterminacyState

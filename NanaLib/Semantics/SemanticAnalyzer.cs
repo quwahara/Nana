@@ -207,6 +207,7 @@ namespace Nana.Semantics
                 case "Ret":         /**/ u = Ret(t); break;
                 case "Nop":         /**/ u = new DoNothing(); break;
                 case "_End_Cma_":   /**/ u = Cma(t); break;
+                case "Throw":       /**/ u = Throw(t); break;
                 case "Try":         /**/ u = Try(t); break;
                 default:
                     throw new SemanticError(string.Format("'{0}' cannot be in there", t.Value), t);
@@ -448,6 +449,17 @@ namespace Nana.Semantics
             Breaks.Pop();
 
             return new WhileInfo(dolbl, endlbl, condv, lines);
+        }
+
+        public object Throw(Token t)
+        {
+            Sema s = Gate(t.Follows[0]) as Sema;
+            if (s == null
+                || false == s.Att.CanGet
+                || false == s.Att.TypGet.IsReferencing
+                || false == typeof(Exception).IsAssignableFrom(s.Att.TypGet.RefType)
+                ) { throw new SemanticError("Cannot throw the value", t.Follows[0]); }
+            return new ThrowStmt(s);
         }
 
         public object Try(Token t)

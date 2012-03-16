@@ -455,6 +455,7 @@ namespace Nana.CodeGeneration
                 case C.BrFalse: return BrFalse(imr);
                 case C.PutLabel: return PutLabel(imr);
                 case C.Ope: return Ope(imr, out extra);
+                case C.Throw: return OpCodes.Throw.ToString();
                 case C.Try: return ".try {";
                 case C.Catch: return Catch(imr.TypV);
                 case C.Finally: return "} finally {";

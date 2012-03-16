@@ -45,6 +45,7 @@ namespace Nana.IMRs
 
         Ope,
 
+        Throw,
         Try,
         Catch,
         Finally,
@@ -103,6 +104,7 @@ namespace Nana.IMRs
 
         public static readonly IMR IMR_Ret = new IMR(C.Ret);
         public static readonly IMR IMR_Pop = new IMR(C.Pop);
+        public static readonly IMR IMR_Throw = new IMR(C.Throw);
         public static readonly IMR IMR_Try = new IMR(C.Try);
         public static readonly IMR IMR_Finally = new IMR(C.Finally);
         public static readonly IMR IMR_EndFinally = new IMR(C.EndFinally);
@@ -110,6 +112,7 @@ namespace Nana.IMRs
 
         public IMR Ret() { return Append(IMR_Ret); }
         public IMR Pop() { return Append(IMR_Pop); }
+        public IMR Throw() { return Append(IMR_Throw); }
         public IMR Try() { return Append(IMR_Try); }
         public IMR Finally() { return Append(IMR_Finally); }
         public IMR EndFinally() { return Append(IMR_EndFinally); }

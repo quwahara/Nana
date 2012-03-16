@@ -834,13 +834,13 @@ fun Main():void
             Test();
         }
 
-
         [Test]
         public void TC0315_ExceptionHandling()
         {
             Inp =
 @"
 try
+    throw Exception()
 catch IndexOutOfRangeException do
 catch ex:Exception do
 finally
@@ -848,22 +848,28 @@ end
 ";
             EpcSyn = @"0Source
 +---[0]try
-    +---[0]catch
+    +---[0]throw
+    |   +---[0](
+    |       +---[F]Exception
+    |       +---[T])
+    +---[1]catch
     |   +---[0]IndexOutOfRangeException
     |   +---[1]do
-    +---[1]catch
+    +---[2]catch
     |   +---[0]:
     |   |   +---[F]ex
     |   |   +---[S]Exception
     |   +---[1]do
-    +---[2]finally
-    +---[3]end
+    +---[3]finally
+    +---[4]end
 ";
 
             EpcIL = @".field static class [mscorlib]System.Exception ex
 .method static public void .cctor() {
     .try {
     .try {
+    newobj instance void [mscorlib]System.Exception::.ctor()
+    throw
     leave exitcatch$000001
     } catch [mscorlib]System.IndexOutOfRangeException {
     pop
@@ -885,47 +891,6 @@ exitfinally$000001:
     ret
 }
 ";
-
-//            A: 0Source
-//+---[0]try
-//    +---[0]=
-//    |   +---[F]a
-//    |   +---[S]0
-//    +---[1]=
-//    |   +---[F]b
-//    |   +---[S]1
-//    +---[2]catch
-//    |   +---[0]:
-//    |   |   +---[F]ex
-//    |   |   +---[S]Exception
-//    |   +---[1]do
-//    |       +---[0]=
-//    |       |   +---[F]c
-//    |       |   +---[S]2
-//    |       +---[1]=
-//    |           +---[F]d
-//    |           +---[S]3
-//    +---[3]catch
-//    |   +---[0]:
-//    |   |   +---[F]ex
-//    |   |   +---[S]Exception
-//    |   +---[1]do
-//    |       +---[0]=
-//    |       |   +---[F]e
-//    |       |   +---[S]4
-//    |       +---[1]=
-//    |           +---[F]f
-//    |           +---[S]5
-//    +---[4]finally
-//    |   +---[0]=
-//    |   |   +---[F]g
-//    |   |   +---[S]6
-//    |   +---[1]=
-//    |       +---[F]h
-//    |       +---[S]7
-//    +---[5]end
-//'try' cannot be in there
-
             Test();
         }
 
@@ -991,6 +956,29 @@ System.Console.WriteLine(i)
 ";
             Test();
         }
+
+        //[Test]
+        public void ZZZ()
+        {
+            Inp =
+@"
+try
+    throw Exception(""xxx"")
+catch IndexOutOfRangeException do
+catch ex:Exception do
+finally
+end
+";
+            EpcSyn = @"
+x
+";
+
+            EpcIL = @"
+x
+";
+            Test();
+        }
+
 
         //        [Test]
 //        public void ZZZ()

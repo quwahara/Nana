@@ -1,7 +1,6 @@
 try
     `p("a")
-    ar  = int[2]
-    v   = ar[3]     //  produce IndexOutOfRangeException
+    throw Exception("nyah")
     `p("b")
 catch iorx: IndexOutOfRangeException do
     `p(iorx.ToString())
