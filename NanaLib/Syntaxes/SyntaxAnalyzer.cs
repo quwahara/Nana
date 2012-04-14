@@ -448,33 +448,38 @@ namespace Nana.Syntaxes
         {
             List<Token> result;
             int i;
-            PrefixDef flw;
+            PrefixDef def;
             Token t;
+            bool vreq, greq;
 
             result = new List<Token>();
             i = 0;
-            flw = i < follows.Count ? follows[i] : null;
+            // get first definition
+            def = i < follows.Count ? follows[i] : null;
 
-            while (flw != null)
+            while (def != null)
             {
                 t = Tokens.Cur;
+                vreq = greq = false;
 
-                // match
-                while (flw != null)
+                // check matching with value and/or group
+                while (def != null)
                 {
+                    vreq = def.Kind.StartsWith("Value");
+                    greq = def.Kind.StartsWith("Group");
+
                     // don't have to match
-                    if (flw.Kind.StartsWith("Value") == false && flw.Kind.StartsWith("Group") == false) break;
+                    if (vreq == false && greq == false)
+                    { break; }
 
                     if (t == null)
-                    {
-                        throw new SyntaxError("The sentence is not completed");
-                    }
+                    { throw new SyntaxError("The sentence is not completed"); }
 
                     // check match
-                    if (flw.Kind.StartsWith("Value") && flw.Value == t.Value) break;
-                    if (flw.Kind.StartsWith("Group") && t.IsGroupOf(flw.Value)) break;
+                    if (vreq && def.Value == t.Value) { break; }
+                    if (greq && t.IsGroupOf(def.Value)) { break; }
 
-                    if (flw.Appearance == "1")
+                    if (def.Appearance == "1")
                     {
                         if (t == Token.ZEnd)
                         { throw new SyntaxError("Not expected end"); }
@@ -482,27 +487,25 @@ namespace Nana.Syntaxes
                     }
                     // skip
                     i++;
-                    flw = i < follows.Count ? follows[i] : null;
+                    def = i < follows.Count ? follows[i] : null;
                 }
 
-                if (flw == null) break;
+                if (def == null) break;
                 if (t == Token.ZEnd)
                 {
-                    bool goNext = flw.Kind == "Refer" || flw.Appearance == "?" || flw.Appearance == "*";
+                    bool goNext = def.Kind == "Refer" || def.Appearance == "?" || def.Appearance == "*";
                     if (goNext == false)
                     {
-                        if (flw.Value != Token.ZEndValue)
-                        {
-                            throw new SyntaxError("Sentence is end");
-                        }
+                        if (def.Value != Token.ZEndValue)
+                        { throw new SyntaxError("Sentence is end"); }
                         break;
                     }
                 }
 
-                if (flw.Group != "") t.Group = flw.Group;
+                if (def.Group != "") t.Group = def.Group;
 
                 // pluck
-                switch (flw.Kind)
+                switch (def.Kind)
                 {
                     case "Value":
                     case "Group":
@@ -513,37 +516,34 @@ namespace Nana.Syntaxes
                     case "GroupClause":
                         result.Add(t);
                         Tokens.Next();
-                        t.Follows = Follows(flw.Follows);
+                        t.Follows = Follows(def.Follows);
                         break;
                     case "Refer":
-                        result.AddRange(Follows(flw));
+                        Token[] rs = Follows(def);
+                        result.AddRange(rs);
                         break;
                     case "Expr":
-                        if ("?*".Contains(flw.Appearance))
+                        if ("?*".Contains(def.Appearance))
                         {
-                            Token tt = Exprs(flw.Ends);
-                            if (tt == null)
-                            {
-                                ++i;
-                            }
+                            Token xs = Exprs(def.Ends);
+                            if (xs == null)
+                            { ++i; }
                             else
-                            {
-                                result.Add(tt);
-                            }
+                            { result.Add(xs); }
                         }
                         else
                         {
-                            result.Add(ExprF(flw.Rbp));
+                            result.Add(ExprF(def.Rbp));
                         }
                         break;
                     default:
                         throw new InternalError(string.Format(
-                            @"'{0}' is not a supported kind.", flw.Kind));
+                            @"'{0}' is not a supported kind.", def.Kind));
                 }
 
-                // next
-                if (flw.Appearance == "1" || flw.Appearance == "?") i++;
-                flw = i < follows.Count ? follows[i] : null;
+                // get next definition
+                if (def.Appearance == "1" || def.Appearance == "?") i++;
+                def = i < follows.Count ? follows[i] : null;
             }
 
             return result.ToArray();
