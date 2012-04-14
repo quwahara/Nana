@@ -183,8 +183,6 @@ namespace Nana.Tokens
             return t.Value != ZEnd.Value ? t : ZEnd;
         }
 
-        public Token Clone() { return MemberwiseClone() as Token; }
-
         public override string ToString()
         {
             return Value + "|" + Group;
