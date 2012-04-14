@@ -61,9 +61,6 @@ namespace Nana.Tokens
         public Token[] Follows;
         public Token Custom;
 
-        public List<Token> _FollowsL;
-        public List<Token> FollowsL { [DebuggerNonUserCode] get { return _FollowsL ?? (_FollowsL = new List<Token>(Follows)); } }
-
         // the locations for traceability
 
         public string Path = "";
