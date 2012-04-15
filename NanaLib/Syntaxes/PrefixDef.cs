@@ -199,24 +199,8 @@ namespace Nana.Syntaxes
 
         public bool MatchTo(Token t)
         {
-            if (t == null)
-            { return false; }
-
-            string group = t.Group;
-            if (Sty.NotNullOrEmpty(group) && group[0] == '_')
-            {
-                foreach (string g in group.Split(new char[] { '_' }))
-                {
-                    if (string.IsNullOrEmpty(g))
-                    { continue; }
-                    bool yes = MatchTo(new Token(t.Value, g));
-                    if (yes)
-                    { return yes; }
-                }
-                return false;
-            }
-
-            return MatchToValue(t.Value) || MatchToGroup(t.Group);
+            return t.ForeachGroup
+                (delegate(Token t_) { return MatchToValue(t_.Value) || MatchToGroup(t_.Group); });
         }
 
         public bool MatchToValue(string value)

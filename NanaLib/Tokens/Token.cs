@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Nana.Delegates;
 using System.Diagnostics;
+using Nana.Infr;
 
 namespace Nana.Tokens
 {
@@ -98,6 +99,23 @@ namespace Nana.Tokens
                 if (Follows == null || Follows.Length == 0) return null;
                 return Follows[Follows.Length - 1];
             }
+        }
+
+        public bool ForeachGroup(Predicate<Token> prd)
+        {
+            if (Sty.NotNullOrEmpty(Group) && Group[0] == '_')
+            {
+                foreach (string g in Group.Split(new char[] { '_' }))
+                {
+                    if (string.IsNullOrEmpty(g))
+                    { continue; }
+                    bool yes = prd(new Token(Value, g));
+                    if (yes)
+                    { return yes; }
+                }
+                return false;
+            }
+            return prd(this);
         }
 
         public bool Contains(string path)
