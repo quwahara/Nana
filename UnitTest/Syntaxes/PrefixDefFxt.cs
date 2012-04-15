@@ -95,7 +95,7 @@ namespace UnitTest.Syntaxes
         public void T109_FncDef()
         {
             Inp = GetDef(@"Fnc");
-            Epc = @"Fnc:GroupClause:1:Func:(Id:Group:1, 0funcdec:Refer:1)";
+            Epc = @"Fnc:GroupClause:1:Fnc:(Id:Group:1, 0funcdec:Refer:1)";
             Test();
         }
 

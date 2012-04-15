@@ -697,7 +697,7 @@ namespace Nana.Semantics
                 Nsp nsp = holder as Nsp;
                 Token sec = t.Second;
                 if (sec.Group != "Id")
-                { throw new SyntaxError("Specify type, func or variable name", sec); }
+                { throw new SyntaxError("Specify type, function or variable name", sec); }
                 sec.ValueImplicit = nsp.Name + "." + sec.Value;
                 comb = Gate(sec);
                 return comb;
@@ -1164,7 +1164,7 @@ namespace Nana.Semantics
 
         public override void ConstructSubs()
         {
-            foreach (Token t in Seed.Select("@TypeBody/@Func"))
+            foreach (Token t in Seed.Select("@TypeBody/@Fnc"))
             { Subs.AddLast(new FunAnalyzer(t, this)); }
             ConstructSubsAll();
         }
@@ -1228,7 +1228,7 @@ namespace Nana.Semantics
                 switch (targ.Group)
                 {
                     case "TypeDef": a = new TypAnalyzer(targ, this); break;
-                    case "Func": a = new FunAnalyzer(targ, this); break;
+                    case "Fnc": a = new FunAnalyzer(targ, this); break;
                     case "Using":
                         if (UsingSeeds == null) { UsingSeeds = new LinkedList<Token>(); }
                         UsingSeeds.AddLast(targ);
