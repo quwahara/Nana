@@ -386,7 +386,7 @@ namespace Nana.Syntaxes
             Defs = defs;
 
             //  this declaration is only good for test purpose. 
-            //  assumes to be overwritten for ExprF by InfixAnalyzer.Expr in actual use case.
+            //  assumes to overwrite for ExprF by InfixAnalyzer.Expr in ordinary use case.
             ExprF = delegate(int rbp)
             {
                 Token t_ = this.Tokens.Cur;
@@ -410,7 +410,7 @@ namespace Nana.Syntaxes
 
         public Token Analyze(Token t)
         {
-            PrefixDef sdf = GetPrefixDef(t.Value, t.Group);
+            PrefixDef sdf = GetPrefixDef(t);
             if (sdf == null)
                 throw new InternalError(string.Format(
                     @"'{0}' is not a first word for a sentence.", t.Value), t);
@@ -419,28 +419,22 @@ namespace Nana.Syntaxes
             return t;
         }
 
-        public PrefixDef GetPrefixDef(string value, string group)
+        public PrefixDef GetPrefixDef(Token t)
         {
-            return Defs.Find(delegate(PrefixDef d) { return IsPrefix(value, group, d); });
+            return Defs.Find(delegate(PrefixDef d) { return d.MatchTo(t); });
         }
 
         public bool IsPrefix(Token t)
         {
-            return Defs.Exists(delegate(PrefixDef d) { return IsPrefix(t.Value, t.Group, d); });
-        }
-
-        static public bool IsPrefix(string value, string group, PrefixDef d)
-        {
-            return d.Kind.StartsWith("Value") && d.Value == value
-                || d.Kind.StartsWith("Group") && Token.IsGroupOf(group, d.Value)
-                ;
+            return Defs.Exists(delegate(PrefixDef d) { return d.MatchTo(t); });
         }
 
         public Token[] Follows(PrefixDef d)
         {
-            if (d.Kind != "Refer") throw new InternalError("The kind for follows must be Refer, Kind: " + d.Kind);
+            if (d.Kind != "Refer")
+            { throw new InternalError("The kind for follows must be Refer, Kind: " + d.Kind); }
 
-            PrefixDef def = GetPrefixDef(d.Value, null);
+            PrefixDef def = GetPrefixDef(new Token(d.Value));
             return Follows(def.Follows);
         }
 
@@ -574,5 +568,6 @@ namespace Nana.Syntaxes
             return false;
         }
 
-    }
+    }   //  end of PrefixAnalyzer
+
 }
