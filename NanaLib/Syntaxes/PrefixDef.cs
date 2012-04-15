@@ -192,8 +192,16 @@ namespace Nana.Syntaxes
             return p;
         }
 
+        public bool IsMatchRequired
+        {
+            get { return Kind.StartsWith("Value") || Kind.StartsWith("Group"); }
+        }
+
         public bool MatchTo(Token t)
         {
+            if (t == null)
+            { return false; }
+
             string group = t.Group;
             if (Sty.NotNullOrEmpty(group) && group[0] == '_')
             {

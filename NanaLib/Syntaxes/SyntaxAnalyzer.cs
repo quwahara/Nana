@@ -429,22 +429,12 @@ namespace Nana.Syntaxes
             return Defs.Exists(delegate(PrefixDef d) { return d.MatchTo(t); });
         }
 
-        public Token[] Follows(PrefixDef d)
-        {
-            if (d.Kind != "Refer")
-            { throw new InternalError("The kind for follows must be Refer, Kind: " + d.Kind); }
-
-            PrefixDef def = GetPrefixDef(new Token(d.Value));
-            return Follows(def.Follows);
-        }
-
         public Token[] Follows(List<PrefixDef> follows)
         {
             List<Token> result;
             int i;
             PrefixDef def;
             Token t;
-            bool vreq, greq;
 
             result = new List<Token>();
             i = 0;
@@ -454,49 +444,34 @@ namespace Nana.Syntaxes
             while (def != null)
             {
                 t = Tokens.Cur;
-                vreq = greq = false;
 
                 // check matching with value and/or group
                 while (def != null)
                 {
-                    vreq = def.Kind.StartsWith("Value");
-                    greq = def.Kind.StartsWith("Group");
-
                     // don't have to match
-                    if (vreq == false && greq == false)
+                    if (false == def.IsMatchRequired)
                     { break; }
 
-                    if (t == null)
-                    { throw new SyntaxError("The sentence is not completed"); }
-
-                    // check match
-                    if (vreq && def.Value == t.Value) { break; }
-                    if (greq && t.IsGroupOf(def.Value)) { break; }
+                    //  or it's matched
+                    if (def.MatchTo(t))
+                    { break; }
 
                     if (def.Appearance == "1")
                     {
                         if (t == Token.ZEnd)
-                        { throw new SyntaxError("Not expected end"); }
-                        throw new SyntaxError(string.Format("Not expected word: '{0}'", t.Value), t);
+                        { throw new SyntaxError("Got at end of source that was not expected"); }
+                        throw new SyntaxError(string.Format("Unexpected word is found: '{0}'", t.Value), t);
                     }
                     // skip
                     i++;
                     def = i < follows.Count ? follows[i] : null;
                 }
 
-                if (def == null) break;
-                if (t == Token.ZEnd)
-                {
-                    bool goNext = def.Kind == "Refer" || def.Appearance == "?" || def.Appearance == "*";
-                    if (goNext == false)
-                    {
-                        if (def.Value != Token.ZEndValue)
-                        { throw new SyntaxError("Sentence is end"); }
-                        break;
-                    }
-                }
+                if (def == null || def.MatchTo(Token.ZEnd))
+                { break; }
 
-                if (def.Group != "") t.Group = def.Group;
+                if (def.Group != "")
+                { t.Group = def.Group; }
 
                 // pluck
                 switch (def.Kind)
@@ -513,7 +488,8 @@ namespace Nana.Syntaxes
                         t.Follows = Follows(def.Follows);
                         break;
                     case "Refer":
-                        Token[] rs = Follows(def);
+                        PrefixDef refdef = GetPrefixDef(new Token(def.Value));
+                        Token[] rs = Follows(refdef.Follows);
                         result.AddRange(rs);
                         break;
                     case "Expr":

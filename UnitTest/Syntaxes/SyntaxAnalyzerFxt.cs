@@ -1147,7 +1147,7 @@ sfunc   Fnc
 f       Id
 xxx     Id
 ";
-            Epc = @"Not expected word: 'xxx'";
+            Epc = @"Unexpected word is found: 'xxx'";
             Test();
         }
     }
