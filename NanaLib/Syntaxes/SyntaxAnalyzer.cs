@@ -258,10 +258,31 @@ namespace Nana.Syntaxes
 
         public Token Left(Token t)
         {
-            if (IsPrefix(t))          /**/ { t.Lbp = 0; return Sntc(t); }
-            if (t.IsGroupOf(Factors))   /**/ { return t; }
+            if (IsPrefix(t))    /**/ { t.Lbp = 0; return Sntc(t); }
+            if (IsFactor(t))    /**/ { return t; }
             throw new SyntaxError(string.Format(
                 @"Cannot place '{0}' at there.", t.Value), t);
+        }
+
+        public bool IsFactor(Token t)
+        {
+            if (t == null)
+            { return false; }
+
+            string group = t.Group;
+            if (Sty.NotNullOrEmpty(group) && group[0] == '_')
+            {
+                foreach (string g in group.Split(new char[] { '_' }))
+                {
+                    if (string.IsNullOrEmpty(g))
+                    { continue; }
+                    bool yes = IsFactor(new Token(t.Value, g));
+                    if (yes)
+                    { return yes; }
+                }
+                return false;
+            }
+            return Factors.Contains(t.Group);
         }
 
         public Token Infix(Token infix, Token left)
@@ -503,7 +524,7 @@ namespace Nana.Syntaxes
                         }
                         else
                         {
-                            result.Add(ExprF(def.Rbp));
+                            result.Add(ExprF(0));
                         }
                         break;
                     default:

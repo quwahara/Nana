@@ -40,7 +40,7 @@ namespace UnitTest.Tokens
 2   Factor
 ";
             Epc =
-@"V:2 G:Factor B:0 T:
+@"V:2 G:Factor B:0
 ";
             Test();
         }
@@ -53,8 +53,8 @@ namespace UnitTest.Tokens
 3   Factor
 ";
             Epc =
-@"V:3 G:Factor B:0 T:
-V:3 G:Factor B:0 T:
+@"V:3 G:Factor B:0
+V:3 G:Factor B:0
 ";
             Test();
         }
@@ -68,9 +68,9 @@ V:3 G:Factor B:0 T:
 4   Factor
 ";
             Epc =
-@"V:4 G:Factor B:0 T:
-V:4 G:Factor B:0 T:
-V:4 G:Factor B:0 T:
+@"V:4 G:Factor B:0
+V:4 G:Factor B:0
+V:4 G:Factor B:0
 ";
             Test();
         }
@@ -112,7 +112,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"//";
-            epc = @"V:// G:Cmt B:0 T:/Pos=2";
+            epc = @"V:// G:Cmt B:0/Pos=2";
             Run(inp, epc);
         }
 
@@ -121,7 +121,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"//a";
-            epc = @"V://a G:Cmt B:0 T:/Pos=3";
+            epc = @"V://a G:Cmt B:0/Pos=3";
             Run(inp, epc);
         }
 
@@ -130,7 +130,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"//abc";
-            epc = @"V://abc G:Cmt B:0 T:/Pos=5";
+            epc = @"V://abc G:Cmt B:0/Pos=5";
             Run(inp, epc);
         }
 
@@ -140,7 +140,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"...";
-            epc = @"V:... G:Id B:0 T:/Pos=3";
+            epc = @"V:... G:Id B:0/Pos=3";
             Run(inp, epc);
         }
 
@@ -149,7 +149,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"==";
-            epc = @"V:== G:Ope B:0 T:/Pos=2";
+            epc = @"V:== G:Ope B:0/Pos=2";
             Run(inp, epc);
         }
 
@@ -194,7 +194,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"""""";
-            epc = @"V:"""" G:Str B:0 T:/Pos=2";
+            epc = @"V:"""" G:Str B:0/Pos=2";
             Run(inp, epc);
         }
 
@@ -203,7 +203,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"""a""";
-            epc = @"V:""a"" G:Str B:0 T:/Pos=3";
+            epc = @"V:""a"" G:Str B:0/Pos=3";
             Run(inp, epc);
         }
 
@@ -212,7 +212,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"""abc""";
-            epc = @"V:""abc"" G:Str B:0 T:/Pos=5";
+            epc = @"V:""abc"" G:Str B:0/Pos=5";
             Run(inp, epc);
         }
 
@@ -221,7 +221,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"""\\""";
-            epc = @"V:""\\"" G:Str B:0 T:/Pos=4";
+            epc = @"V:""\\"" G:Str B:0/Pos=4";
             Run(inp, epc);
         }
 
@@ -230,7 +230,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"""\\\\""";
-            epc = @"V:""\\\\"" G:Str B:0 T:/Pos=6";
+            epc = @"V:""\\\\"" G:Str B:0/Pos=6";
             Run(inp, epc);
         }
 
@@ -239,7 +239,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"""\""""";
-            epc = @"V:""\"""" G:Str B:0 T:/Pos=4";
+            epc = @"V:""\"""" G:Str B:0/Pos=4";
             Run(inp, epc);
         }
 
@@ -248,7 +248,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"""\""\""\""""";
-            epc = @"V:""\""\""\"""" G:Str B:0 T:/Pos=8";
+            epc = @"V:""\""\""\"""" G:Str B:0/Pos=8";
             Run(inp, epc);
         }
 
@@ -259,7 +259,7 @@ V:4 G:Factor B:0 T:
             inp = @"""
 """;
             epc = @"V:""
-"" G:Str B:0 T:/Pos=1";
+"" G:Str B:0/Pos=1";
             Run(inp, epc);
         }
 
@@ -296,7 +296,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"/.,/";
-            epc = @"V:/.,/ G:Cmt B:0 T:/Pos=4";
+            epc = @"V:/.,/ G:Cmt B:0/Pos=4";
             Run(inp, epc);
         }
 
@@ -305,7 +305,7 @@ V:4 G:Factor B:0 T:
         {
             string inp, epc;
             inp = @"/.abc,/";
-            epc = @"V:/.abc,/ G:Cmt B:0 T:/Pos=7";
+            epc = @"V:/.abc,/ G:Cmt B:0/Pos=7";
             Run(inp, epc);
         }
 
@@ -317,7 +317,7 @@ V:4 G:Factor B:0 T:
 ,/
 ";
             epc = @"V:/.
-,/ G:Cmt B:0 T:/Pos=2";
+,/ G:Cmt B:0/Pos=2";
             Run(inp, epc);
         }
 
@@ -333,7 +333,7 @@ hij,/
             epc = @"V:/.
 abcd
 efg
-hij,/ G:Cmt B:0 T:/Pos=5";
+hij,/ G:Cmt B:0/Pos=5";
             Run(inp, epc);
         }
 

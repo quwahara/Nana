@@ -17,8 +17,8 @@ namespace Nana.Syntaxes
     {
         public string Kind = "";
         public string Value = "";
-        public string Key = "";
-        public int Rbp = 0;
+        //public string Key = "";
+        //public int Rbp = 0;
         public string Appearance = "";
         public string Group = "";
         public PrefixDef[] EndDefs = null;
@@ -92,7 +92,7 @@ namespace Nana.Syntaxes
                 d_.Appearance               /**/ = "1";
                 d_.Kind                     /**/ = "Value";
                 //TODO  check is this using
-                d_.Rbp                      /**/ = 0;
+                //d_.Rbp                      /**/ = 0;
                 d_.Group                    /**/ = "";
 
                 idx_ = s_.LastIndexOf('.');
@@ -129,9 +129,9 @@ namespace Nana.Syntaxes
                     }
                 }
 
-                if (d_.Kind.StartsWith("Group"))
-                { d_.Key = "@"; }
-                d_.Key += d_.Value;
+                //if (d_.Kind.StartsWith("Group"))
+                //{ d_.Key = "@"; }
+                //d_.Key += d_.Value;
 
                 return d_;
             };
@@ -235,7 +235,7 @@ namespace Nana.Syntaxes
             StringBuilder b = new StringBuilder();
             if (Value == "(" || Value == ")" || Value == ":") b.Append(@"\");
             b.Append(Value).Append(":").Append(Kind);
-            if (Rbp > 0) b.Append(":" + Rbp.ToString());
+            //if (Rbp > 0) b.Append(":" + Rbp.ToString());
             if (Appearance != "") b.Append(":" + Appearance);
             if (Group != "") b.Append(":" + Group);
             if (EndDefs != null)

@@ -67,9 +67,6 @@ namespace Nana.Tokens
         public int Row = 0;
         public int Col = 0;
 
-        //TODO assess needs of Tag
-        public object Tag = "";
-
         static Token()
         {
             ZEnd = new Token();
@@ -142,31 +139,6 @@ namespace Nana.Tokens
             }
 
             return ts.ToArray();
-        }
-
-        /// <summary>
-        /// Is this group of `group'
-        /// </summary>
-        public bool IsGroupOf(string group)
-        {
-            return IsGroupOf(this.Group, group);
-        }
-
-        /// <summary>
-        /// Is this group of `group'
-        /// </summary>
-        public bool IsGroupOf(List<string> grouplist)
-        {
-            return grouplist.Exists(IsGroupOf);
-        }
-
-        /// <summary>
-        /// Is `value' group of `group'
-        /// </summary>
-        static public bool IsGroupOf(string value, string group)
-        {
-            return value != null && group != null
-                && value.Contains(group);
         }
 
         static public Token FromVG(string value_group)
@@ -385,7 +357,7 @@ namespace Nana.Tokens
 
         public static string ToUTStr(Token t)
         {
-            return "V:" + t.Value + " G:" + t.Group + " B:" + t.Lbp + " T:" + (t.Tag == null ? "(null)" : t.Tag.ToString());
+            return "V:" + t.Value + " G:" + t.Group + " B:" + t.Lbp;
         }
 
     }
