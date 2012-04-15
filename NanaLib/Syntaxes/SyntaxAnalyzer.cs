@@ -419,14 +419,6 @@ namespace Nana.Syntaxes
             return t;
         }
 
-        public Token[] Follows(PrefixDef d)
-        {
-            if (d.Kind != "Refer") throw new InternalError("The kind for follows must be Refer, Kind: "  + d.Kind);
-
-            PrefixDef sdf = GetPrefixDef(d.Value, null);
-            return Follows(sdf.Follows);
-        }
-
         public PrefixDef GetPrefixDef(string value, string group)
         {
             return Defs.Find(delegate(PrefixDef d) { return IsPrefix(value, group, d); });
@@ -442,6 +434,14 @@ namespace Nana.Syntaxes
             return d.Kind.StartsWith("Value") && d.Value == value
                 || d.Kind.StartsWith("Group") && Token.IsGroupOf(group, d.Value)
                 ;
+        }
+
+        public Token[] Follows(PrefixDef d)
+        {
+            if (d.Kind != "Refer") throw new InternalError("The kind for follows must be Refer, Kind: " + d.Kind);
+
+            PrefixDef def = GetPrefixDef(d.Value, null);
+            return Follows(def.Follows);
         }
 
         public Token[] Follows(List<PrefixDef> follows)

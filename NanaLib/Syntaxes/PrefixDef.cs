@@ -17,6 +17,7 @@ namespace Nana.Syntaxes
     {
         public string Kind = "";
         public string Value = "";
+        public string Key = "";
         public int Rbp = 0;
         public string Appearance = "";
         public string Group = "";
@@ -127,6 +128,10 @@ namespace Nana.Syntaxes
                         case 's': d_.Kind = d_.Value; break;
                     }
                 }
+
+                if (d_.Kind.StartsWith("Group"))
+                { d_.Key = "@"; }
+                d_.Key += d_.Value;
 
                 return d_;
             };

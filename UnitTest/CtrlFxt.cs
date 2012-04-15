@@ -22,6 +22,8 @@ namespace UnitTest
     {
         private string Prv0()
         {
+            List<string> sls = new List<string>();
+            string sss = sls[99];
             try
             {
             }
@@ -962,12 +964,9 @@ System.Console.WriteLine(i)
         {
             Inp =
 @"
-try
-    throw Exception(""xxx"")
-catch IndexOutOfRangeException do
-catch ex:Exception do
-finally
-end
+System.Collections.Generic.List<string>()
+-> ls
+ls[0] -> s
 ";
             EpcSyn = @"
 x
