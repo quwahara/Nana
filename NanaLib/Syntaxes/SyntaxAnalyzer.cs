@@ -74,7 +74,7 @@ namespace Nana.Syntaxes
             290 :
             280 *   /   %
             270 +   -
-            260 <_  >_  <=  >=
+            260 <   >   <=  >=
             240 ==  !=
             230 and
             220 xor
@@ -93,7 +93,7 @@ namespace Nana.Syntaxes
             300 (   )
             300 [   ]
             300 {   }
-            300 <   >
+            300 `<  >
             ";
 
         static public readonly string SuffixBpsTxt = @"
@@ -117,6 +117,7 @@ namespace Nana.Syntaxes
         public Dictionary<string, int> SuffixBps;
         public List<string> Factors;
         public Token _Cur;
+        public Stack<string> DisabledInfix;
 
         public ITokenEnumerator Tokens;
         public Func<Token, bool> IsPrefix = delegate(Token t) { return false; };
@@ -135,6 +136,7 @@ namespace Nana.Syntaxes
             Factors = Sty.ToStringListAndClean(factors);
             SuffixBps       /**/ = CreateBps(suffixBps,     /*pickOne=*/ true);
             CircumfixR = CreateWith1and2(circumfixBps);
+            DisabledInfix = new Stack<string>();
         }
 
         static public Dictionary<string, string> CreateWith1and2(string src)
@@ -210,14 +212,22 @@ namespace Nana.Syntaxes
                 
                 _Cur = Tokens.Cur;
                 // apply sentence kind
-                if (InfixBps.ContainsKey(_Cur.Value))
+                if (InfixBps.ContainsKey(_Cur.Value) && false == IsDisabledInfix(_Cur.Value))
                 {
                     _Cur.Lbp = InfixBps[_Cur.Value];
                 }
-                else if (InfixRBps.ContainsKey(_Cur.Value))
+                else if (InfixRBps.ContainsKey(_Cur.Value) && false == IsDisabledInfix(_Cur.Value))
                 {
                     _Cur.Lbp = InfixRBps[_Cur.Value];
                 }
+                //if (InfixBps.ContainsKey(_Cur.Value))
+                //{
+                //    _Cur.Lbp = InfixBps[_Cur.Value];
+                //}
+                //else if (InfixRBps.ContainsKey(_Cur.Value))
+                //{
+                //    _Cur.Lbp = InfixRBps[_Cur.Value];
+                //}
                 else if (CircumfixBps.ContainsKey(_Cur.Value))
                 {
                     _Cur.Lbp = CircumfixBps[_Cur.Value];
@@ -229,6 +239,13 @@ namespace Nana.Syntaxes
                 }
                 return _Cur;
             }
+        }
+
+        public bool IsDisabledInfix(string s)
+        {
+            return DisabledInfix.Count > 0
+                && DisabledInfix.Peek() == s
+                ;
         }
 
         public Token Analyze()
@@ -282,10 +299,17 @@ namespace Nana.Syntaxes
 
                 string begin = infix.Value;
                 string end = CircumfixR[begin];
+                
+                bool doDisableInfix = InfixBps.ContainsKey(end) || InfixRBps.ContainsKey(end);
+                if (doDisableInfix)
+                { DisabledInfix.Push(end); }
 
                 //  Does the circumfix have contents?
                 if (Cur.Value != end)
                 { infix.Second = Expr(0); }
+
+                if (doDisableInfix)
+                { DisabledInfix.Pop(); }
 
                 //  Is the circumfix closed?
                 if (Cur.Value != end)

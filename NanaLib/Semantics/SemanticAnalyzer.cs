@@ -255,7 +255,8 @@ namespace Nana.Semantics
                 case ":":   /**/ u = DefineVariable(t); break;
                 case "(":   /**/ u = CallFunc(t); break;
                 case "[":   /**/ u = Bracket(t); break;
-                case "<":   /**/ u = Generics(t); break;
+                case "`<":   /**/ u = Generics(t); break;
+                //case "<":   /**/ u = Generics(t); break;
 
                 default:
                     throw new InternalError(@"The operator is not supported: " + t.Value, t);
@@ -370,8 +371,8 @@ namespace Nana.Semantics
 
                     case "==":
                     case "!=":
-                    case "<_":
-                    case ">_":
+                    case "<":
+                    case ">":
                     case "<=":
                     case ">=":
                     case "and":

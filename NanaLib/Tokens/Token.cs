@@ -53,6 +53,9 @@ namespace Nana.Tokens
         /// It is contained or not in SentenceDef.Ends list (Token that represents the end to determine whether there is a syntax)
         /// </summary>
         public string Group = "";
+        public string[] Groups = EmptyGroups;
+        static public readonly string[] EmptyGroups = new string[] { };
+
 
         // components of syntax tree
 

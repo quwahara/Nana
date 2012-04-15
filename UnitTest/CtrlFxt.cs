@@ -22,6 +22,7 @@ namespace UnitTest
     {
         private string Prv0()
         {
+            List<List<string>> lls = new List<List<string>>();
             List<string> sls = new List<string>();
             string sss = sls[99];
             try
@@ -901,7 +902,7 @@ exitfinally$000001:
         {
             Inp =
 @"
-System.Collections.Generic.List<string>()
+System.Collections.Generic.List`<string>()
 -> ls
 ls.IndexOf("""") -> i
 System.Console.WriteLine(i)
@@ -909,7 +910,7 @@ System.Console.WriteLine(i)
             EpcSyn = @"0Source
 +---[0]->
 |   +---[F](
-|   |   +---[F]<
+|   |   +---[F]`<
 |   |   |   +---[F].
 |   |   |   |   +---[F].
 |   |   |   |   |   +---[F].
@@ -949,6 +950,76 @@ System.Console.WriteLine(i)
     stsfld int32 i
     ldsfld int32 i
     call void [mscorlib]System.Console::WriteLine(int32)
+    ret
+}
+.method static public void '0'() {
+    .entrypoint
+    ret
+}
+";
+            Test();
+        }
+
+        [Test]
+        public void TC0415_List_string_1()
+        {
+            Inp =
+@"
+System.Collections.Generic.List`< System.Collections.Generic.List`<string> >()
+-> ls
+ls.ToString() -> i
+System.Console.WriteLine(i)
+";
+            EpcSyn = @"0Source
++---[0]->
+|   +---[F](
+|   |   +---[F]`<
+|   |   |   +---[F].
+|   |   |   |   +---[F].
+|   |   |   |   |   +---[F].
+|   |   |   |   |   |   +---[F]System
+|   |   |   |   |   |   +---[S]Collections
+|   |   |   |   |   +---[S]Generic
+|   |   |   |   +---[S]List
+|   |   |   +---[S]`<
+|   |   |   |   +---[F].
+|   |   |   |   |   +---[F].
+|   |   |   |   |   |   +---[F].
+|   |   |   |   |   |   |   +---[F]System
+|   |   |   |   |   |   |   +---[S]Collections
+|   |   |   |   |   |   +---[S]Generic
+|   |   |   |   |   +---[S]List
+|   |   |   |   +---[S]string
+|   |   |   |   +---[T]>
+|   |   |   +---[T]>
+|   |   +---[T])
+|   +---[S]ls
++---[1]->
+|   +---[F](
+|   |   +---[F].
+|   |   |   +---[F]ls
+|   |   |   +---[S]ToString
+|   |   +---[T])
+|   +---[S]i
++---[2](
+    +---[F].
+    |   +---[F].
+    |   |   +---[F]System
+    |   |   +---[S]Console
+    |   +---[S]WriteLine
+    +---[S]i
+    +---[T])
+";
+            EpcIL = @".field static class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>> ls
+.field static string i
+.method static public void .cctor() {
+    newobj instance void class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>>::.ctor()
+    stsfld class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>> ls
+    ldsfld class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>> ls
+    callvirt instance string class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>>::ToString()
+    stsfld string i
+    ldsfld string i
+    call void [mscorlib]System.Console::WriteLine(string)
     ret
 }
 .method static public void '0'() {

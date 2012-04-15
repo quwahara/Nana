@@ -133,7 +133,8 @@ namespace Nana.CodeGeneration
                 b.Append("<");
                 b.Append(string.Join(", "
                     , new List<Typ>(t.GenericTypeParams)
-                    .ConvertAll<string>(TypeFullName)
+                    .ConvertAll<string>(TypeNameInSig)
+                    //.ConvertAll<string>(TypeFullName)
                     .ToArray()
                     ));
                 b.Append(">");

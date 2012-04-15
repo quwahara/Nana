@@ -849,9 +849,9 @@ System.Console.WriteLine(i)
 System.Console.WriteLine(i)
 1 != 1 -> i
 System.Console.WriteLine(i)
-1 >_ 1 -> i
+1 > 1 -> i
 System.Console.WriteLine(i)
-1 <_ 1 -> i
+1 < 1 -> i
 System.Console.WriteLine(i)
 1 >= 1 -> i
 System.Console.WriteLine(i)
