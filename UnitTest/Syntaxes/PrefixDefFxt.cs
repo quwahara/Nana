@@ -46,7 +46,7 @@ namespace UnitTest.Syntaxes
         public void T102_IdDotDecDef()
         {
             Inp = GetDef(@"0iddotdec");
-            Epc = @"0iddotdec:ValueClause:1:(Id:GroupClause:1:(.:ValueClause:*:(Id:Group:1)))";
+            Epc = @"0iddotdec:ValueClause:1:(Id:GroupClause:1:Id:(.:ValueClause:*:(Id:Group:1:Id)))";
             Test();
         }
 
@@ -78,7 +78,7 @@ namespace UnitTest.Syntaxes
         public void T107_BodyDecDef()
         {
             Inp = GetDef(@"0bodydec");
-            Epc = @"0bodydec:ValueClause:1:(Bgn:GroupClause:1:Block:(Expr:Expr:*:(End)), End:Group:1)";
+            Epc = @"0bodydec:ValueClause:1:(Bgn:GroupClause:1:Block:(Expr:Expr:*:(End)), End:Group:1:End)";
 
             Test();
         }
@@ -95,7 +95,7 @@ namespace UnitTest.Syntaxes
         public void T109_FncDef()
         {
             Inp = GetDef(@"Fnc");
-            Epc = @"Fnc:GroupClause:1:Fnc:(Id:Group:1, 0funcdec:Refer:1)";
+            Epc = @"Fnc:GroupClause:1:Fnc:(Id:Group:1:Id, 0funcdec:Refer:1)";
             Test();
         }
 

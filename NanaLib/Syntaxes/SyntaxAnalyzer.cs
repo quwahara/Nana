@@ -346,7 +346,7 @@ namespace Nana.Syntaxes
 
             cons.@0     _(  (.@1    Expr.s? _)  )   0conscall.r 0attrdec.r  0bodydec.r      -- Fnc  PrmDef
 
-            Fnc.g@0     Id.g 0funcdec.r          -- Fnc
+            Fnc.g   Id.g 0funcdec.r
 
                 0funcdec    _(  (.@0    Expr.s? _)  ) 0typedec.r 0attrdec.r 0bodydec.r          -- PrmDef
                 0typedec    _(  :.?@0   Expr.s  _)                                                  --  TypeSpec

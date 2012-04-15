@@ -18,7 +18,6 @@ namespace Nana.Syntaxes
         public string Kind = "";
         public string Value = "";
         //public string Key = "";
-        //public int Rbp = 0;
         public string Appearance = "";
         public string Group = "";
         public PrefixDef[] EndDefs = null;
@@ -91,8 +90,6 @@ namespace Nana.Syntaxes
                 d_                          /**/ = new PrefixDef();
                 d_.Appearance               /**/ = "1";
                 d_.Kind                     /**/ = "Value";
-                //TODO  check is this using
-                //d_.Rbp                      /**/ = 0;
                 d_.Group                    /**/ = "";
 
                 idx_ = s_.LastIndexOf('.');
@@ -123,7 +120,11 @@ namespace Nana.Syntaxes
                             d_.Appearance = e_.ToString(); break;
 
                         case 'v': d_.Kind = "Value"; break;
-                        case 'g': d_.Kind = "Group"; break;
+                        case 'g':
+                            d_.Kind = "Group";
+                            if (string.IsNullOrEmpty(d_.Group))
+                            { d_.Group = d_.Value; }
+                            break;
                         case 'r': d_.Kind = "Refer"; break;
                         case 's': d_.Kind = d_.Value; break;
                     }
