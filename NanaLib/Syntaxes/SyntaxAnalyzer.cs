@@ -495,7 +495,7 @@ namespace Nana.Syntaxes
                     case "Expr":
                         if ("?*".Contains(def.Appearance))
                         {
-                            Token xs = Exprs(def.Ends);
+                            Token xs = Exprs(def.EndDefs);
                             if (xs == null)
                             { ++i; }
                             else
@@ -519,29 +519,17 @@ namespace Nana.Syntaxes
             return result.ToArray();
         }
 
-        public Token Exprs(string[] ends)
+        public Token Exprs(PrefixDef[] ends)
         {
             if (ends == null)       /**/ { throw new InternalError(@"Ends array is null"); }
             if (ends.Length == 0)   /**/ { throw new InternalError(@"Ends array is empty"); }
 
-            if (IsInEnds(Tokens.Cur, ends)) { return null; }
-            return ExprF(0);
-        }
-
-        static public bool IsInEnds(Token t, string[] ends)
-        {
-            foreach (string end in ends)
+            foreach (PrefixDef d in ends)
             {
-                if (end.EndsWith(".g"))
-                {
-                    if (t.IsGroupOf(end.Substring(0, end.Length - ".g".Length))) { return true; }
-                }
-                else
-                {
-                    if (t.Value == end) { return true; }
-                }
+                if (d.MatchTo(Tokens.Cur))
+                { return null; }
             }
-            return false;
+            return ExprF(0);
         }
 
     }   //  end of PrefixAnalyzer

@@ -21,17 +21,17 @@ namespace Nana.Syntaxes
         public int Rbp = 0;
         public string Appearance = "";
         public string Group = "";
-        public string[] Ends = null;
+        public PrefixDef[] EndDefs = null;
         public PrefixDef Parent = null;
         public List<PrefixDef> Follows = null;
 
-        public static string[] CreateEnds(PrefixDef s)
+        public static PrefixDef[] CreateEndDefs(PrefixDef s)
         {
-            List<string> result             /**/ = new List<string>();
+            List<PrefixDef> result          /**/ = new List<PrefixDef>();
 
             //  e.g. 'elif' becomes an end by itself.
             if (s.Kind.EndsWith("Clause") && (s.Appearance == "*" || s.Appearance == "+"))
-            { result.Add(s.Value); }
+            { result.Add(s); }
 
             if (s.Parent == null)           /**/ { return result.ToArray(); }
             if (s.Parent.Follows == null)   /**/ { return result.ToArray(); }
@@ -43,12 +43,12 @@ namespace Nana.Syntaxes
                 PrefixDef sib               /**/ = siblings[i];
                 if (sib.Kind == "Value" || sib.Kind.EndsWith("Clause") || sib.Kind == "Group")
                 {
-                    result.Add(sib.Value + (sib.Kind == "Group" ? ".g" : ""));
+                    result.Add(sib);
                     if (sib.Appearance == "1") { return result.ToArray(); }
                 }
             }
-            result.AddRange(CreateEnds(s.Parent));
-            
+            result.AddRange(CreateEndDefs(s.Parent));
+
             return result.ToArray();
         }
 
@@ -179,7 +179,7 @@ namespace Nana.Syntaxes
                 {
                     if (p_.Value == "Expr" && "?*".Contains(p_.Appearance))
                     {
-                        p_.Ends = CreateEnds(p_);
+                        p_.EndDefs = CreateEndDefs(p_);
                     }
                     else if (p_.Follows != null)
                     {
@@ -238,11 +238,11 @@ namespace Nana.Syntaxes
             if (Rbp > 0) b.Append(":" + Rbp.ToString());
             if (Appearance != "") b.Append(":" + Appearance);
             if (Group != "") b.Append(":" + Group);
-            if (Ends != null)
+            if (EndDefs != null)
             {
                 b.Append(":(");
-                if (Ends.Length > 0) b.Append(Ends[0]);
-                for (int i = 1; i < Ends.Length; i++) b.Append("," + Ends[i]);
+                if (EndDefs.Length > 0) b.Append(EndDefs[0].Value);
+                for (int i = 1; i < EndDefs.Length; i++) b.Append("," + EndDefs[i].Value);
                 b.Append(")");
             }
             if (Follows != null)
