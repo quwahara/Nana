@@ -898,7 +898,7 @@ exitfinally$000001:
         }
 
         [Test]
-        public void TC0315_List_string_1()
+        public void TC0315_List_string()
         {
             Inp =
 @"
@@ -961,13 +961,13 @@ System.Console.WriteLine(i)
         }
 
         [Test]
-        public void TC0415_List_string_1()
+        public void TC0415_List_List_string()
         {
             Inp =
 @"
 System.Collections.Generic.List`< System.Collections.Generic.List`<string> >()
 -> ls
-ls.ToString() -> i
+ls.Count -> i
 System.Console.WriteLine(i)
 ";
             EpcSyn = @"0Source
@@ -995,11 +995,9 @@ System.Console.WriteLine(i)
 |   |   +---[T])
 |   +---[S]ls
 +---[1]->
-|   +---[F](
-|   |   +---[F].
-|   |   |   +---[F]ls
-|   |   |   +---[S]ToString
-|   |   +---[T])
+|   +---[F].
+|   |   +---[F]ls
+|   |   +---[S]Count
 |   +---[S]i
 +---[2](
     +---[F].
@@ -1011,15 +1009,15 @@ System.Console.WriteLine(i)
     +---[T])
 ";
             EpcIL = @".field static class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>> ls
-.field static string i
+.field static int32 i
 .method static public void .cctor() {
     newobj instance void class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>>::.ctor()
     stsfld class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>> ls
     ldsfld class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>> ls
-    callvirt instance string class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>>::ToString()
-    stsfld string i
-    ldsfld string i
-    call void [mscorlib]System.Console::WriteLine(string)
+    callvirt instance int32 class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>>::get_Count()
+    stsfld int32 i
+    ldsfld int32 i
+    call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
 .method static public void '0'() {

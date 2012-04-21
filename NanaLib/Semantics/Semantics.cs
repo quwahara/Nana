@@ -668,6 +668,7 @@ namespace Nana.Semantics
         public bool IsGenericInstance = false;
 
         public List<Ovld> Ovlds = new List<Ovld>();
+        public List<Prop> Props = new List<Prop>();
 
         public List<Nmd> DebuggerDisplayMembers { get { return Members_; } }
 
@@ -707,7 +708,7 @@ namespace Nana.Semantics
         public Ovld NewOvld(string name)
         {
             if (Members_.Exists(GetNamePredicate<Nmd>(name)))
-            { throw new SyntaxError("The name is already defined: " + name); }
+            { throw new SemanticError("The name is already defined: " + name); }
             Ovld ovl = new Ovld(new Token(name), E);
             Ovlds.Add(ovl);
             BeAMember(ovl);
@@ -801,9 +802,18 @@ namespace Nana.Semantics
             return ovld.NewFun(mb);
         }
 
+        public Prop FindProp(string name)
+        {
+            EnsureMembers();
+            return Props.Find(GetNamePredicate<Prop>(name));
+        }
+
         public Prop NewProp(PropertyInfo p)
         {
-            return BeAMember<Prop>(new Prop(p, E));
+            Prop prp = new Prop(p, E);
+            Props.Add(prp);
+            BeAMember<Prop>(new Prop(p, E));
+            return prp;
         }
 
         public bool IsAssignableFrom(Typ y)
@@ -859,43 +869,83 @@ namespace Nana.Semantics
 
             Typ gt = self.GenericType;
             gt.EnsureMembers();
-            foreach (Ovld gao in gt.Ovlds)
+            
+            List<Variable> nvs = new List<Variable>();
+            Action<Ovld, Fun> newfun = delegate(Ovld newovld_, Fun gfun_)
             {
-                Ovld sao = self.FindOrNewOvld(gao.Name);
-                List<Variable> svs = new List<Variable>();
-                foreach (Fun ga in gao.Funs)
+                Variable nv; Typ nvty; int genericIndex;
+                nvs.Clear();
+                foreach (Variable gv in gfun_.Params)
                 {
-                    Variable sv; Typ st; int genericIndex;
-                    svs.Clear();
-                    foreach (Variable gv in ga.Params)
-                    {
-                        if (gv.VarKind != Variable.VariableKind.Param)
-                        {
-                            continue;
-                        }
-                        st = TransGenericType(self, gv.Att.TypGet);
-                        sv = new Variable(gv.Name, st, Variable.VariableKind.Param);
-                        genericIndex = self.GenericDic.ContainsKey(gv.Att.TypGet.Name)
-                            ? Array.IndexOf(self.GenericTypeParams, self.GenericDic[gv.Att.TypGet.Name])
-                            : -1;
-                        sv.GenericIndex = genericIndex;
-                        if (genericIndex >= 0)
-                        {
-                            sv.VarKind = Variable.VariableKind.ParamGeneric;
-                        }
-                        svs.Add(sv);
-                    }
-
-
-                    {
-                        Typ rettyp = ga.Att.CanGet
-                            ? TransGenericType(self, ga.Att.TypGet)
-                            : self.E.BTY.Void
-                            ;
-                        sao.NewFun(new Token(ga.Name), svs, rettyp);
-                    }
+                    if (gv.VarKind != Variable.VariableKind.Param)
+                    { continue; }
+                    nvty = TransGenericType(self, gv.Att.TypGet);
+                    nv = new Variable(gv.Name, nvty, Variable.VariableKind.Param);
+                    genericIndex = self.GenericDic.ContainsKey(gv.Att.TypGet.Name)
+                        ? Array.IndexOf(self.GenericTypeParams, self.GenericDic[gv.Att.TypGet.Name])
+                        : -1;
+                    nv.GenericIndex = genericIndex;
+                    if (genericIndex >= 0)
+                    { nv.VarKind = Variable.VariableKind.ParamGeneric; }
+                    nvs.Add(nv);
                 }
+
+                {
+                    Typ rettyp = gfun_.Att.CanGet
+                        ? TransGenericType(self, gfun_.Att.TypGet)
+                        : self.E.BTY.Void
+                        ;
+                    newovld_.NewFun(new Token(gfun_.Name), nvs, rettyp);
+                }
+            };
+
+            foreach (Ovld govld in gt.Ovlds)
+            {
+                Ovld newovld = self.FindOrNewOvld(govld.Name);
+                foreach (Fun gfun in govld.Funs)
+                { newfun(newovld, gfun); }
+
+                //Ovld sao = self.FindOrNewOvld(gao.Name);
+                //List<Variable> svs = new List<Variable>();
+                //foreach (Fun ga in gao.Funs)
+                //{
+                //    Variable sv; Typ st; int genericIndex;
+                //    svs.Clear();
+                //    foreach (Variable gv in ga.Params)
+                //    {
+                //        if (gv.VarKind != Variable.VariableKind.Param)
+                //        {
+                //            continue;
+                //        }
+                //        st = TransGenericType(self, gv.Att.TypGet);
+                //        sv = new Variable(gv.Name, st, Variable.VariableKind.Param);
+                //        genericIndex = self.GenericDic.ContainsKey(gv.Att.TypGet.Name)
+                //            ? Array.IndexOf(self.GenericTypeParams, self.GenericDic[gv.Att.TypGet.Name])
+                //            : -1;
+                //        sv.GenericIndex = genericIndex;
+                //        if (genericIndex >= 0)
+                //        {
+                //            sv.VarKind = Variable.VariableKind.ParamGeneric;
+                //        }
+                //        svs.Add(sv);
+                //    }
+
+
+                //    {
+                //        Typ rettyp = ga.Att.CanGet
+                //            ? TransGenericType(self, ga.Att.TypGet)
+                //            : self.E.BTY.Void
+                //            ;
+                //        sao.NewFun(new Token(ga.Name), svs, rettyp);
+                //    }
+                //}
             }
+
+            foreach (Prop p in gt.Props)
+            {
+                self.BeAMember<Prop>(p);
+            }
+
         }
 
         static public Typ TransGenericType(Typ instance, Typ generic)
