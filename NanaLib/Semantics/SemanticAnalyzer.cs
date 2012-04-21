@@ -69,6 +69,9 @@ namespace Nana.Semantics
             return Above == null ? null : Above.GetType() == typeof(T) ? Above as T : Above.FindUpTypeOf<T>();
         }
 
+        public void ErNameDuplication(Token dupname, Nsp n)
+        { throw new SemanticError(string.Format("The {0} is already defined in {1}", dupname.Value, n.Name), dupname); }
+
     }
 
     public class LineAnalyzer : SemanticAnalyzer
@@ -202,6 +205,7 @@ namespace Nana.Semantics
                 case "Dot":         /**/ u = Dot(t); break;
                 case "If":          /**/ u = If(t); break;
                 case "While":       /**/ u = While(t); break;
+                    //  TODO cehck TypeSpec2
                 case "TypeSpec2":   /**/ u = TypeSpec(t); break;
                 case "Typ":         /**/ u = DefineVariable(t); break;
                 case "Ret":         /**/ u = Ret(t); break;
@@ -307,6 +311,7 @@ namespace Nana.Semantics
 
             if ((tu.GetType() == typeof(Nmd)) == false
                 && (tu is ArrayAccessInfo) == false
+                && (tu is FieldAccessInfo) == false
                 && ((tu is Sema) && (tu as Sema).Att.CanSet) == false
                 )
             {
@@ -316,6 +321,10 @@ namespace Nana.Semantics
             if (tu is ArrayAccessInfo)
             {
                 return new ArraySetInfo(tu as ArrayAccessInfo, gv2);
+            }
+            if (tu is FieldAccessInfo)
+            {
+                return new FieldSetInfo(tu as FieldAccessInfo, gv2);
             }
             if (tu.GetType() == typeof(CallPropInfo))
             {
@@ -726,6 +735,8 @@ namespace Nana.Semantics
             if (mbr == null) { throw new SemanticError(string.Format("{0} is not a member of {1}", t.Second.Value, y._FullName), t.Second); }
             if (mbr is Enu) { return mbr; }
             if (mbr is Prop) { return new CallPropInfo(y, mbr as Prop, v); };
+            if (mbr is Variable && (mbr as Variable).VarKind == Variable.VariableKind.Field)
+            { return new FieldAccessInfo(mbr as Variable, v); }
 
             return new Member(y, mbr, v);
         }
@@ -1172,16 +1183,24 @@ namespace Nana.Semantics
 
         public void AnalyzeTyp()
         {
-            Token t = Seed;
-            Token name = t.Find("@Name");
+            Token s = Seed;
+            Token name = s.Find("@Name");
             if (name == null || string.IsNullOrEmpty(name.Value))
-            { throw new InternalError("Specify name to the type", t); }
+            { throw new InternalError("Specify name to the type", s); }
 
             AppAnalyzer appazr = FindUpTypeOf<AppAnalyzer>();
             App app = appazr.App;
-            if (app.ContainsKey(name.Value))
+            if (app.HasMember(name.Value))
             { throw new SemanticError("The type is already defined. Type name:" + name.Value, name); }
             Typ = app.NewTyp(name);
+
+            foreach (Token t in Seed.Find("@Block").Follows)
+            {
+                if (t.Group == "Fnc")
+                { continue; }
+
+                Gate(t);
+            }
 
             base.Nsp = base.Fun = Typ;
         }
@@ -1204,6 +1223,14 @@ namespace Nana.Semantics
             if (nt == typeof(Ovld))
             { return new Member(Typ, n, null); }
             return n;
+        }
+
+        public override Variable NewVar(string name, Typ typ)
+        {
+            if (Typ.HasMember(name))
+            { ErNameDuplication(new Token(name), Typ); }
+
+            return Typ.NewVar(name, typ);
         }
 
     }

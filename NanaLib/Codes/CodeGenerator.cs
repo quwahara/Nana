@@ -291,16 +291,28 @@ namespace Nana.CodeGeneration
                 .AppendLine();
 
             foreach (Variable v in ap.Vars)
-            { b.Append(DeclareField(v)); }
+            { b.Append(DeclareFieldStatic(v)); }
 
             return b.ToString();
         }
 
-        public string DeclareField(Variable v)
+        public string DeclareFieldStatic(Variable v)
+        {
+            return DeclareField(v, /*isStatic=*/ true);
+        }
+
+        public string DeclareFieldInstance(Variable v)
+        {
+            return DeclareField(v, /*isStatic=*/ false);
+        }
+
+        public string DeclareField(Variable v, bool isStatic)
         {
             StringBuilder b = new StringBuilder();
-            b.Append(".field static ")
-                .Append(TypeNameInSig(v.Att.TypGet))
+            b.Append(".field ");
+            if (isStatic)
+            { b.Append("static "); }
+            b.Append(TypeNameInSig(v.Att.TypGet))
                 .Append(" ")
                 .Append(Qk(v.Name))
                 .AppendLine();
@@ -328,6 +340,10 @@ namespace Nana.CodeGeneration
             b.Append(" {").AppendLine();
 
             IndentDepth += 1;
+
+            string ind = GetCurrentIndent();
+            foreach (Variable v in d.Flds)
+            { b.Append(ind).Append(DeclareFieldInstance(v)); }
 
             return b.ToString();
         }
@@ -493,7 +509,7 @@ namespace Nana.CodeGeneration
                 case Variable.VariableKind.This: return OpCodes.Ldarg_0.ToString();
                 case Variable.VariableKind.Param: return S(OpCodes.Ldarg, Qk(v.Name));
                 case Variable.VariableKind.Local: return S(OpCodes.Ldloc, Qk(v.Name));
-                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsfld, TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name));
+                case Variable.VariableKind.Field: return S(v.Att.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name));
                 case Variable.VariableKind.Vector: return S(OpCodes.Ldelem, TypeNameInSig(v.Att.TypGet));
             }
             throw new NotSupportedException();
@@ -531,7 +547,7 @@ namespace Nana.CodeGeneration
                     }
                     return S(OpCodes.Ldarga, Qk(v.Name));
                 case Variable.VariableKind.Local: return S(OpCodes.Ldloca, Qk(v.Name));
-                case Variable.VariableKind.StaticField: return S(OpCodes.Ldsflda, TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name));
+                case Variable.VariableKind.Field: return S(v.Att.IsStatic ? OpCodes.Ldsflda : OpCodes.Ldflda, TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name));
             }
             throw new NotSupportedException();
         }
@@ -543,7 +559,7 @@ namespace Nana.CodeGeneration
             {
                 case Nana.Semantics.Variable.VariableKind.Param: return S(OpCodes.Starg, Qk(v.Name));
                 case Nana.Semantics.Variable.VariableKind.Local: return S(OpCodes.Stloc, Qk(v.Name));
-                case Nana.Semantics.Variable.VariableKind.StaticField: return S(OpCodes.Stsfld, TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name));
+                case Nana.Semantics.Variable.VariableKind.Field: return S(v.Att.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name));
             }
             throw new NotSupportedException();
         }

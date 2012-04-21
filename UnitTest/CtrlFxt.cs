@@ -20,8 +20,14 @@ namespace UnitTest
 {
     public class Class0
     {
+        public object ZZZ;
+
         private string Prv0()
         {
+            Class0 c0 = new Class0();
+            c0.ZZZ = "zzz";
+
+
             List<List<string>> lls = new List<List<string>>();
             List<string> sls = new List<string>();
             string sss = sls[99];
@@ -1028,14 +1034,23 @@ System.Console.WriteLine(i)
             Test();
         }
 
+        //  book
+
         //[Test]
         public void ZZZ()
         {
             Inp =
 @"
 class C
-..
+...
     Field : int
+
+    sfun Main():void
+    ..
+        c       = C()
+        c.Field = 7
+        //v       = c.Field
+    ,,
 ,,,
 ";
             EpcSyn = @"

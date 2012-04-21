@@ -18,6 +18,7 @@ namespace Nana.Semantics
 {
     public class Attr
     {
+        public bool IsStatic = false;
         public bool CanExec_ = false;
         public bool CanExec { get { return CanExec_ || CanGet || CanSet; } }
         public bool CanGet { get { return CanDo(TypGet); } }
@@ -143,7 +144,7 @@ namespace Nana.Semantics
             }
         }
 
-        public bool ContainsKey(string name)
+        public bool HasMember(string name)
         { return Members.Exists(GetNamePredicate<Nmd>(name)); }
 
         public T BeAMember<T>(T member) where T : Nmd
@@ -694,6 +695,15 @@ namespace Nana.Semantics
             BaseTyp = baseTyp;
         }
 
+        public List<Variable> Flds = new List<Variable>();
+
+        override public Variable NewVar(string name, Typ typ)
+        {
+            Variable v = new Variable(name, typ, Variable.VariableKind.Field);
+            Flds.Add(v);
+            return BeAMember(v);
+        }
+
         public Ovld FindOrNewOvld(string name)
         {
             return FindFunOvld(name) ?? NewOvld(name);
@@ -1026,7 +1036,9 @@ namespace Nana.Semantics
 
         override public Variable NewVar(string name, Typ typ)
         {
-            Variable v = new Variable(name, typ, Variable.VariableKind.StaticField);
+            Variable v = new Variable(name, typ, Variable.VariableKind.Field);
+            //Variable v = new Variable(name, typ, Variable.VariableKind.StaticField);
+            v.Att.IsStatic = true;
             Vars.Add(v);
             return BeAMember(v);
         }
@@ -1176,10 +1188,13 @@ namespace Nana.Semantics
 
     public class Variable : Nmd
     {
+        //TODO  remove vector? and array because of unuse
         public enum VariableKind
         {
-            Param, This, Local, StaticField, InstanceField,
-            Vector, Array, ParamGeneric
+            Param, This, Local,
+            Field,
+            Vector, Array,
+            ParamGeneric
         }
         public VariableKind VarKind;
         public int GenericIndex = -1;
@@ -1825,6 +1840,68 @@ namespace Nana.Semantics
             }
             gen.StArrayElement(t, t2);
         }
+    }
+
+    public class FieldAccessInfo : Sema
+    {
+        public Variable Fld;
+        public Sema Instance;
+
+        public FieldAccessInfo(Variable fld, Sema instance)
+        {
+            Fld = fld;
+            Instance = instance;
+
+            Att.TypGet = Att.TypSet = fld.Att.TypGet;
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            Instance.Give(gen);
+            gen.LoadVariable(Fld);
+        }
+
+        public override void Addr(IMRGenerator gen)
+        {
+            Give(gen);
+        }
+
+        public override void Exec(IMRGenerator gen)
+        {
+            Give(gen);
+            gen.Pop();
+        }
+    }
+
+    public class FieldSetInfo : Sema
+    {
+        public FieldAccessInfo FldAcc;
+        public Sema GiveVal;
+
+        public FieldSetInfo(FieldAccessInfo fldacc, Sema giveVal)
+        {
+            FldAcc = fldacc;
+            GiveVal = giveVal;
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            FldAcc.Give(gen);
+        }
+
+        public override void Take(IMRGenerator gen)
+        {
+            FldAcc.Instance.Give(gen);
+            GiveVal.Give(gen);
+            gen.StoreVariable(FldAcc.Fld);
+        }
+
+        public override void Exec(IMRGenerator gen)
+        {
+            Give(gen);
+            gen.Pop();
+        }
+
     }
 
     public class Custom : Sema
