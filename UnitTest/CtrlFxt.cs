@@ -1033,9 +1033,10 @@ System.Console.WriteLine(i)
         {
             Inp =
 @"
-System.Collections.Generic.List<string>()
--> ls
-ls[0] -> s
+class C
+..
+    Field : int
+,,,
 ";
             EpcSyn = @"
 x

@@ -1165,7 +1165,7 @@ namespace Nana.Semantics
 
         public override void ConstructSubs()
         {
-            foreach (Token t in Seed.Select("@TypeBody/@Fnc"))
+            foreach (Token t in Seed.Select("@Block/@Fnc"))
             { Subs.AddLast(new FunAnalyzer(t, this)); }
             ConstructSubsAll();
         }
