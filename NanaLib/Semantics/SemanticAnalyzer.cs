@@ -318,13 +318,15 @@ namespace Nana.Semantics
                 throw new SyntaxError("Can not assign to: " + take.Value, take);
             }
 
+            Sema prepare = null;
+            if (tu is Assign)
+            { prepare = (tu as Assign).Prepare; }
+            else if (tu is FieldAccessInfo)
+            { prepare = (tu as FieldAccessInfo).Instance; }
+
             if (tu is ArrayAccessInfo)
             {
                 return new ArraySetInfo(tu as ArrayAccessInfo, gv2);
-            }
-            if (tu is FieldAccessInfo)
-            {
-                return new FieldSetInfo(tu as FieldAccessInfo, gv2);
             }
             if (tu.GetType() == typeof(CallPropInfo))
             {
@@ -335,7 +337,7 @@ namespace Nana.Semantics
                 tu = NewVar((tu as Nmd).Seed.Value, gv2.Att.TypGet);
             }
 
-            return new Assign(gv2, tu as Sema);
+            return new Assign(gv2, tu as Sema, prepare);
         }
 
         public object TypeSpec(Token t)

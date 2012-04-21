@@ -1213,18 +1213,32 @@ namespace Nana.Semantics
 
         public override void Give(IMRGenerator gen)
         {
-            gen.LoadVariable(this);
+            if (VarKind == VariableKind.Field)
+            {
+                gen.LoadField(/*Typ is*/ null, this);
+            }
+            else
+            {
+                gen.LoadVariable(this);
+            }
         }
 
         public override void Take(IMRGenerator gen)
         {
-            gen.StoreVariable(this);
+            if (VarKind == VariableKind.Field)
+            {
+                gen.StoreField(/*Typ is*/ null, this);
+            }
+            else
+            {
+                gen.StoreVariable(this);
+            }
         }
 
         public override void Addr(IMRGenerator gen)
         {
             if (Att.TypGet.IsValueType) { gen.LoadAVariable(this); }
-            else { gen.LoadVariable(this); }
+            else { Give(gen); }
         }
 
         public override string ToString()
@@ -1236,6 +1250,7 @@ namespace Nana.Semantics
 
     public class Assign : Sema
     {
+        public Sema Prepare;
         public Sema GiveVal;
         public Sema TakeVar;
 
@@ -1245,6 +1260,15 @@ namespace Nana.Semantics
             TakeVar = take;
             Att_.TypGet = take.Att_.TypGet;
             Att_.TypSet = take.Att_.TypSet;
+        }
+
+        public Assign(Sema give, Sema take, Sema prepare)
+        {
+            GiveVal = give;
+            TakeVar = take;
+            Att_.TypGet = take.Att_.TypGet;
+            Att_.TypSet = take.Att_.TypSet;
+            Prepare = prepare;
         }
 
         public override void Take(IMRGenerator gen)
@@ -1266,6 +1290,9 @@ namespace Nana.Semantics
 
         public override void Exec(IMRGenerator gen)
         {
+            if (Prepare != null)
+            { Prepare.Give(gen); }
+
             GiveVal.Give(gen);
             TakeVar.Take(gen);
         }
@@ -1530,7 +1557,7 @@ namespace Nana.Semantics
             {
                 gen.Catch(ca.ExcpTyp);
                 if (ca.ExcpVar != null)
-                { gen.StoreVariable(ca.ExcpVar); }
+                { ca.ExcpVar.Take(gen); }
                 else
                 { gen.Pop(); }
                 foreach (Sema s in ca.Block) { s.Exec(gen); }
@@ -1858,7 +1885,12 @@ namespace Nana.Semantics
         public override void Give(IMRGenerator gen)
         {
             Instance.Give(gen);
-            gen.LoadVariable(Fld);
+            gen.LoadField(Instance.Att.TypGet, Fld);
+        }
+
+        public override void Take(IMRGenerator gen)
+        {
+            gen.StoreField(Instance.Att.TypGet, Fld);
         }
 
         public override void Addr(IMRGenerator gen)
@@ -1871,37 +1903,6 @@ namespace Nana.Semantics
             Give(gen);
             gen.Pop();
         }
-    }
-
-    public class FieldSetInfo : Sema
-    {
-        public FieldAccessInfo FldAcc;
-        public Sema GiveVal;
-
-        public FieldSetInfo(FieldAccessInfo fldacc, Sema giveVal)
-        {
-            FldAcc = fldacc;
-            GiveVal = giveVal;
-        }
-
-        public override void Give(IMRGenerator gen)
-        {
-            FldAcc.Give(gen);
-        }
-
-        public override void Take(IMRGenerator gen)
-        {
-            FldAcc.Instance.Give(gen);
-            GiveVal.Give(gen);
-            gen.StoreVariable(FldAcc.Fld);
-        }
-
-        public override void Exec(IMRGenerator gen)
-        {
-            Give(gen);
-            gen.Pop();
-        }
-
     }
 
     public class Custom : Sema

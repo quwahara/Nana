@@ -1034,7 +1034,55 @@ System.Console.WriteLine(i)
             Test();
         }
 
-        //  book
+        [Test]
+        public void TC0421_Field()
+        {
+            Inp =
+@"
+class C
+...
+    Field : int
+
+    sfun Main():void
+    ..
+        c       = C()
+        ; (c.Field = 7) = 8
+        Console.WriteLine(c.Field);
+    ,,
+,,,
+";
+            EpcSyn = @"";
+
+            EpcIL = @".class public C {
+    .field int32 Field
+    .method static public void Main() {
+        .entrypoint
+        .locals (
+            class [NanaFxt]C c
+        )
+        newobj instance void [NanaFxt]C::.ctor()
+        stloc c
+        ldloc c
+        ldc.i4 8
+        ldloc c
+        ldc.i4 7
+        stfld int32 [NanaFxt]C::Field
+        stfld int32 [NanaFxt]C::Field
+        ldloc c
+        ldfld int32 [NanaFxt]C::Field
+        call void [mscorlib]System.Console::WriteLine(int32)
+        ret
+    }
+    .method public void .ctor() {
+        ldarg.0
+        call instance void object::.ctor()
+        ret
+    }
+}
+";
+            Test();
+        }
+
 
         //[Test]
         public void ZZZ()
@@ -1048,8 +1096,11 @@ class C
     sfun Main():void
     ..
         c       = C()
-        c.Field = 7
+//    c.Field = 7
+
+        ; (c.Field = 7) = 8
         //v       = c.Field
+        Console.WriteLine(c.Field);
     ,,
 ,,,
 ";

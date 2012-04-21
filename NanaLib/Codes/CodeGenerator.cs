@@ -479,6 +479,8 @@ namespace Nana.CodeGeneration
                 case C.CloseTry: return "}";
                 case C.Leave: return OpCodes.Leave.ToString() + " " + imr.StringV;
                 case C.EndFinally: return OpCodes.Endfinally.ToString();
+                case C.LdField: return LoadField(imr.TypV, imr.VariableV);
+                case C.StField: return StoreField(imr.TypV, imr.VariableV);
 
             }
             throw new NotSupportedException();
@@ -509,7 +511,6 @@ namespace Nana.CodeGeneration
                 case Variable.VariableKind.This: return OpCodes.Ldarg_0.ToString();
                 case Variable.VariableKind.Param: return S(OpCodes.Ldarg, Qk(v.Name));
                 case Variable.VariableKind.Local: return S(OpCodes.Ldloc, Qk(v.Name));
-                case Variable.VariableKind.Field: return S(v.Att.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name));
                 case Variable.VariableKind.Vector: return S(OpCodes.Ldelem, TypeNameInSig(v.Att.TypGet));
             }
             throw new NotSupportedException();
@@ -559,9 +560,24 @@ namespace Nana.CodeGeneration
             {
                 case Nana.Semantics.Variable.VariableKind.Param: return S(OpCodes.Starg, Qk(v.Name));
                 case Nana.Semantics.Variable.VariableKind.Local: return S(OpCodes.Stloc, Qk(v.Name));
-                case Nana.Semantics.Variable.VariableKind.Field: return S(v.Att.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name));
             }
             throw new NotSupportedException();
+        }
+
+        public static string StoreField(Typ t, Variable v)
+        {
+            Attr att = v.Att;
+            OpCode op = att.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld;
+            string pre = t == null ? "" : (TypeFullName(t) + "::");
+            return S(op, TypeNameInSig(att.TypGet) + " " + pre + Qk(v.Name));
+        }
+
+        public static string LoadField(Typ t, Variable v)
+        {
+            Attr att = v.Att;
+            OpCode op = att.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld;
+            string pre = t == null ? "" : (TypeFullName(t) + "::");
+            return S(op, TypeNameInSig(att.TypGet) + " " + pre + Qk(v.Name));
         }
 
         public static string LdArrayElement(IMR imr)

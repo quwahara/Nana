@@ -34,9 +34,11 @@ namespace Nana.IMRs
         LdLiteral,
         LdVariable,
         LdVariableA,
+        LdField,
 
         StArrayElement,
         StVariable,
+        StField,
         
         NewObject,
         NewArray,
@@ -63,6 +65,7 @@ namespace Nana.IMRs
         public IMR(C c) { C = c; }
         public IMR(C c, string v) : this(c) { StringV = v; }
         public IMR(C c, Typ vt, Fun vf) : this(c) { TypV = vt; FunV = vf; }
+        public IMR(C c, Typ vt, Variable v) : this(c) { TypV = vt; VariableV = v; }
         public IMR(C c, Literal v) : this(c) { LiteralV = v; }
         public IMR(C c, Variable v) : this(c) { VariableV = v; }
         public IMR(C c, Typ v) : this(c) { TypV = v; }
@@ -149,6 +152,10 @@ namespace Nana.IMRs
 
         public IMR Catch(Typ t) { return Append(new IMR(C.Catch, t)); }
         public IMR Leave(string label) { return Append(new IMR(C.Leave, label)); }
+
+
+        public IMR LoadField(Typ t, Variable v) { return Append(new IMR(C.LdField, t, v)); }
+        public IMR StoreField(Typ t, Variable v) { return Append(new IMR(C.StField, t, v)); }
 
     }
 
