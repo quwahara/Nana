@@ -1089,18 +1089,19 @@ class C
         {
             Inp =
 @"
+
+
+fun GFun()
+..
+,,
+
 class C
 ...
-    Field : int
-
-    sfun Main():void
+    fun F()
     ..
-        c       = C()
-//    c.Field = 7
-
-        ; (c.Field = 7) = 8
-        //v       = c.Field
-        Console.WriteLine(c.Field);
+    ,,
+    vfun VF()
+    ..
     ,,
 ,,,
 ";

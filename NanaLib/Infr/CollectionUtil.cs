@@ -93,7 +93,7 @@ namespace Nana.Infr
             return result;
         }
 
-        public static List<T> ByNext<T>(Func<T, T> next, T origin) where T : class
+        public static List<T> CollectUntilReturnNull<T>(Func<T, T> next, T origin) where T : class
         {
             List<T> ls = new List<T>();
             T item = origin;

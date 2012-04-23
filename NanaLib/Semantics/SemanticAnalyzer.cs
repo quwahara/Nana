@@ -418,7 +418,7 @@ namespace Nana.Semantics
                 if (ope == "+")
                 {
                     Typ ts = Env.BTY.String;
-                    Fun concat = ts.FindFunOvld("Concat").GetFunOf(ts, new Typ[] { ts, ts }, ThisTyp, Fun);
+                    Fun concat = ts.FindOvld("Concat").GetFunOf(ts, new Typ[] { ts, ts }, ThisTyp, Fun);
                     return new CallFunction(tp, concat, /* instance */ null, new Sema[] { lv, rv }, /* isNewObj */ false);
                 }
                 else
@@ -681,7 +681,7 @@ namespace Nana.Semantics
             {
                 calleetyp = first as Typ;
                 isNewObj = true;
-                ovl = calleetyp.FindFunOvld(Nana.IMRs.IMRGenerator.InstCons);
+                ovl = calleetyp.FindOvld(Nana.IMRs.IMRGenerator.InstCons);
             }
             Debug.Assert(ovl != null);
 
@@ -1024,7 +1024,7 @@ namespace Nana.Semantics
         {
             Token t = Seed;
             bool isStatic, isCtor;
-            bool isInTypDecl = false;
+            bool isInTypDecl = false == (ThisTyp is App);
             string ftyp = ResolveFuncType(t.Value, isInTypDecl);
 
             MethodAttributes attrs = AnalyzeAttrs(ftyp);
@@ -1152,7 +1152,7 @@ namespace Nana.Semantics
             {
                 Typ calleetyp = o as Typ;
                 bool isNewObj = true;
-                Ovld ovl = calleetyp.FindFunOvld(Nana.IMRs.IMRGenerator.InstCons);
+                Ovld ovl = calleetyp.FindOvld(Nana.IMRs.IMRGenerator.InstCons);
                 Fun f = ovl.GetFunOf(calleetyp, new Typ[] { }, ThisTyp, null);
                 if (f == null) { throw new SyntaxError("It is not a member", t.First); }
                 Nsp n = AboveBlock.Nsp;
@@ -1509,7 +1509,7 @@ namespace Nana.Semantics
                 if (false == Nana.IMRs.IMRGenerator.IsInstCons(fun.Name))
                 { continue; }
                 Typ bty = mytyp.BaseTyp;
-                Fun callee = bty.FindFunOvld(".ctor").GetFunOf(bty, new Typ[] { }, mytyp, fun);
+                Fun callee = bty.FindOvld(".ctor").GetFunOf(bty, new Typ[] { }, mytyp, fun);
                 Sema instance = fun.FindVar("this");
                 fun.Exes.Add(new CallFunction(bty, callee, instance, new Sema[] { }, false /*:isNewObj*/));
             }

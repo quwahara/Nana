@@ -439,18 +439,17 @@ namespace Nana.Semantics
         {
             List<Fun> candidates = new List<Fun>();
 
-            //  inheritance hierarchy into list
-            List<Typ> typs = Cty.ByNext<Typ>(delegate(Typ y) { return y.BaseTyp; }, ty);
-            //  go up hierarchy and find same name ActnOvld
-            List<Ovld> ovlds2 = typs.FindAll(delegate(Typ y) { return null != y.FindFunOvld(this.Name); })
-                .ConvertAll<Ovld>(delegate(Typ y) { return y.FindFunOvld(this.Name); });
+            //  Typ collection: inheritance hierarchy into list
+            List<Typ> typs = Cty.CollectUntilReturnNull<Typ>(delegate(Typ y) { return y.BaseTyp; }, ty);
+            
+            //  Ovld collection: go up hierarchy and find same name ActnOvld
+            List<Ovld> ovlds = typs.FindAll(delegate(Typ y) { return null != y.FindOvld(this.Name); })
+                .ConvertAll<Ovld>(delegate(Typ y) { return y.FindOvld(this.Name); });
 
-            //  collect same name Fun
+            //  Fun collection: collect Fun in ovlds
             List<Fun> srclst = new List<Fun>(this.Funs);
-            foreach (Ovld ovld in ovlds2)
-            {
-                srclst.AddRange(ovld.Funs);
-            }
+            foreach (Ovld ovld in ovlds)
+            { srclst.AddRange(ovld.Funs); }
 
             //  collect Actn that has same signature or assignalbe signature but not in candidate list
             foreach (Fun f in srclst)
@@ -706,10 +705,10 @@ namespace Nana.Semantics
 
         public Ovld FindOrNewOvld(string name)
         {
-            return FindFunOvld(name) ?? NewOvld(name);
+            return FindOvld(name) ?? NewOvld(name);
         }
 
-        public Ovld FindFunOvld(string name)
+        public Ovld FindOvld(string name)
         {
             EnsureMembers();
             return Ovlds.Find(GetNamePredicate<Ovld>(name));
