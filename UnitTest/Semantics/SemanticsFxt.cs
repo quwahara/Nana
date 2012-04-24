@@ -18,6 +18,101 @@ using UnitTest.Util;
 using Nana.Delegates;
 using Nana.CodeGeneration;
 using Nana.Infr;
+using System.Text.RegularExpressions;
+
+namespace UnitTest.Semantics.Accessibility
+{
+    [TestFixture]
+    public class AccessibilityFxt
+    {
+        [Test]
+        public void Test()
+        {
+            string cases = @"
+
+            Public          diff_class  diff_fam    diff_Asmb   True
+            Public          diff_class  diff_fam    same_Asmb   True
+            Public          diff_class  same_fam    diff_Asmb   True
+            Public          same_class  diff_fam    diff_Asmb   True
+            Public          diff_class  same_fam    same_Asmb   True
+            Public          same_class  same_fam    same_Asmb   True
+
+            FamOrAssem      diff_class  diff_fam    diff_Asmb   False
+            FamOrAssem      diff_class  diff_fam    same_Asmb   True
+            FamOrAssem      diff_class  same_fam    diff_Asmb   True
+            FamOrAssem      same_class  diff_fam    diff_Asmb   False
+            FamOrAssem      diff_class  same_fam    same_Asmb   True
+            FamOrAssem      same_class  same_fam    same_Asmb   True
+
+            Assembly        diff_class  diff_fam    diff_Asmb   False
+            Assembly        diff_class  diff_fam    same_Asmb   True
+            Assembly        diff_class  same_fam    diff_Asmb   False
+            Assembly        same_class  diff_fam    diff_Asmb   False
+            Assembly        diff_class  same_fam    same_Asmb   True
+            Assembly        same_class  same_fam    same_Asmb   True
+            
+            Family          diff_class  diff_fam    diff_Asmb   False
+            Family          diff_class  diff_fam    same_Asmb   False
+            Family          diff_class  same_fam    diff_Asmb   True
+            Family          same_class  diff_fam    diff_Asmb   False
+            Family          diff_class  same_fam    same_Asmb   True
+            Family          same_class  same_fam    same_Asmb   True
+            
+            FamAndAssem     diff_class  diff_fam    diff_Asmb   False
+            FamAndAssem     diff_class  diff_fam    same_Asmb   False
+            FamAndAssem     diff_class  same_fam    diff_Asmb   False
+            FamAndAssem     same_class  diff_fam    diff_Asmb   False
+            FamAndAssem     diff_class  same_fam    same_Asmb   True
+            FamAndAssem     same_class  same_fam    same_Asmb   True
+            
+            Private         diff_class  diff_fam    diff_Asmb   False
+            Private         diff_class  diff_fam    same_Asmb   False
+            Private         diff_class  same_fam    diff_Asmb   False
+            Private         same_class  diff_fam    diff_Asmb   True
+            Private         diff_class  same_fam    same_Asmb   False
+            Private         same_class  same_fam    same_Asmb   True
+";
+
+            List<string> cs = new List<string>();
+            {
+                using (StringReader r = new StringReader(cases))
+                {
+                    string ln;
+                    while ((ln = r.ReadLine()) != null)
+                    {
+                        ln = ln.Trim();
+                        if (0 == ln.Length) { continue; }
+                        cs.Add(ln);
+                    }
+                }
+            }
+
+            {
+                Nana.Semantics.Accessibility.Modifier mod;
+                bool isSameClass, isSameFamily, isSameAssembly, expected, actual;
+                foreach (string c in cs)
+                {
+                    string[] items = Regex.Split(c, @"\s+");
+                    mod = (Nana.Semantics.Accessibility.Modifier)Enum.Parse(typeof(Nana.Semantics.Accessibility.Modifier), items[0]);
+                    isSameClass     /**/ = "same_class" /**/ == items[1];
+                    isSameFamily    /**/ = "same_fam"   /**/ == items[2];
+                    isSameAssembly  /**/ = "same_Asmb"  /**/ == items[3];
+                    expected        /**/ = "True"       /**/ == items[4];
+
+                    actual = Nana.Semantics.Accessibility.CanAccess(mod, isSameClass, isSameFamily, isSameAssembly);
+                    if (expected != actual)
+                    {
+                        //  trap for debug
+                        actual = Nana.Semantics.Accessibility.CanAccess(mod, isSameClass, isSameFamily, isSameAssembly);
+                    }
+
+                    Assert.AreEqual(expected, actual, c);
+                }
+            }
+        }
+    }
+     
+}
 
 namespace UnitTest.Semantics.Try
 {

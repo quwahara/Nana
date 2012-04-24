@@ -555,7 +555,6 @@ namespace Nana.Semantics
             {
                 if (null == (mb as MethodInfo))
                 {
-                    string x = "";
                 }
 
             }
@@ -1926,6 +1925,53 @@ namespace Nana.Semantics
             ForPs = forps;
             Att.CanExec_ = true;
             Att.TypGet = callee.Att.TypGet;
+        }
+
+    }
+
+    public class TypFunPair
+    {
+        public Typ Ty; public Fun Fu;
+        public TypFunPair() { }
+        public TypFunPair(Typ ty, Fun fu) { Ty = ty; Fu = fu; }
+    }
+
+    public class Accessibility
+    {
+        public enum Modifier
+        {
+            None,
+            Public,         //  public
+            FamOrAssem,     //  protected internal
+            Assembly,       //  internal
+            Family,         //  protected
+            FamAndAssem,    //  not in C#
+            Private         //  private
+        }
+
+        public static bool CanAccess(Modifier mod, bool isSameClass, bool isSameFamily, bool isSameAssembly)
+        {
+            if (mod == Modifier.Public) { return true; }
+            if (mod == Modifier.Private && isSameClass) { return true; }
+
+            if (isSameFamily)
+            {
+                if (mod == Modifier.Family) { return true; }
+                if (mod == Modifier.FamOrAssem) { return true; }
+            }
+
+            if (isSameAssembly)
+            {
+                if (mod == Modifier.Assembly) { return true; }
+                if (mod == Modifier.FamOrAssem) { return true; }
+            }
+
+            if (isSameFamily && isSameAssembly)
+            {
+                if (mod == Modifier.FamAndAssem) { return true; }
+            }
+
+            return false;
         }
 
     }
