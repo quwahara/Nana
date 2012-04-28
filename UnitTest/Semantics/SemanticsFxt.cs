@@ -20,10 +20,10 @@ using Nana.CodeGeneration;
 using Nana.Infr;
 using System.Text.RegularExpressions;
 
-namespace UnitTest.Semantics.Accessibility
+namespace UnitTest.Semantics.AccessibilityControl
 {
     [TestFixture]
-    public class AccessibilityFxt
+    public class AccessibilityControlFxt
     {
         [Test]
         public void Test()
@@ -88,22 +88,22 @@ namespace UnitTest.Semantics.Accessibility
             }
 
             {
-                Nana.Semantics.Accessibility.Modifier mod;
+                Nana.Semantics.Accessibility acc;
                 bool isSameClass, isSameFamily, isSameAssembly, expected, actual;
                 foreach (string c in cs)
                 {
                     string[] items = Regex.Split(c, @"\s+");
-                    mod = (Nana.Semantics.Accessibility.Modifier)Enum.Parse(typeof(Nana.Semantics.Accessibility.Modifier), items[0]);
+                    acc = (Nana.Semantics.Accessibility)Enum.Parse(typeof(Nana.Semantics.Accessibility), items[0]);
                     isSameClass     /**/ = "same_class" /**/ == items[1];
                     isSameFamily    /**/ = "same_fam"   /**/ == items[2];
                     isSameAssembly  /**/ = "same_Asmb"  /**/ == items[3];
                     expected        /**/ = "True"       /**/ == items[4];
 
-                    actual = Nana.Semantics.Accessibility.CanAccess(mod, isSameClass, isSameFamily, isSameAssembly);
+                    actual = Nana.Semantics.AccessibilityControl.CanAccess(acc, isSameClass, isSameFamily, isSameAssembly);
                     if (expected != actual)
                     {
                         //  trap for debug
-                        actual = Nana.Semantics.Accessibility.CanAccess(mod, isSameClass, isSameFamily, isSameAssembly);
+                        actual = Nana.Semantics.AccessibilityControl.CanAccess(acc, isSameClass, isSameFamily, isSameAssembly);
                     }
 
                     Assert.AreEqual(expected, actual, c);

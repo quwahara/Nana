@@ -377,12 +377,12 @@ namespace Nana.Semantics
             return BeAMember(f);
         }
 
-        public Fun GetFunOf(Typ ty, Typ[] argtyps, Typ ert, Fun caller)
+        public Fun GetFunOf(Typ ty, Typ[] argtyps, Typ callertyp, Fun callerfun)
         {
             List<Fun> cand = CreateCandidateFunList(ty, argtyps);
 
             //  TODO  remove candidate with accessibility
-            Predicate<Fun> canAccess = delegate(Fun callee_) { return AccessControl.CanAccess(ert, caller, ty, callee_); };
+            Predicate<Fun> canAccess = delegate(Fun callee_) { return AccessControl.CanAccess(callertyp, callerfun, ty, callee_); };
 
             List<Fun> sel = new List<Fun>();
             Fun callee;
@@ -1936,39 +1936,39 @@ namespace Nana.Semantics
         public TypFunPair(Typ ty, Fun fu) { Ty = ty; Fu = fu; }
     }
 
-    public class Accessibility
+    public enum Accessibility
     {
-        public enum Modifier
-        {
-            None,
-            Public,         //  public
-            FamOrAssem,     //  protected internal
-            Assembly,       //  internal
-            Family,         //  protected
-            FamAndAssem,    //  not in C#
-            Private         //  private
-        }
+        None,
+        Public,         //  public
+        FamOrAssem,     //  protected internal
+        Assembly,       //  internal
+        Family,         //  protected
+        FamAndAssem,    //  not in C#
+        Private         //  private
+    }
 
-        public static bool CanAccess(Modifier mod, bool isSameClass, bool isSameFamily, bool isSameAssembly)
+    public class AccessibilityControl
+    {
+        public static bool CanAccess(Accessibility acc, bool isSameClass, bool isSameFamily, bool isSameAssembly)
         {
-            if (mod == Modifier.Public) { return true; }
-            if (mod == Modifier.Private && isSameClass) { return true; }
+            if (acc == Accessibility.Public) { return true; }
+            if (acc == Accessibility.Private && isSameClass) { return true; }
 
             if (isSameFamily)
             {
-                if (mod == Modifier.Family) { return true; }
-                if (mod == Modifier.FamOrAssem) { return true; }
+                if (acc == Accessibility.Family) { return true; }
+                if (acc == Accessibility.FamOrAssem) { return true; }
             }
 
             if (isSameAssembly)
             {
-                if (mod == Modifier.Assembly) { return true; }
-                if (mod == Modifier.FamOrAssem) { return true; }
+                if (acc == Accessibility.Assembly) { return true; }
+                if (acc == Accessibility.FamOrAssem) { return true; }
             }
 
             if (isSameFamily && isSameAssembly)
             {
-                if (mod == Modifier.FamAndAssem) { return true; }
+                if (acc == Accessibility.FamAndAssem) { return true; }
             }
 
             return false;
