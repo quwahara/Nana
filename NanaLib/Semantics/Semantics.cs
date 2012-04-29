@@ -32,6 +32,7 @@ namespace Nana.Semantics
         }
         public Typ TypGet = null;
         public Typ TypSet = null;
+        public Accessibility Acc = Accessibility.Public;
     }
 
     public class Sema
@@ -377,87 +378,88 @@ namespace Nana.Semantics
             return BeAMember(f);
         }
 
-        public Fun GetFunOf(Typ ty, Typ[] argtyps, Typ callertyp, Fun callerfun)
+        public Fun GetFunOf(Typ calleetyp, Typ[] argtyps, Typ callertyp, Fun callerfun)
         {
-            List<Fun> cand = CreateCandidateFunList(ty, argtyps);
+            List<Tuple2<Typ, Fun>> cand = CreateCandidateFunList(calleetyp, argtyps);
 
-            //  TODO  remove candidate with accessibility
-            Predicate<Fun> canAccess = delegate(Fun callee_) { return AccessControl.CanAccess(callertyp, callerfun, ty, callee_); };
+            Predicate<Tuple2<Typ, Fun>> canAccess
+                = delegate(Tuple2<Typ, Fun> tf)
+                { return AccessibilityControl.CanAccess(tf.F2.Att.Acc, tf.F1, callertyp); };
 
-            List<Fun> sel = new List<Fun>();
-            Fun callee;
-            foreach (Fun c in cand)
+            List<Tuple2<Typ, Fun>> sel = new List<Tuple2<Typ, Fun>>();
+            Tuple2<Typ, Fun> callee;
+            foreach (Tuple2<Typ, Fun> tf in cand)
             {
+                Fun c = tf.F2;
                 if (c.IsSameSignature(argtyps) == false) { continue; }
-                sel.Add(c);
+                sel.Add(tf);
             }
             if (sel.Count > 1)
-            {
-                sel = sel.FindAll(canAccess);
-            }
+            { sel = sel.FindAll(canAccess); }
             if (sel.Count > 1)
-            {
-                throw new SyntaxError("More than 2 candidates methods:" + Name);
-            }
+            { throw new SyntaxError("More than 2 candidates methods:" + Name); }
             if (sel.Count == 1)
             {
                 callee = sel[0];
                 if (false == canAccess(callee))
-                {
-                    throw new SyntaxError("Can not access the function: " + Name);
-                }
-                return callee;
+                { throw new SyntaxError("Can not access the function: " + Name); }
+                return callee.F2;
             }
 
             sel.Clear();
-            foreach (Fun c in cand)
+            foreach (Tuple2<Typ, Fun> tf in cand)
             {
+                Fun c = tf.F2;
                 if (c.IsAssignableSignature(argtyps) == false) { continue; }
-                sel.Add(c);
+                sel.Add(tf);
             }
             if (sel.Count == 0)
-            {
-                throw new SyntaxError("No candidate method for:" + Name);
-            }
+            { throw new SyntaxError("No candidate method for:" + Name); }
             if (sel.Count > 1)
-            {
-                sel = sel.FindAll(canAccess);
-            }
+            { sel = sel.FindAll(canAccess); }
             if (sel.Count > 1)
-            {
-                throw new SyntaxError("More than 2 candidates methods:" + Name);
-            }
+            { throw new SyntaxError("More than 2 candidates methods:" + Name); }
             callee = sel[0];
             if (false == canAccess(callee))
             {
                 throw new SyntaxError("Can not access the function: " + Name);
             }
-            return callee;
+            return callee.F2;
         }
 
-        public List<Fun> CreateCandidateFunList(Typ ty, Typ[] argtyps)
+        public List<Tuple2<Typ, Fun>> CreateCandidateFunList(Typ ty, Typ[] argtyps)
         {
-            List<Fun> candidates = new List<Fun>();
+            List<Tuple2<Typ, Fun>> candidates = new List<Tuple2<Typ, Fun>>();
 
             //  Typ collection: inheritance hierarchy into list
             List<Typ> typs = Cty.CollectUntilReturnNull<Typ>(delegate(Typ y) { return y.BaseTyp; }, ty);
-            
+
             //  Ovld collection: go up hierarchy and find same name ActnOvld
-            List<Ovld> ovlds = typs.FindAll(delegate(Typ y) { return null != y.FindOvld(this.Name); })
-                .ConvertAll<Ovld>(delegate(Typ y) { return y.FindOvld(this.Name); });
+            List<Tuple2<Typ, Ovld>> ovlds
+                = typs.FindAll(delegate(Typ y) { return null != y.FindOvld(this.Name); })
+                .ConvertAll<Tuple2<Typ, Ovld>>(delegate(Typ y) { return new Tuple2<Typ, Ovld>(y, y.FindOvld(this.Name)); });
 
             //  Fun collection: collect Fun in ovlds
-            List<Fun> srclst = new List<Fun>(this.Funs);
-            foreach (Ovld ovld in ovlds)
-            { srclst.AddRange(ovld.Funs); }
+            List<Tuple2<Typ, Fun>> srclst
+                = (new List<Fun>(this.Funs))
+                .ConvertAll<Tuple2<Typ, Fun>>(delegate(Fun f) { return new Tuple2<Typ, Fun>(ty, f); }); ;
+
+            foreach (Tuple2<Typ, Ovld> ovld in ovlds)
+            {
+                srclst.AddRange(
+                    new List<Fun>(ovld.F2.Funs)
+                    .ConvertAll<Tuple2<Typ, Fun>>(delegate(Fun f) { return new Tuple2<Typ, Fun>(ovld.F1, f); })
+                    );
+            }
 
             //  collect Actn that has same signature or assignalbe signature but not in candidate list
-            foreach (Fun f in srclst)
+            foreach (Tuple2<Typ, Fun> tf in srclst)
             {
+                Fun f = tf.F2;
                 if (f.Params.Count != argtyps.Length) { continue; }
                 if (f.IsAssignableSignature(argtyps) == false) { continue; }
-                if (candidates.Exists(delegate(Fun a_) { return a_.IsSameSignature(f.Signature); })) { continue; }
-                candidates.Add(f);
+                if (candidates.Exists(delegate(Tuple2<Typ, Fun> a_) { return a_.F2.IsSameSignature(f.Signature); })) { continue; }
+                candidates.Add(tf);
             }
 
             return candidates;
@@ -571,6 +573,7 @@ namespace Nana.Semantics
                 else                    /**/ { tt = (mb as ConstructorInfo).DeclaringType; }
             }
             Att.TypGet = env.FindOrNewRefType(tt);
+            Att.Acc = AccessibilityControl.FromMethodAttributes(mb.Attributes);
         }
 
         public Variable NewThis(Typ typ)
@@ -765,6 +768,7 @@ namespace Nana.Semantics
             IsArray = dimension > 1;
             IsVectorOrArray = IsVector || IsArray;
             ArrayType = typ;
+            AssemblyName = typ.AssemblyName;
             SetBaseTyp(env.BTY.Array);
         }
 
@@ -1929,13 +1933,6 @@ namespace Nana.Semantics
 
     }
 
-    public class TypFunPair
-    {
-        public Typ Ty; public Fun Fu;
-        public TypFunPair() { }
-        public TypFunPair(Typ ty, Fun fu) { Ty = ty; Fu = fu; }
-    }
-
     public enum Accessibility
     {
         None,
@@ -1949,8 +1946,27 @@ namespace Nana.Semantics
 
     public class AccessibilityControl
     {
-        public static bool CanAccess(Accessibility acc, bool isSameClass, bool isSameFamily, bool isSameAssembly)
+        public static bool CanAccess(Accessibility calleeacc, Typ calleetyp, Typ callertyp)
         {
+            bool isSameClass = calleetyp == callertyp;
+            bool isSameFamily = false;
+            {
+                Typ basetyp = callertyp;
+                while (basetyp != null)
+                {
+                    isSameFamily = calleetyp == basetyp;
+                    if (isSameFamily)
+                    { break; }
+                    basetyp = basetyp.BaseTyp;
+                }
+            }
+            bool isSameAssembly = calleetyp.AssemblyName == callertyp.AssemblyName;
+            return CanAccess(calleeacc, isSameClass, isSameFamily, isSameAssembly);
+        }
+
+        public static bool CanAccess(Accessibility calleeacc, bool isSameClass, bool isSameFamily, bool isSameAssembly)
+        {
+            Accessibility acc = calleeacc;
             if (acc == Accessibility.Public) { return true; }
             if (acc == Accessibility.Private && isSameClass) { return true; }
 
@@ -1974,150 +1990,21 @@ namespace Nana.Semantics
             return false;
         }
 
-    }
-
-    public class AccessControl
-    {
-        [Flags]
-        public enum Modifier
-        {
-            None            /**/ = 0x0000,
-            AssemblyAnd     /**/ = 0x0001,
-            AssemblyOr      /**/ = 0x0002,
-            AssemblyAny     /**/ = 0x0004,
-
-            Private         /**/ = 0x0008 | AssemblyAny,
-            Family          /**/ = 0x0010 | AssemblyAny,
-            Public          /**/ = 0x0020 | AssemblyAny,
-
-            FamAndAssem     /**/ = Family | AssemblyAnd,
-            Assembly        /**/ = AssemblyAnd,
-            FamOrAssem      /**/ = Family | AssemblyOr
-        }
-
-        [Flags]
-        public enum Relation
-        {
-            None            /**/ = 0x0000,
-            Nested          /**/ = 0x0001,
-            InheritedType   /**/ = 0x0002,
-            IdentType       /**/ = 0x0004
-        }
-
         static public bool Contains(MethodAttributes flag, MethodAttributes isIn)
         {
             return (isIn & flag) == flag;
         }
 
-        static public bool Contains(Modifier flag, Modifier isIn)
+        static public Accessibility FromMethodAttributes(MethodAttributes a)
         {
-            return (isIn & flag) == flag;
+            if (Contains(MethodAttributes.Public        /*0x06*/, a)) return Accessibility.Public;
+            if (Contains(MethodAttributes.FamORAssem    /*0x05*/, a)) return Accessibility.FamOrAssem;
+            if (Contains(MethodAttributes.Family        /*0x04*/, a)) return Accessibility.Family;
+            if (Contains(MethodAttributes.Assembly      /*0x03*/, a)) return Accessibility.Assembly;
+            if (Contains(MethodAttributes.FamANDAssem   /*0x02*/, a)) return Accessibility.FamAndAssem;
+            if (Contains(MethodAttributes.Private       /*0x01*/, a)) return Accessibility.Private;
+            return Accessibility.None;
         }
-
-        static public bool Contains(Relation flag, Relation isIn)
-        {
-            return (isIn & flag) == flag;
-        }
-
-        static public bool CanAccessByRelation(Relation r, Modifier m)
-        {
-            if (Contains(Modifier.Private, m))
-            {
-                return Contains(Relation.Nested, r) || Contains(Relation.IdentType, r);
-            }
-            else if (Contains(Modifier.Family, m))
-            {
-                return Contains(Relation.Nested, r) || Contains(Relation.IdentType, r) || Contains(Relation.InheritedType, r);
-            }
-            else
-            {
-                // Modifier.Public
-                return true;
-            }
-        }
-
-        static public bool CanAccessByAssembly(bool identAssembly, Modifier m)
-        {
-            if (Contains(Modifier.AssemblyAnd, m))
-            {
-                return identAssembly == true;
-            }
-            else if (Contains(Modifier.AssemblyOr, m))
-            {
-                return identAssembly == true;
-            }
-            else
-            {
-                // Modifier.AssemblyAny
-                return true;
-            }
-        }
-
-        static public Modifier FromMethodAttributes(MethodAttributes a)
-        {
-            if (Contains(MethodAttributes.Public        /*0x06*/, a)) return Modifier.Public;
-            if (Contains(MethodAttributes.FamORAssem    /*0x05*/, a)) return Modifier.FamOrAssem;
-            if (Contains(MethodAttributes.Family        /*0x04*/, a)) return Modifier.Family;
-            if (Contains(MethodAttributes.Assembly      /*0x03*/, a)) return Modifier.Assembly;
-            if (Contains(MethodAttributes.FamANDAssem   /*0x02*/, a)) return Modifier.FamAndAssem;
-            if (Contains(MethodAttributes.Private       /*0x01*/, a)) return Modifier.Private;
-            return Modifier.None;
-        }
-
-        static public bool CanAccess(bool identAssembly, Relation r, Modifier m)
-        {
-            if (Contains(Modifier.AssemblyAnd, m))
-            {
-                return CanAccessByAssembly(identAssembly, m) && CanAccessByRelation(r, m);
-            }
-            else if (Contains(Modifier.AssemblyOr, m))
-            {
-                return CanAccessByAssembly(identAssembly, m) || CanAccessByRelation(r, m);
-            }
-            else
-            {
-                // Modifier.AssemblyAny
-                return CanAccessByRelation(r, m);
-            }
-        }
-
-        static public bool CanAccess(Typ ert, Fun er, Typ eet, Fun ee)
-        {
-            bool identAssembly;
-            identAssembly = ert.AssemblyName == eet.AssemblyName;
-
-            Relation r = Relation.None;
-            if (ert == eet)
-            {
-                r = Relation.IdentType;
-            }
-            else if (ert != null && eet != null && ert.IsSubclassOf(eet))
-            {
-                r = Relation.InheritedType;
-            }
-            //TODO implemet condition for Relation.Nested
-
-            Modifier m;
-            m = FromMethodAttributes(ee.MthdAttrs);
-
-            return CanAccess(identAssembly, r, m);
-        }
-
-        public enum Req { Any, Instance, Type }
-
-        static public readonly Req[,] IdentTypeSITbl = new Req[,] {
-            //  <callee>
-            //  satatic     instance            <caller>
-            {   Req.Any,    Req.Instance },  // static
-            {   Req.Any,    Req.Any      }   // instance
-        };
-
-        static public readonly Req[,] AnotherTypeSITbl = new Req[,] {
-            //  <callee>
-            //  satatic     instance            <caller>
-            {   Req.Type,   Req.Instance },  // static
-            {   Req.Type,   Req.Instance }   // instance
-        };
 
     }
 

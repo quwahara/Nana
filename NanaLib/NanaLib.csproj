@@ -44,6 +44,7 @@
     <Compile Include="Infr\Node.cs" />
     <Compile Include="Infr\Params.cs" />
     <Compile Include="Infr\StringUtil.cs" />
+    <Compile Include="Infr\Tuple.cs" />
     <Compile Include="Infr\TypeUtil.cs" />
     <Compile Include="CmdLnArgs.cs" />
     <Compile Include="Ctrl.cs" />
