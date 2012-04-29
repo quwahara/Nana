@@ -15,7 +15,7 @@ using Nana.Semantics;
 using Nana.IMRs;
 using System.Text.RegularExpressions;
 
-namespace Nana.CodeGeneration
+namespace Nana.Generations
 {
     public class CodeGenerator
     {

@@ -9,7 +9,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using Nana.CodeGeneration;
+using Nana.Generations;
 using Nana.Delegates;
 using Nana.Infr;
 using Nana.Tokens;

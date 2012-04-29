@@ -16,7 +16,7 @@ using System.IO;
 using Nana.IMRs;
 using UnitTest.Util;
 using Nana.Delegates;
-using Nana.CodeGeneration;
+using Nana.Generations;
 using Nana.Infr;
 using System.Text.RegularExpressions;
 

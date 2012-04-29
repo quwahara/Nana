@@ -1219,7 +1219,7 @@ x
                     if (References.Count > 0)
                     {
                         TypeInAssemblyLoader ldr = new TypeInAssemblyLoader();
-                        References.ForEach(delegate(string s) { b.AppendLine(Nana.CodeGeneration.CodeGenerator.AssemblyExtern(ldr.LoadFrameworkClassLibrarie(s))); });
+                        References.ForEach(delegate(string s) { b.AppendLine(Nana.Generations.CodeGenerator.AssemblyExtern(ldr.LoadFrameworkClassLibrarie(s))); });
                     }
                     b.Append(".assembly ").Append(asm).Append(" { }").AppendLine();
                     b.Append(".module ").Append(asm).Append(".exe").AppendLine();

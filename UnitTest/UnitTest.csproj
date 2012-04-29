@@ -38,7 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CmdLnArgsFxt.cs" />
-    <Compile Include="Codes\CodeGeneratorFxt.cs" />
+    <Compile Include="Generations\CodeGeneratorFxt.cs" />
     <Compile Include="CtrlFxt.cs" />
     <Compile Include="Experiment.cs" />
     <Compile Include="Infr\DeliFxt.cs" />

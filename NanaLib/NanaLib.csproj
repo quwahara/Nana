@@ -33,7 +33,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Codes\CodeGenerator.cs" />
+    <Compile Include="Generations\CodeGenerator.cs" />
     <Compile Include="Delegates\Delegates.cs" />
     <Compile Include="ILASM\ILASMRunner.cs" />
     <Compile Include="IMRs\IMRGenerator.cs" />
