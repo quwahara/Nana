@@ -112,6 +112,9 @@ namespace Nana.Semantics
             Breaks = new Stack<Literal>();
             Continues = new Stack<Literal>();
             AboveBlock = above;
+
+            EnvAnalyzer eaz = FindUpTypeOf<EnvAnalyzer>();
+            if (null != eaz) { Env = eaz.Env; }
         }
 
         public Token GetTargetWithCustom(Token t)
@@ -1206,14 +1209,13 @@ namespace Nana.Semantics
 
             base.Nsp = base.Fun = Typ;
         }
-        
+
         public void AnalyzeBaseTyp()
         {
-            Token t = Seed;
-            Token baseTypeDef = t.Find("@BaseTypeDef");
-            if (baseTypeDef == null)
-            { return; }
-            Typ.BaseTyp = RequireTyp(baseTypeDef.Follows[0]);
+            Token baseTypeDef = Seed.Find("@BaseTypeDef");
+            Typ.BaseTyp = baseTypeDef != null
+                ? RequireTyp(baseTypeDef.Follows[0])
+                : Env.BTY.Object;
         }
 
         public override object Find(Token t)

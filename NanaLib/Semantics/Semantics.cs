@@ -688,7 +688,6 @@ namespace Nana.Semantics
                 ;
 
             IsValueType = false;
-            BaseTyp = env.BTY.Object;
         }
 
         public void SetBaseTyp(Typ baseTyp)
