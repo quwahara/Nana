@@ -20,14 +20,8 @@ namespace UnitTest
 {
     public class Class0
     {
-        public object ZZZ;
-
         private string Prv0()
         {
-            Class0 c0 = new Class0();
-            c0.ZZZ = "zzz";
-
-
             List<List<string>> lls = new List<List<string>>();
             List<string> sls = new List<string>();
             string sss = sls[99];
@@ -1084,26 +1078,33 @@ class C
         }
 
 
+        Func<string, string> fff;
+
+        List<Func<string, string>> YYY()
+        {
+            List<Func<string, string>> fls = new List<Func<string, string>>();
+
+            for (int i = 0; i < 3; ++i)
+            {
+                fls.Add(delegate(string ppp) { return i.ToString() + "nnn" + ppp; });
+            }
+
+            return fls;
+        }
+
+
         //[Test]
         public void ZZZ()
         {
             Inp =
 @"
-
-
-fun GFun()
+class C
 ..
 ,,
 
-class C
-...
-    fun F()
-    ..
-    ,,
-    vfun VF()
-    ..
-    ,,
-,,,
+c   = C()
+s   = c.ToString()
+`p(s)
 ";
             EpcSyn = @"
 x

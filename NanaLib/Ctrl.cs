@@ -111,6 +111,13 @@ namespace Nana
                         .Append(":");
                 }
                 b.Append(e.Message);
+                
+                if (e is FileNotFoundException)
+                {
+                    FileNotFoundException ffx = e as FileNotFoundException;
+                    b.Append(", Filename: ").Append(ffx.FileName);
+                }
+
                 b.AppendLine();
                 StdErr(b.ToString());
                 if (null != root && root.Contains("@CompileOptions/@xxxtrace"))
@@ -156,7 +163,13 @@ namespace Nana
             {
                 foreach (Token p in root.Select("@Sources/@SourcePath"))
                 {
-                    if (false == File.Exists(p.Value)) { throw new FileNotFoundException("Source file was not found", p.Value); }
+                    if (false == File.Exists(p.Value))
+                    {
+                        if (false == File.Exists(p.Value + ".nana"))
+                        { throw new FileNotFoundException("Source file was not found", p.Value); }
+                        else
+                        { p.Value += ".nana"; }
+                    }
                 }
             }
 
