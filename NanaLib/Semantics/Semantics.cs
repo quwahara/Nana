@@ -223,16 +223,6 @@ namespace Nana.Semantics
 
         public Typ NewRefTyp(Type refType)
         {
-            //Typ t;
-            //if (refType.IsArray)
-            //{
-            //    Typ aty = FindOrNewRefType(refType.GetElementType());
-            //    t = FindOrNewArrayTyp(aty, refType.GetArrayRank());
-            //}
-            //else
-            //{
-            //    t = new Typ(refType, this);
-            //}
             Typ t = new Typ(refType, this);
             RefTyps.Add(t);
             BeAMember(t);
