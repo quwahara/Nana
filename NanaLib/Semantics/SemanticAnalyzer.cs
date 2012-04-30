@@ -154,7 +154,6 @@ namespace Nana.Semantics
         {
             Fun = FindUpTypeIs<FunAnalyzer>().Fun;
             IsInFun = Fun.Att.CanGet;
-            Env = Fun.E;
             TmpVarGen = new TmpVarGenerator(Env.GetTempName, NewVar);
             if (AboveBlock.RequiredReturnValue.Count == 0)
             {
@@ -1039,7 +1038,6 @@ namespace Nana.Semantics
                 ?? FindUpTypeOf<AppAnalyzer>()
                 ;
             Debug.Assert(typazr2 != null);
-            base.Env = typazr2.Typ.E;
 
             Ovld ovld = typazr2.Typ.FindOrNewOvld(nameasm);
 
