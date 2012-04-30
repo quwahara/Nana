@@ -421,7 +421,7 @@ namespace Nana.Semantics
                 {
                     Typ ts = Env.BTY.String;
                     Fun concat = ts.FindOvld("Concat").GetFunOf(ts, new Typ[] { ts, ts }, ThisTyp, Fun);
-                    return new CallFunction(tp, concat, /* instance */ null, new Sema[] { lv, rv }, /* isNewObj */ false);
+                    return new CallFun(tp, concat, /* instance */ null, new Sema[] { lv, rv }, /* isNewObj */ false);
                 }
                 else
                 {
@@ -695,7 +695,7 @@ namespace Nana.Semantics
             Sema instance = mbr == null ? null : mbr.Instance;
 
 
-            return new CallFunction(calleetyp, sig, instance, argvals.ToArray(), isNewObj);
+            return new CallFun(calleetyp, sig, instance, argvals.ToArray(), isNewObj);
         }
 
         public object Dot(Token t)
@@ -1511,7 +1511,7 @@ namespace Nana.Semantics
                 Typ bty = mytyp.BaseTyp;
                 Fun callee = bty.FindOvld(".ctor").GetFunOf(bty, new Typ[] { }, mytyp, fun);
                 Sema instance = fun.FindVar("this");
-                fun.Exes.Add(new CallFunction(bty, callee, instance, new Sema[] { }, false /*:isNewObj*/));
+                fun.Exes.Add(new CallFun(bty, callee, instance, new Sema[] { }, false /*:isNewObj*/));
             }
         }
 

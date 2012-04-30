@@ -345,6 +345,21 @@ namespace Nana.Semantics
         }
     }
 
+    public class BuiltInFun
+    {
+        public BuiltInFun(Env e)
+        {
+            Ovld ovl;
+            Typ ty;
+      
+
+        }
+
+
+
+    }
+
+
     public class Ovld : Nsp
     {
         public List<Fun> Funs = new List<Fun>();
@@ -1308,7 +1323,7 @@ namespace Nana.Semantics
         public bool RDS { get { return true; } }
     }
 
-    public class CallFunction : Sema
+    public class CallFun : Sema
     {
         public Typ CalleeTy;
         public Fun Callee;
@@ -1316,7 +1331,7 @@ namespace Nana.Semantics
         public Sema[] Args;
         public bool IsNewObj;
 
-        public CallFunction(Typ calleety, Fun callee, Sema instance, Sema[] args, bool isNewObj)
+        public CallFun(Typ calleety, Fun callee, Sema instance, Sema[] args, bool isNewObj)
         {
             CalleeTy = calleety;
             Callee = callee;
@@ -1401,7 +1416,7 @@ namespace Nana.Semantics
         {
             if (Prop.Getter == null)
             { throw new SyntaxError("Cannot get value from the property"); }
-            CallFunction cf = new CallFunction(CalleeTy, Prop.Getter, Instance, new Sema[0], /*isNewObj:*/ false);
+            CallFun cf = new CallFun(CalleeTy, Prop.Getter, Instance, new Sema[0], /*isNewObj:*/ false);
             cf.Give(gen);
         }
 
@@ -1448,7 +1463,7 @@ namespace Nana.Semantics
             Fun setter = CP.Prop.Setter;
             if (setter == null)
             { throw new SyntaxError("Cannot set value to the property"); }
-            CallFunction cf = new CallFunction(CP.CalleeTy, setter, CP.Instance, new Sema[] { Value }, /*isNewObj:*/ false);
+            CallFun cf = new CallFun(CP.CalleeTy, setter, CP.Instance, new Sema[] { Value }, /*isNewObj:*/ false);
             cf.Give(gen);
         }
     }

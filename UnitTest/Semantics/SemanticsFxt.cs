@@ -226,7 +226,7 @@ end
         }:Fun
     , Args={}
     , IsNewObj=False
-    }:CallFunction"
+    }:CallFun"
 )
                 , a.Exes[0].ToString());
         }
@@ -264,7 +264,7 @@ end
             Assert.IsTrue(2 == a.Exes.Count);
 
             List<string> xs = a.Exes.ConvertAll<string>(delegate(Sema x) { return x.ToString(); });
-            Assert.IsTrue(xs[0].EndsWith("}:CallFunction"));
+            Assert.IsTrue(xs[0].EndsWith("}:CallFun"));
 
             Typ typ2 = App.FindByNamePath("T102_Class1Func1P0") as Typ;
 
