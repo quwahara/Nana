@@ -361,8 +361,21 @@ namespace Nana.Semantics
             return NewVar(id.Seed.Value, ty);
         }
 
+        public Token InfixToCallFun(Token t)
+        {
+            Token callfunc = new Token("(", "Expr");
+            callfunc.First = new Token(t.Value, "Id");
+            Token prm = callfunc.Second = new Token(",", "_End_Cma_");
+            prm.First = t.First;
+            prm.Second = t.Second;
+            return callfunc;
+        }
+
         public object Ope(Token t)
         {
+            //TODO
+            //return Gate(InfixToCallFun(t));
+
             Sema lv, rv;
 
             lv = Require<Sema>(t.First);
@@ -420,7 +433,7 @@ namespace Nana.Semantics
                 if (ope == "+")
                 {
                     Typ ts = Env.BTY.String;
-                    Fun concat = ts.FindOvld("Concat").GetFunOf(ts, new Typ[] { ts, ts }, ThisTyp, Fun);
+                    Fun concat = ts.FindOvld("Concat").GetFunOf(ts, new Typ[] { ts, ts }, ThisTyp);
                     return new CallFun(tp, concat, /* instance */ null, new Sema[] { lv, rv }, /* isNewObj */ false);
                 }
                 else
@@ -689,7 +702,7 @@ namespace Nana.Semantics
 
             Fun sig = null;
 
-            sig = ovl.GetFunOf(calleetyp, argtyps.ToArray(), ThisTyp, Fun);
+            sig = ovl.GetFunOf(calleetyp, argtyps.ToArray(), ThisTyp);
             if (sig == null) { throw new SyntaxError("It is not a member", t.First); }
 
             Sema instance = mbr == null ? null : mbr.Instance;
@@ -1152,9 +1165,8 @@ namespace Nana.Semantics
             if (typeof(Typ) == o.GetType())
             {
                 Typ calleetyp = o as Typ;
-                bool isNewObj = true;
                 Ovld ovl = calleetyp.FindOvld(Nana.IMRs.IMRGenerator.InstCons);
-                Fun f = ovl.GetFunOf(calleetyp, new Typ[] { }, ThisTyp, null);
+                Fun f = ovl.GetFunOf(calleetyp, new Typ[] { }, ThisTyp);
                 if (f == null) { throw new SyntaxError("It is not a member", t.First); }
                 Nsp n = AboveBlock.Nsp;
                 if (n.Customs == null)
@@ -1509,7 +1521,7 @@ namespace Nana.Semantics
                 if (false == Nana.IMRs.IMRGenerator.IsInstCons(fun.Name))
                 { continue; }
                 Typ bty = mytyp.BaseTyp;
-                Fun callee = bty.FindOvld(".ctor").GetFunOf(bty, new Typ[] { }, mytyp, fun);
+                Fun callee = bty.FindOvld(".ctor").GetFunOf(bty, new Typ[] { }, mytyp);
                 Sema instance = fun.FindVar("this");
                 fun.Exes.Add(new CallFun(bty, callee, instance, new Sema[] { }, false /*:isNewObj*/));
             }
@@ -1538,6 +1550,8 @@ namespace Nana.Semantics
                 Member m;
                 if (BuiltInFunctions.TryGetValue(t.Value, out m))
                 { return m; }
+                //if (Env.BTF.Members.TryGetValue(t.Value, out m))
+                //{ return m; }
             }
 
             bool imp = false == string.IsNullOrEmpty(t.ValueImplicit);

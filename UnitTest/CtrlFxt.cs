@@ -1098,13 +1098,9 @@ class C
         {
             Inp =
 @"
-class C
-..
-,,
-
-c   = C()
-s   = c.ToString()
-`p(s)
+`p(""a"")
+3 + 2           -> n
+""a"" + ""b""   -> s
 ";
             EpcSyn = @"
 x

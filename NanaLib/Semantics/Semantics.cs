@@ -195,9 +195,11 @@ namespace Nana.Semantics
         { return delegate(T v) { return v.Name == name; }; }
     }
 
-    public class Env : Nsp
+    public class Env : App
+    //public class Env : Nsp
     {
         public BuiltInTyp BTY;
+        public BuiltInFun BTF;
         public App Ap;
         public TypeLoader TypeLdr = new TypeLoader();
         public int Sequence = 0;
@@ -213,6 +215,7 @@ namespace Nana.Semantics
         {
             E = this;
             BTY = new BuiltInTyp(this);
+            BTF = new BuiltInFun(this);
         }
 
         public App NewApp(Token seed)
@@ -312,14 +315,14 @@ namespace Nana.Semantics
             return FindNsp(ns) ?? NewNsp(ns);
         }
 
-        public Ovld NewOvld(string name)
-        {
-            if (Members_.Exists(GetNamePredicate<Nmd>(name)))
-            { throw new SyntaxError("The name is already defined: " + name); }
-            Ovld ovl = new Ovld(new Token(name), this);
-            BeAMember(ovl);
-            return ovl;
-        }
+        //public Ovld NewOvld(string name)
+        //{
+        //    if (Members_.Exists(GetNamePredicate<Nmd>(name)))
+        //    { throw new SyntaxError("The name is already defined: " + name); }
+        //    Ovld ovl = new Ovld(new Token(name), this);
+        //    BeAMember(ovl);
+        //    return ovl;
+        //}
 
     }
 
@@ -347,18 +350,90 @@ namespace Nana.Semantics
 
     public class BuiltInFun
     {
+        public Env E;
+
+        public Dictionary<string, Member> Members = new Dictionary<string, Member>();
+        public Dictionary<string, Ovld> Ovrlds = new Dictionary<string, Ovld>();
+
         public BuiltInFun(Env e)
         {
-            Ovld ovl;
-            Typ ty;
-      
+            E = e;
+            Register("-", e.BTY.Int, e.BTY.Int);
+            Register("+", e.BTY.Int, e.BTY.Int);
+        }
 
+        //public void Register(string ope,  Typ ty, string funname, Typ[] prms)
+        //{
+        //    ty.FindOvld(funname).GetFunOf(ty, prms E.BTY.Void, 
+        //    Ovld o = FindOrNewOvld(ope);
+        //    o.Members.Add(f);
+        //    AddToMembers(o);
+        //}
+
+        public void Register(string ope, Typ left, Typ right)
+        {
+            Ovld o = NewOperatorFun(ope, left, right);
+            AddToMembers(o);
+        }
+
+        public void AddToMembers(Ovld o)
+        {
+            string ope = o.Name;
+            if (Members.ContainsKey(ope))
+            { return; }
+            Members.Add(ope, new Member(E.BTY.Void, o, /*instance=*/ null));
+        }
+
+        public Ovld NewOperatorFun(string ope, Typ left, Typ right)
+        {
+            List<Variable> vs = new List<Variable>();
+            vs.Add(new Variable("a", left, Variable.VariableKind.Param));
+            vs.Add(new Variable("b", right, Variable.VariableKind.Param));
+            Ovld o = FindOrNewOvld(ope);
+            Fun f = o.NewFun(new Token(ope), vs, left);
+            f.IsOperator = true;
+            return o;
+        }
+
+        public Ovld FindOrNewOvld(string ope)
+        {
+            Ovld o;
+            if (false == Ovrlds.TryGetValue(ope, out o))
+            {
+                o = new Ovld(new Token(ope), E);
+                Ovrlds.Add(ope, o);
+            }
+            return o;
         }
 
 
+        //public void Register(string ope, Typ left, Typ right)
+        //{
+        //    Ovld o = E.FindOrNewOvld(ope);
+        //    List<Variable> vs = new List<Variable>();
+        //    vs.Add(new Variable("a", left, Variable.VariableKind.Param));
+        //    vs.Add(new Variable("b", right, Variable.VariableKind.Param));
+        //    Fun f = o.NewFun(new Token(ope), vs, left);
+        //    f.IsOperator = true;
+        //    Funs.AddLast(f);
+        //}
 
+        //public void Unregister()
+        //{
+        //    foreach (Fun f in Funs)
+        //    {
+        //        foreach (Nsp n in E.Members)
+        //        {
+        //            if (n.Members.Contains(f))
+        //            {
+        //                n.Members.Remove(f);
+        //                break;
+        //            }
+        //        }
+        //    }
+        //    Funs.Clear();
+        //}
     }
-
 
     public class Ovld : Nsp
     {
@@ -383,7 +458,7 @@ namespace Nana.Semantics
             return BeAMember(f);
         }
 
-        public Fun GetFunOf(Typ calleetyp, Typ[] argtyps, Typ callertyp, Fun callerfun)
+        public Fun GetFunOf(Typ calleetyp, Typ[] argtyps, Typ callertyp)
         {
             List<Tuple2<Typ, Fun>> cand = CreateCandidateFunList(calleetyp, argtyps);
 
@@ -510,6 +585,7 @@ namespace Nana.Semantics
         public bool IsInstance { get { return (MthdAttrs & MethodAttributes.Static) != MethodAttributes.Static; } }
         public bool IsVirtual { get { return (MthdAttrs & MethodAttributes.Virtual) == MethodAttributes.Virtual; } }
         public bool Inherited = false;
+        public bool IsOperator = false;
 
         public bool IsAssignableSignature(Typ[] callertyps)
         {
@@ -1023,8 +1099,11 @@ namespace Nana.Semantics
         public App(Token seed, Env env)
             : base(seed, env, null)
         {
-            Name = Path.GetFileName(E.OutPath);
-            AssemblyName = Path.GetFileNameWithoutExtension(E.OutPath);
+            if (E != null)
+            {
+                Name = Path.GetFileName(E.OutPath);
+                AssemblyName = Path.GetFileNameWithoutExtension(E.OutPath);
+            }
         }
 
         public Nsp NewNsp(Token seed)
@@ -1344,14 +1423,13 @@ namespace Nana.Semantics
 
         public void LoadInstance(IMRGenerator gen)
         {
-            if (Instance != null)
+            if (Instance == null) { return; }
+
+            Instance.Addr(gen);
+            if (Instance is Literal && Instance.Att.TypGet.IsValueType)
             {
-                Instance.Addr(gen);
-                if (Instance is Literal && Instance.Att.TypGet.IsValueType)
-                {
-                    Variable v = (Instance as Literal).TmpVarGen.Substitute(Instance.Att.TypGet, gen);
-                    v.Addr(gen);
-                }
+                Variable v = (Instance as Literal).TmpVarGen.Substitute(Instance.Att.TypGet, gen);
+                v.Addr(gen);
             }
         }
 
@@ -1364,13 +1442,16 @@ namespace Nana.Semantics
         {
             LoadInstance(gen);
             LoadArgs(gen);
-            if (IsNewObj)
+            if (false == Callee.IsOperator)
             {
-                gen.NewObject(CalleeTy, Callee);
+                if (IsNewObj)
+                { gen.NewObject(CalleeTy, Callee); }
+                else
+                { gen.CallFunction(CalleeTy, Callee); }
             }
             else
             {
-                gen.CallFunction(CalleeTy, Callee);
+                gen.Ope(Callee.Name, Callee.Att.TypGet);
             }
         }
 
