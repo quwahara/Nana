@@ -1279,8 +1279,6 @@ namespace Nana.Semantics
 
     public class EnvAnalyzer : AppAnalyzer
     {
-        public Dictionary<string, Member> BuiltInFunctions = new Dictionary<string, Member>();
-
         public EnvAnalyzer(Token seed)
             : base(seed, null)
         { }
@@ -1298,7 +1296,6 @@ namespace Nana.Semantics
         {
             Env = new Env(Seed);
             base.Nsp = Env;
-            AddBuiltInFunction("`p", "WriteLine", typeof(Console));
             foreach (Token opt in Seed.Find("@CompileOptions").Follows)
             {
                 switch (opt.Group.ToLower())
@@ -1319,16 +1316,6 @@ namespace Nana.Semantics
         {
             Subs.AddLast(new AppAnalyzer(Seed.Find("@Syntax"), this));
             ConstructSubsAll();
-        }
-
-        public void AddBuiltInFunction(string built_in_function_name, string actualname, Type holdertype)
-        {
-            Typ hty = Env.FindOrNewRefType(holdertype);
-            Ovld actualao = hty.FindMemeber(actualname) as Ovld;
-            BuiltInFunctions.Add(
-                built_in_function_name
-                , new Member(hty, actualao, null)
-                );
         }
 
         public void Main()
@@ -1473,8 +1460,6 @@ namespace Nana.Semantics
 
             {
                 Member m;
-                if (BuiltInFunctions.TryGetValue(t.Value, out m))
-                { return m; }
                 if (Env.BFN.Members.TryGetValue(t.Value, out m))
                 { return m; }
             }

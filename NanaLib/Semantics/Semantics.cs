@@ -363,19 +363,21 @@ namespace Nana.Semantics
             Typ bol = e.BTY.Bool;
 
             foreach (string ope in "+,-,*,/,%".Split(new char[] { ',' }))
-            { Register(ope, int_, int_, int_); }
+            { RegisterOperator(ope, int_, int_, int_); }
 
             foreach (string ope in "==,!=,<,>,<=,>=,and,or,xor".Split(new char[] { ',' }))
-            { Register(ope, int_, int_, bol); }
+            { RegisterOperator(ope, int_, int_, bol); }
 
             foreach (string ope in "==,!=,and,or,xor".Split(new char[] { ',' }))
-            { Register(ope, bol, bol, bol); }
+            { RegisterOperator(ope, bol, bol, bol); }
             
             Typ str = e.BTY.String;
-            Register("+", str, "Concat", new Typ[] { str, str });
+            RegisterOperatorLikeFun("+", str, "Concat", new Typ[] { str, str });
+
+            RegisterOvldAlias(E.FindOrNewRefType(typeof(Console)), "`p", "WriteLine");
         }
 
-        public void Register(string ope,  Typ calleetyp, string funname, Typ[] argtyps)
+        public void RegisterOperatorLikeFun(string ope,  Typ calleetyp, string funname, Typ[] argtyps)
         {
             Ovld o = FindOrNewOvld(ope);
             Fun actual = calleetyp.FindOvld(funname).GetFunOf(calleetyp, argtyps, E.BTY.Void);
@@ -385,21 +387,26 @@ namespace Nana.Semantics
             newfun.CalleeTypOfOperatorLikeFun = calleetyp;
             o.Members.Add(newfun);
             o.Funs.Add(newfun);
-            AddToMembers(o);
+            AddToMembers(E.BTY.Void, ope, o);
         }
 
-        public void Register(string ope, Typ left, Typ right, Typ ret)
+        public void RegisterOperator(string ope, Typ left, Typ right, Typ ret)
         {
             Ovld o = NewOperatorFun(ope, left, right, ret);
-            AddToMembers(o);
+            AddToMembers(E.BTY.Void, ope, o);
         }
 
-        public void AddToMembers(Ovld o)
+        public void RegisterOvldAlias(Typ calleetyp, string name, string actualname)
         {
-            string ope = o.Name;
-            if (Members.ContainsKey(ope))
+            Ovld actual = calleetyp.FindMemeber(actualname) as Ovld;
+            AddToMembers(calleetyp, name, actual);
+        }
+
+        public void AddToMembers(Typ calletyp, string name, Ovld o)
+        {
+            if (Members.ContainsKey(name))
             { return; }
-            Members.Add(ope, new Member(E.BTY.Void, o, /*instance=*/ null));
+            Members.Add(name, new Member(calletyp, o, /*instance=*/ null));
         }
 
         public Ovld NewOperatorFun(string ope, Typ left, Typ right, Typ ret)
