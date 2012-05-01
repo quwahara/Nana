@@ -109,21 +109,9 @@ namespace Nana.Semantics
         public Env E;
         public LinkedList<Custom> Customs;
 
-        public Nsp(string name, Env env)
-            : this(name, false, env)
-        {
-        }
-
         public Nsp(Token seed, Env env)
-            : this(seed.Value, env)
+            : base(seed)
         {
-            Seed = seed;
-        }
-
-        public Nsp(string name, bool isReferencing, Env env)
-        {
-            Name = name;
-            IsReferencing = isReferencing;
             E = env;
         }
 
@@ -299,7 +287,9 @@ namespace Nana.Semantics
         public Nsp NewNsp(string ns)
         {
             EnsureMembers();
-            return BeAMember(new Nsp(ns, true, this)); ;
+            Nsp nsp = new Nsp(new Token(ns), this);
+            nsp.IsReferencing = true;
+            return BeAMember(nsp);
         }
 
         public Nsp FindNsp(string ns)
