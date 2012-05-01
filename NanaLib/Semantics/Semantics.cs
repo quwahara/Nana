@@ -48,6 +48,7 @@ namespace Nana.Semantics
     public class Member
     {
         public Typ Ty;
+
         public Nmd Value;
         public Sema Instance;
 
@@ -196,10 +197,9 @@ namespace Nana.Semantics
     }
 
     public class Env : App
-    //public class Env : Nsp
     {
         public BuiltInTyp BTY;
-        public BuiltInFun BTF;
+        public BuiltInFun BFN;
         public App Ap;
         public TypeLoader TypeLdr = new TypeLoader();
         public int Sequence = 0;
@@ -215,7 +215,7 @@ namespace Nana.Semantics
         {
             E = this;
             BTY = new BuiltInTyp(this);
-            BTF = new BuiltInFun(this);
+            BFN = new BuiltInFun(this);
         }
 
         public App NewApp(Token seed)
@@ -358,21 +358,39 @@ namespace Nana.Semantics
         public BuiltInFun(Env e)
         {
             E = e;
-            Register("-", e.BTY.Int, e.BTY.Int);
-            Register("+", e.BTY.Int, e.BTY.Int);
+
+            Typ int_ = e.BTY.Int;
+            Typ bol = e.BTY.Bool;
+
+            foreach (string ope in "+,-,*,/,%".Split(new char[] { ',' }))
+            { Register(ope, int_, int_, int_); }
+
+            foreach (string ope in "==,!=,<,>,<=,>=,and,or,xor".Split(new char[] { ',' }))
+            { Register(ope, int_, int_, bol); }
+
+            foreach (string ope in "==,!=,and,or,xor".Split(new char[] { ',' }))
+            { Register(ope, bol, bol, bol); }
+            
+            Typ str = e.BTY.String;
+            Register("+", str, "Concat", new Typ[] { str, str });
         }
 
-        //public void Register(string ope,  Typ ty, string funname, Typ[] prms)
-        //{
-        //    ty.FindOvld(funname).GetFunOf(ty, prms E.BTY.Void, 
-        //    Ovld o = FindOrNewOvld(ope);
-        //    o.Members.Add(f);
-        //    AddToMembers(o);
-        //}
-
-        public void Register(string ope, Typ left, Typ right)
+        public void Register(string ope,  Typ calleetyp, string funname, Typ[] argtyps)
         {
-            Ovld o = NewOperatorFun(ope, left, right);
+            Ovld o = FindOrNewOvld(ope);
+            Fun actual = calleetyp.FindOvld(funname).GetFunOf(calleetyp, argtyps, E.BTY.Void);
+            Fun newfun = o.NewFun(new Token(actual.Name), actual.Params, actual.Att.TypGet);
+            newfun.MthdAttrs = actual.MthdAttrs;
+            newfun.IsOperatorLikeFun = true;
+            newfun.CalleeTypOfOperatorLikeFun = calleetyp;
+            o.Members.Add(newfun);
+            o.Funs.Add(newfun);
+            AddToMembers(o);
+        }
+
+        public void Register(string ope, Typ left, Typ right, Typ ret)
+        {
+            Ovld o = NewOperatorFun(ope, left, right, ret);
             AddToMembers(o);
         }
 
@@ -384,13 +402,13 @@ namespace Nana.Semantics
             Members.Add(ope, new Member(E.BTY.Void, o, /*instance=*/ null));
         }
 
-        public Ovld NewOperatorFun(string ope, Typ left, Typ right)
+        public Ovld NewOperatorFun(string ope, Typ left, Typ right, Typ ret)
         {
             List<Variable> vs = new List<Variable>();
             vs.Add(new Variable("a", left, Variable.VariableKind.Param));
             vs.Add(new Variable("b", right, Variable.VariableKind.Param));
             Ovld o = FindOrNewOvld(ope);
-            Fun f = o.NewFun(new Token(ope), vs, left);
+            Fun f = o.NewFun(new Token(ope), vs, ret);
             f.IsOperator = true;
             return o;
         }
@@ -586,6 +604,8 @@ namespace Nana.Semantics
         public bool IsVirtual { get { return (MthdAttrs & MethodAttributes.Virtual) == MethodAttributes.Virtual; } }
         public bool Inherited = false;
         public bool IsOperator = false;
+        public bool IsOperatorLikeFun = false;
+        public Typ CalleeTypOfOperatorLikeFun;
 
         public bool IsAssignableSignature(Typ[] callertyps)
         {
@@ -1442,16 +1462,20 @@ namespace Nana.Semantics
         {
             LoadInstance(gen);
             LoadArgs(gen);
-            if (false == Callee.IsOperator)
+            if (Callee.IsOperator)
             {
-                if (IsNewObj)
-                { gen.NewObject(CalleeTy, Callee); }
-                else
-                { gen.CallFunction(CalleeTy, Callee); }
+                gen.Ope(Callee.Name, Callee.Att.TypGet);
             }
             else
             {
-                gen.Ope(Callee.Name, Callee.Att.TypGet);
+                Typ calleeTy = Callee.IsOperatorLikeFun
+                    ? Callee.CalleeTypOfOperatorLikeFun
+                    : CalleeTy;
+
+                if (IsNewObj)
+                { gen.NewObject(calleeTy, Callee); }
+                else
+                { gen.CallFunction(calleeTy, Callee); }
             }
         }
 

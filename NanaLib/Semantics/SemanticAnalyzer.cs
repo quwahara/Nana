@@ -361,90 +361,15 @@ namespace Nana.Semantics
             return NewVar(id.Seed.Value, ty);
         }
 
-        public Token InfixToCallFun(Token t)
-        {
-            Token callfunc = new Token("(", "Expr");
-            callfunc.First = new Token(t.Value, "Id");
-            Token prm = callfunc.Second = new Token(",", "_End_Cma_");
-            prm.First = t.First;
-            prm.Second = t.Second;
-            return callfunc;
-        }
-
         public object Ope(Token t)
         {
-            //TODO
-            //return Gate(InfixToCallFun(t));
-
-            Sema lv, rv;
-
-            lv = Require<Sema>(t.First);
-            rv = Require<Sema>(t.Second);
-
-            string ope = t.Value;
-            Typ tp = lv.Att.TypGet;
-            if (tp.IsReferencingOf(typeof(int)))
-            {
-                CalcInfo c;
-                switch (ope)
-                {
-                    case "+":
-                    case "-":
-                    case "*":
-                    case "/":
-                    case "%":
-                        c = new CalcInfo(ope, lv, rv, Env.BTY.Int); break;
-
-                    case "==":
-                    case "!=":
-                    case "<":
-                    case ">":
-                    case "<=":
-                    case ">=":
-                    case "and":
-                    case "or":
-                    case "xor":
-                        c = new CalcInfo(ope, lv, rv, Env.BTY.Bool); break;
-
-                    default:
-                        throw new SyntaxError("Can not use '" + ope + "'", t);
-                }
-                return c;
-            }
-            else if (tp.IsReferencingOf(typeof(bool)))
-            {
-                CalcInfo c;
-                switch (ope)
-                {
-                    case "==":
-                    case "!=":
-                    case "and":
-                    case "or":
-                    case "xor":
-                        c = new CalcInfo(ope, lv, rv, Env.BTY.Bool); break;
-
-                    default:
-                        throw new SyntaxError("Can not use '" + ope + "'", t);
-                }
-                return c;
-            }
-            else if (tp.IsReferencingOf(typeof(string)))
-            {
-                if (ope == "+")
-                {
-                    Typ ts = Env.BTY.String;
-                    Fun concat = ts.FindOvld("Concat").GetFunOf(ts, new Typ[] { ts, ts }, ThisTyp);
-                    return new CallFun(tp, concat, /* instance */ null, new Sema[] { lv, rv }, /* isNewObj */ false);
-                }
-                else
-                {
-                    throw new SyntaxError("Can not use '" + ope + "'", t);
-                }
-            }
-            else
-            {
-                throw new SyntaxError("Can not use '" + ope + "'", t);
-            }
+            //  transform infix to call-fun
+            Token callfun = new Token("(", "Expr");
+            callfun.First = new Token(t.Value, "Id");
+            Token prm = callfun.Second = new Token(",", "_End_Cma_");
+            prm.First = t.First;
+            prm.Second = t.Second;
+            return Gate(callfun);
         }
 
         public object While(Token while_)
@@ -1550,8 +1475,8 @@ namespace Nana.Semantics
                 Member m;
                 if (BuiltInFunctions.TryGetValue(t.Value, out m))
                 { return m; }
-                //if (Env.BTF.Members.TryGetValue(t.Value, out m))
-                //{ return m; }
+                if (Env.BFN.Members.TryGetValue(t.Value, out m))
+                { return m; }
             }
 
             bool imp = false == string.IsNullOrEmpty(t.ValueImplicit);
