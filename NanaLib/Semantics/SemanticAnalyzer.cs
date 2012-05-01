@@ -76,33 +76,15 @@ namespace Nana.Semantics
 
     public class LineAnalyzer : SemanticAnalyzer
     {
-        public Typ ThisTyp_ = null;
-        public Typ ThisTyp
-        {
-            get
-            {
-                if (ThisTyp_ == null)
-                {
-                    TypAnalyzer ta
-                        = FindUpTypeOf<TypAnalyzer>()
-                        ?? FindUpTypeOf<AppAnalyzer>()
-                        ;
-                    ThisTyp_ = ta.Typ;
-                }
-                return ThisTyp_;
-            }
-        }
         public BlockAnalyzer AboveBlock;
 
         public Stack<Literal> Breaks;
         public Stack<Literal> Continues;
         public Env Env;
-        public Fun Fun_;
-        public Fun Fun
-        {
-            get { return Fun_; }
-            set { Fun_ = value; }
-        }
+        public App App;
+        public Typ Typ;
+        public Fun Fun;
+        public Nsp Nsp;
         public TmpVarGenerator TmpVarGen;
         public bool IsInFun;
 
@@ -150,9 +132,18 @@ namespace Nana.Semantics
             return Fun.NewVar(name, typ);
         }
 
+        public void FindUpNsps()
+        {
+            App = FindUpTypeOf<AppAnalyzer>().App;
+            Typ = FindUpTypeIs<TypAnalyzer>().Typ;
+            Fun = FindUpTypeIs<FunAnalyzer>().Fun;
+            Nsp = FindUpTypeIs<BlockAnalyzer>().Nsp;
+        }
+
         public void AnalyzeLine()
         {
-            Fun = FindUpTypeIs<FunAnalyzer>().Fun;
+            FindUpNsps();
+            
             IsInFun = Fun.Att.CanGet;
             TmpVarGen = new TmpVarGenerator(Env.GetTempName, NewVar);
             if (AboveBlock.RequiredReturnValue.Count == 0)
@@ -233,7 +224,6 @@ namespace Nana.Semantics
                 }
                 return c;
             }
-            //return new Chain(Gate(t.First), Gate(t.Second));
         }
 
         public object Ret(Token t)
@@ -619,7 +609,7 @@ namespace Nana.Semantics
 
             Fun sig = null;
 
-            sig = ovl.GetFunOf(calleetyp, argtyps.ToArray(), ThisTyp);
+            sig = ovl.GetFunOf(calleetyp, argtyps.ToArray(), Typ);
             if (sig == null) { throw new SyntaxError("It is not a member", t.First); }
 
             Sema instance = mbr == null ? null : mbr.Instance;
@@ -889,13 +879,11 @@ namespace Nana.Semantics
 
     public class BlockAnalyzer : LineAnalyzer
     {
-        public Nsp Nsp;
         public Stack<ReturnValue> RequiredReturnValue = new Stack<ReturnValue>();
 
         public BlockAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
         {
-            AboveBlock = above;
             Token c = Seed.Custom;
             while (c != null)
             {
@@ -954,9 +942,12 @@ namespace Nana.Semantics
 
         public void AnalyzeFun()
         {
+            App = FindUpTypeOf<AppAnalyzer>().App;
+            Typ = FindUpTypeIs<TypAnalyzer>().Typ;
+
             Token t = Seed;
             bool isStatic, isCtor;
-            bool isInTypDecl = false == (ThisTyp is App);
+            bool isInTypDecl = false == (Typ is App);
             string ftyp = ResolveFuncType(t.Value, isInTypDecl);
 
             MethodAttributes attrs = AnalyzeAttrs(ftyp);
@@ -1073,13 +1064,15 @@ namespace Nana.Semantics
 
         public void AnalyzeCustom()
         {
+            FindUpNsps();
+
             Token t = Seed;
             object o = Gate(t);
             if (typeof(Typ) == o.GetType())
             {
                 Typ calleetyp = o as Typ;
                 Ovld ovl = calleetyp.FindOvld(Nana.IMRs.IMRGenerator.InstCons);
-                Fun f = ovl.GetFunOf(calleetyp, new Typ[] { }, ThisTyp);
+                Fun f = ovl.GetFunOf(calleetyp, new Typ[] { }, Typ);
                 if (f == null) { throw new SyntaxError("It is not a member", t.First); }
                 Nsp n = AboveBlock.Nsp;
                 if (n.Customs == null)
@@ -1091,13 +1084,6 @@ namespace Nana.Semantics
 
     public class TypAnalyzer : FunAnalyzer
     {
-        public Typ Typ_;
-        public Typ Typ
-        {
-            get { return Typ_; }
-            set { base.Fun = Typ_ = value; }
-        }
-
         public TypAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
         { }
@@ -1120,7 +1106,7 @@ namespace Nana.Semantics
             App app = appazr.App;
             if (app.HasMember(name.Value))
             { throw new SemanticError("The type is already defined. Type name:" + name.Value, name); }
-            Typ = app.NewTyp(name);
+            base.Nsp = base.Fun = base.Typ = app.NewTyp(name);
 
             foreach (Token t in Seed.Find("@Block").Follows)
             {
@@ -1129,8 +1115,6 @@ namespace Nana.Semantics
 
                 Gate(t);
             }
-
-            base.Nsp = base.Fun = Typ;
         }
 
         public void AnalyzeBaseTyp()
@@ -1162,7 +1146,7 @@ namespace Nana.Semantics
 
     }
 
-    public class SrcAnalyzer : TypAnalyzer
+    public class SrcAnalyzer : BlockAnalyzer
     {
         public LinkedList<Token> UsingSeeds;
         public LinkedList<Nsp> UsingNsp = new LinkedList<Nsp>();
@@ -1198,8 +1182,8 @@ namespace Nana.Semantics
 
         public void AnalyzeSrc()
         {
-            base.Typ = FindUpTypeOf<AppAnalyzer>().Typ;
-            UsingNsp.AddLast(base.Typ.E.FindOrNewNsp("System"));
+            Typ ty = FindUpTypeOf<AppAnalyzer>().Typ;
+            UsingNsp.AddLast(ty.E.FindOrNewNsp("System"));
         }
 
         public void AnalyzeUsing()
@@ -1233,15 +1217,8 @@ namespace Nana.Semantics
         }
     }
 
-    public class AppAnalyzer : SrcAnalyzer
+    public class AppAnalyzer : TypAnalyzer
     {
-        public App App_;
-        public App App
-        {
-            get { return App_; }
-            set { base.Typ = App_ = value; }
-        }
-
         public AppAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
         { }
@@ -1255,7 +1232,7 @@ namespace Nana.Semantics
 
         public void AnalyzeApp()
         {
-            App = FindUpTypeOf<EnvAnalyzer>().Env.NewApp(Seed);
+            base.Fun = base.Typ = base.App = FindUpTypeOf<EnvAnalyzer>().Env.NewApp(Seed);
         }
 
         override public object FindUp(Token t)
@@ -1523,7 +1500,6 @@ namespace Nana.Semantics
 
     public class SpecifiedTypAnalyzer
     {
-
         static public Token GoToLastIdAndBuildName(Token t)
         {
             Debug.Assert(t != null);
