@@ -91,16 +91,14 @@ namespace Nana.Semantics
 
     public class Nmd : Sema
     {
-        public string Name_;
-        public string Name { get { return Name_; } set { Name_ = value; } }
+        public string Name;
         public Token Seed;
 
         public Nmd() { }
         public Nmd(string name) { Name = name; }
-        [DebuggerNonUserCode]
         public Nmd(Token seed) : this(seed.Value) { Seed = seed; }
 
-        public override string ToString() { return Name_ + ":" + typeof(Nmd).Name; }
+        public override string ToString() { return Name + ":" + typeof(Nmd).Name; }
     }
 
     public class Nsp : Nmd
@@ -113,7 +111,7 @@ namespace Nana.Semantics
 
         public Nsp(string name, bool isReferencing, Env env)
         {
-            Name_ = name;
+            Name = name;
             IsReferencing = isReferencing;
             E = env;
         }
@@ -430,34 +428,6 @@ namespace Nana.Semantics
             }
             return o;
         }
-
-
-        //public void Register(string ope, Typ left, Typ right)
-        //{
-        //    Ovld o = E.FindOrNewOvld(ope);
-        //    List<Variable> vs = new List<Variable>();
-        //    vs.Add(new Variable("a", left, Variable.VariableKind.Param));
-        //    vs.Add(new Variable("b", right, Variable.VariableKind.Param));
-        //    Fun f = o.NewFun(new Token(ope), vs, left);
-        //    f.IsOperator = true;
-        //    Funs.AddLast(f);
-        //}
-
-        //public void Unregister()
-        //{
-        //    foreach (Fun f in Funs)
-        //    {
-        //        foreach (Nsp n in E.Members)
-        //        {
-        //            if (n.Members.Contains(f))
-        //            {
-        //                n.Members.Remove(f);
-        //                break;
-        //            }
-        //        }
-        //    }
-        //    Funs.Clear();
-        //}
     }
 
     public class Ovld : Nsp
@@ -1263,7 +1233,7 @@ namespace Nana.Semantics
         public GenericArgument(Type refType)
         {
             RefType = refType;
-            Name_ = refType.Name;
+            Name = refType.Name;
         }
     }
 
@@ -1314,7 +1284,7 @@ namespace Nana.Semantics
         public Variable(string name, Typ typ, VariableKind varKind)
             : base()
         {
-            Name_ = name;
+            Name = name;
             VarKind = varKind;
 
             Att.TypGet = typ;
