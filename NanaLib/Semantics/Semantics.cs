@@ -432,7 +432,9 @@ namespace Nana.Semantics
 
         public Fun NewFun(Token seed, List<Variable> params_, Typ returnTyp)
         {
-            Fun f = new Fun(seed, params_, returnTyp, E);
+            Fun f = new Fun(seed, E);
+            f.SetParams(params_);
+            f.SetReturnTyp(returnTyp);
             Funs.Add(f);
             return BeAMember(f);
         }
@@ -594,17 +596,23 @@ namespace Nana.Semantics
 
         public List<IMR> IMRs = new List<IMR>();
 
-        public Fun(Token seed, List<Variable> params_, Typ returnTyp, Env env)
+        public Fun(Token seed, Env env)
             : base(seed, env)
         {
-            if (params_ == null) { return; }
+        }
+
+        public void SetReturnTyp(Typ returnTyp)
+        {
+            Att.TypGet = returnTyp;
+        }
+
+        public void SetParams(List<Variable> params_)
+        {
             params_.ForEach(delegate(Variable v)
             {
                 Params.Add(v);
                 BeAMember(v);
             });
-
-            Att.TypGet = returnTyp;
         }
 
         public MethodBase Mb;
@@ -744,7 +752,7 @@ namespace Nana.Semantics
         public List<Nmd> DebuggerDisplayMembers { get { return Members_; } }
 
         public Typ(Token seed, Env env, App app)
-            : base(seed, null, null, env)
+            : base(seed, env)
         {
             if (app != null) { AssemblyName = app.AssemblyName; }
             _FullName = Name;
@@ -797,7 +805,7 @@ namespace Nana.Semantics
         public Type RefType = null;
 
         public Typ(Type refType, Env env)
-            : base(new Token(refType.FullName ?? refType.Name), null, null, env)
+            : base(new Token(refType.FullName ?? refType.Name), env)
         {
             RefType = refType;
             IsValueType = refType.IsValueType;
@@ -829,7 +837,7 @@ namespace Nana.Semantics
         }
 
         public Typ(Typ typ, Env env, int dimension)
-            : base(new Token(typ._FullName + "[" + dimension + "]"), null, null, env)
+            : base(new Token(typ._FullName + "[" + dimension + "]"), env)
         {
             Dimension = dimension;
             IsVector = dimension == 1;
@@ -845,7 +853,7 @@ namespace Nana.Semantics
         public Dictionary<string, Typ> GenericDic = null;
 
         public Typ(Typ genericTyp, Env env, Typ[] genericTypeParams)
-            : base(new Token(genericTyp.Name), null, null, env)
+            : base(new Token(genericTyp.Name), env)
         {
             GenericType = genericTyp;
             GenericTypeParams = genericTypeParams;
