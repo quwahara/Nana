@@ -618,16 +618,6 @@ namespace Nana.Semantics
             if (MethodAttributes.SpecialName == (mb.Attributes & MethodAttributes.SpecialName))
             { SpecialName = mb.Name; }
 
-            if (mb.IsConstructor && (mb.IsStatic == false))
-            { }
-            else
-            {
-                if (null == (mb as MethodInfo))
-                {
-                }
-
-            }
-
             Type tt = null;
 
             if (mb is MethodInfo)

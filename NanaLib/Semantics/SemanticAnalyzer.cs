@@ -195,7 +195,6 @@ namespace Nana.Semantics
             switch (t.Group)
             {
                 case "Prior":       /**/ u = Gate(t.Follows[0]); break;
-                //case "Factor":   /**/ u = Factor(t); break;
                 case "Num":         /**/ u = Num(t); break;
                 case "Str":         /**/ u = Str(t); break;
                 case "Bol":         /**/ u = Bol(t); break;
@@ -207,8 +206,6 @@ namespace Nana.Semantics
                 case "Dot":         /**/ u = Dot(t); break;
                 case "If":          /**/ u = If(t); break;
                 case "While":       /**/ u = While(t); break;
-                    //  TODO cehck TypeSpec2
-                case "TypeSpec2":   /**/ u = TypeSpec(t); break;
                 case "Typ":         /**/ u = DefineVariable(t); break;
                 case "Ret":         /**/ u = Ret(t); break;
                 case "Nop":         /**/ u = new DoNothing(); break;
@@ -340,11 +337,6 @@ namespace Nana.Semantics
             }
 
             return new Assign(gv2, tu as Sema, prepare);
-        }
-
-        public object TypeSpec(Token t)
-        {
-            return Id(t);
         }
 
         public object DefineVariable(Token t)
@@ -996,10 +988,6 @@ namespace Nana.Semantics
             {
                 returnType = RequireTyp(ty.Follows[0]);
             }
-            //else if (null != (ty = t.Find("@TypeSpec/@TypeSpec2")))
-            //{
-            //    returnType = RequireTyp(ty);
-            //}
 
             List<Typ> signature = prmls.ConvertAll<Typ>(delegate(Variable v) { return v.Att.TypGet; });
 
@@ -1539,7 +1527,7 @@ namespace Nana.Semantics
         static public Token GoToLastIdAndBuildName(Token t)
         {
             Debug.Assert(t != null);
-            Debug.Assert(t.Group == "Id" || t.Group == "TypeSpec2");
+            Debug.Assert(t.Group == "Id");
 
             Token pre = t;
             Token next;
@@ -1554,7 +1542,7 @@ namespace Nana.Semantics
                 Debug.Assert(pre.Follows[0].Follows != null);
                 Debug.Assert(pre.Follows[0].Follows.Length == 1);
                 Debug.Assert(pre.Follows[0].Follows[0] != null);
-                Debug.Assert(pre.Follows[0].Follows[0].Group == "Id" || pre.Follows[0].Follows[0].Group == "TypeSpec2");
+                Debug.Assert(pre.Follows[0].Follows[0].Group == "Id");
 
                 next = pre.Follows[0].Follows[0];
                 next.ValueImplicit = pre.ValueImplicit + "." + next.Value;
