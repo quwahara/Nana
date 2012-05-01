@@ -751,10 +751,9 @@ namespace Nana.Semantics
 
         public List<Nmd> DebuggerDisplayMembers { get { return Members_; } }
 
-        public Typ(Token seed, Env env, App app)
+        public Typ(Token seed, Env env)
             : base(seed, env)
         {
-            if (app != null) { AssemblyName = app.AssemblyName; }
             _FullName = Name;
 
             TypAttributes
@@ -1093,7 +1092,7 @@ namespace Nana.Semantics
     public class App : Typ
     {
         public App(Token seed, Env env)
-            : base(seed, env, null)
+            : base(seed, env)
         {
             if (E != null)
             {
@@ -1112,13 +1111,14 @@ namespace Nana.Semantics
 
         public Typ NewTyp(Token seed)
         {
-            return BeAMember(new Typ(seed, E, this));
+            Typ ty = new Typ(seed, E);
+            ty.AssemblyName = AssemblyName;
+            return BeAMember(ty);
         }
 
         override public Variable NewVar(string name, Typ typ)
         {
             Variable v = new Variable(name, typ, Variable.VariableKind.Field);
-            //Variable v = new Variable(name, typ, Variable.VariableKind.StaticField);
             v.Att.IsStatic = true;
             Vars.Add(v);
             return BeAMember(v);
