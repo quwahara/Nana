@@ -109,13 +109,6 @@ namespace Nana.Semantics
         public Env E;
         public LinkedList<Custom> Customs;
 
-        public Nsp(string name, bool isReferencing, Env env)
-        {
-            Name = name;
-            IsReferencing = isReferencing;
-            E = env;
-        }
-
         public Nsp(string name, Env env)
             : this(name, false, env)
         {
@@ -125,6 +118,13 @@ namespace Nana.Semantics
             : this(seed.Value, env)
         {
             Seed = seed;
+        }
+
+        public Nsp(string name, bool isReferencing, Env env)
+        {
+            Name = name;
+            IsReferencing = isReferencing;
+            E = env;
         }
 
         public void EnsureMembers()
@@ -312,15 +312,6 @@ namespace Nana.Semantics
         {
             return FindNsp(ns) ?? NewNsp(ns);
         }
-
-        //public Ovld NewOvld(string name)
-        //{
-        //    if (Members_.Exists(GetNamePredicate<Nmd>(name)))
-        //    { throw new SyntaxError("The name is already defined: " + name); }
-        //    Ovld ovl = new Ovld(new Token(name), this);
-        //    BeAMember(ovl);
-        //    return ovl;
-        //}
 
     }
 
@@ -1547,39 +1538,6 @@ namespace Nana.Semantics
             { throw new SyntaxError("Cannot set value to the property"); }
             CallFun cf = new CallFun(CP.CalleeTy, setter, CP.Instance, new Sema[] { Value }, /*isNewObj:*/ false);
             cf.Give(gen);
-        }
-    }
-
-    public class CalcInfo : Sema
-    {
-        public string Sign;
-        public Sema Lv;
-        public Sema Rv;
-
-        public CalcInfo(string sign, Sema lv, Sema rv, Typ typ)
-        {
-            Sign = sign;
-            Lv = lv;
-            Rv = rv;
-            Att.TypGet = typ;
-        }
-
-        public override void Give(IMRGenerator gen)
-        {
-            Lv.Give(gen);
-            Rv.Give(gen);
-            gen.Ope(Sign, Att.TypGet);
-        }
-
-        public override void Addr(IMRGenerator gen)
-        {
-            Give(gen);
-        }
-
-        public override void Exec(IMRGenerator gen)
-        {
-            Give(gen);
-            gen.Pop();
         }
     }
 
