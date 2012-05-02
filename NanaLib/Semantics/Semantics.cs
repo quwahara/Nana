@@ -37,8 +37,7 @@ namespace Nana.Semantics
 
     public class Sema
     {
-        public Attr Att_ = new Attr();
-        public Attr Att { get { return Att_; } }
+        public Attr Att = new Attr();
         public virtual void Exec(IMRGenerator gen) { }
         public virtual void Give(IMRGenerator gen) { }
         public virtual void Take(IMRGenerator gen) { }
@@ -1319,16 +1318,16 @@ namespace Nana.Semantics
         {
             GiveVal = give;
             TakeVar = take;
-            Att_.TypGet = take.Att_.TypGet;
-            Att_.TypSet = take.Att_.TypSet;
+            Att.TypGet = take.Att.TypGet;
+            Att.TypSet = take.Att.TypSet;
         }
 
         public Assign(Sema give, Sema take, Sema prepare)
         {
             GiveVal = give;
             TakeVar = take;
-            Att_.TypGet = take.Att_.TypGet;
-            Att_.TypSet = take.Att_.TypSet;
+            Att.TypGet = take.Att.TypGet;
+            Att.TypSet = take.Att.TypSet;
             Prepare = prepare;
         }
 
@@ -1503,7 +1502,7 @@ namespace Nana.Semantics
             CP = cp;
             Value = value;
 
-            Att_ = cp.Prop.Att;
+            Att = cp.Prop.Att;
         }
 
         public override void Give(IMRGenerator gen)
