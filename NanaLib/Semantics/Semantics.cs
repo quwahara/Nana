@@ -202,9 +202,9 @@ namespace Nana.Semantics
             BFN = new BuiltInFun(this);
         }
 
-        public App NewApp(Token seed)
+        public App NewApp(string name)
         {
-            Ap = new App(seed.Value, this);
+            Ap = new App(name, this);
             return BeAMember(Ap);
         }
 
@@ -360,7 +360,7 @@ namespace Nana.Semantics
         {
             Ovld o = FindOrNewOvld(ope);
             Fun actual = calleetyp.FindOvld(funname).GetFunOf(calleetyp, argtyps, E.BTY.Void);
-            Fun newfun = o.NewFun(new Token(actual.Name), actual.Params, actual.Att.TypGet);
+            Fun newfun = o.NewFun(actual.Name, actual.Params, actual.Att.TypGet);
             newfun.MthdAttrs = actual.MthdAttrs;
             newfun.IsOperatorLikeFun = true;
             newfun.CalleeTypOfOperatorLikeFun = calleetyp;
@@ -394,7 +394,7 @@ namespace Nana.Semantics
             vs.Add(new Variable("a", left, Variable.VariableKind.Param));
             vs.Add(new Variable("b", right, Variable.VariableKind.Param));
             Ovld o = FindOrNewOvld(ope);
-            Fun f = o.NewFun(new Token(ope), vs, ret);
+            Fun f = o.NewFun(ope, vs, ret);
             f.IsOperator = true;
             return o;
         }
@@ -420,9 +420,9 @@ namespace Nana.Semantics
         {
         }
 
-        public Fun NewFun(Token seed, List<Variable> params_, Typ returnTyp)
+        public Fun NewFun(string name, List<Variable> params_, Typ returnTyp)
         {
-            Fun f = new Fun(seed.Value, E);
+            Fun f = new Fun(name, E);
             f.SetParams(params_);
             f.SetReturnTyp(returnTyp);
             Funs.Add(f);
@@ -962,7 +962,7 @@ namespace Nana.Semantics
                         ? TransGenericType(self, gfun_.Att.TypGet)
                         : self.E.BTY.Void
                         ;
-                    newovld_.NewFun(new Token(gfun_.Name), nvs, rettyp);
+                    newovld_.NewFun(gfun_.Name, nvs, rettyp);
                 }
             };
 
@@ -1084,16 +1084,16 @@ namespace Nana.Semantics
             }
         }
 
-        public Nsp NewNsp(Token seed)
+        public Nsp NewNsp(string name)
         {
-            Nsp n = new Nsp(seed.Value, E);
+            Nsp n = new Nsp(name, E);
             BeAMember(n);
             return n;
         }
 
-        public Typ NewTyp(Token seed)
+        public Typ NewTyp(string name)
         {
-            Typ ty = new Typ(seed.Value, E);
+            Typ ty = new Typ(name, E);
             ty.AssemblyName = AssemblyName;
             return BeAMember(ty);
         }

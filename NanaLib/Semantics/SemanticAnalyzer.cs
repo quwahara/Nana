@@ -978,7 +978,7 @@ namespace Nana.Semantics
             if (ovld.Contains(signature.ToArray()))
             { throw new SemanticError("The function is already defined. Function name:" + nameasm, t); }
 
-            Fun = ovld.NewFun(new Token(nameasm), prmls, returnType);
+            Fun = ovld.NewFun(nameasm, prmls, returnType);
 
             base.Nsp = Fun;
 
@@ -1099,7 +1099,7 @@ namespace Nana.Semantics
             App app = appazr.App;
             if (app.HasMember(name.Value))
             { throw new SemanticError("The type is already defined. Type name:" + name.Value, name); }
-            base.Nsp = base.Fun = base.Typ = app.NewTyp(name);
+            base.Nsp = base.Fun = base.Typ = app.NewTyp(name.Value);
 
             foreach (Token t in Seed.Find("@Block").Follows)
             {
@@ -1227,8 +1227,7 @@ namespace Nana.Semantics
 
         public void AnalyzeApp()
         {
-            base.Fun = base.Typ = base.App = FindUpTypeOf<EnvAnalyzer>().Env.NewApp(Seed);
-            
+            base.Fun = base.Typ = base.App = FindUpTypeOf<EnvAnalyzer>().Env.NewApp(Seed.Value);
         }
 
         override public object FindUp(Token t)
