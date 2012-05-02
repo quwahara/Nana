@@ -25,7 +25,6 @@ namespace Nana.Tokens
         public int Lbp = 0;
 
         public string Value = "";
-        public string ValueImplicit = "";
 
         /// <summary>
         /// Group‚Í\•¶‚ğ’è‹`‚·‚é‚à‚Ì‚Ì1‚Â‚Å‚·

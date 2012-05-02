@@ -288,8 +288,6 @@ namespace Nana.Semantics
                 return new BranchInfo(Continues.Peek());
             }
 
-            if (string.IsNullOrEmpty(t.ValueImplicit)) { t.ValueImplicit = t.Value; }
-
             return AboveBlock.FindUp(t) as object ?? new Nmd(t.Value);
         }
 
@@ -1200,14 +1198,16 @@ namespace Nana.Semantics
 
             object o = AboveBlock.FindUp(t);
             if (o != null) { return o; }
-            string valimpbk = t.ValueImplicit;
+
+            Token tmp = new Token();
+            tmp.Group = "Id";
             foreach (Nsp n in UsingNsp)
             {
-                t.ValueImplicit = n.Name + "." + t.Value;
-                o = AboveBlock.FindUp(t);
-                t.ValueImplicit = valimpbk;
+                tmp.Value = n.Name + "." + t.Value;
+                o = AboveBlock.FindUp(tmp);
                 if (o != null) { return o; }
             }
+
             return null;
         }
     }
@@ -1425,20 +1425,14 @@ namespace Nana.Semantics
                 { return m; }
             }
 
-            bool imp = false == string.IsNullOrEmpty(t.ValueImplicit);
-
             Nmd n;
             if (null != (n = Env.Find(t.Value))) { return n; }
-            if (imp && null != (n = Env.Find(t.ValueImplicit))) { return n; }
 
             if (Env.TypeLdr.IsNamespace(t.Value))
             { return Env.FindOrNewNsp(t.Value); }
 
-            if (imp && Env.TypeLdr.IsNamespace(t.ValueImplicit))
-            { return Env.FindOrNewNsp(t.ValueImplicit); }
-
-            Type type;
-            if (imp && null != (type = Env.TypeLdr.GetTypeByName(t.ValueImplicit)))
+            Type type = Env.TypeLdr.GetTypeByName(t.Value);
+            if (null != type)
             { return Env.FindOrNewRefType(type); }
 
             return null;
@@ -1492,63 +1486,6 @@ namespace Nana.Semantics
                 return n is Typ && (n as Typ).IsReferencing == true;
             });
 
-        }
-
-    }
-
-    public class SpecifiedTypAnalyzer
-    {
-        static public Token GoToLastIdAndBuildName(Token t)
-        {
-            Debug.Assert(t != null);
-            Debug.Assert(t.Group == "Id");
-
-            Token pre = t;
-            Token next;
-
-            if (pre.ValueImplicit == "") { pre.ValueImplicit = pre.Value; }
-            while (pre.Follows != null && pre.Follows.Length > 0)
-            {
-                if (pre.Follows[0].Value == "[") { break; }
-
-                Debug.Assert(pre.Follows.Length == 1);
-                Debug.Assert(pre.Follows[0].Value == ".");
-                Debug.Assert(pre.Follows[0].Follows != null);
-                Debug.Assert(pre.Follows[0].Follows.Length == 1);
-                Debug.Assert(pre.Follows[0].Follows[0] != null);
-                Debug.Assert(pre.Follows[0].Follows[0].Group == "Id");
-
-                next = pre.Follows[0].Follows[0];
-                next.ValueImplicit = pre.ValueImplicit + "." + next.Value;
-                pre = next;
-            }
-
-            return pre;
-        }
-
-        static public bool IsArray(Token[] follows)
-        {
-            return follows != null && follows.Length > 0
-                && follows[follows.Length - 1].Value == "[";
-        }
-
-        public static int GetDimension(Token[] follows)
-        {
-            Debug.Assert(follows != null && follows.Length > 0);
-
-            Token a_ = follows[follows.Length - 1];
-            Token[] fs;
-            List<Token> fs2;
-            int dim;
-            dim = 1;
-            fs = a_.Follows != null ? a_.Follows : new Token[0];
-            fs2 = new List<Token>();
-            foreach (Token f in fs)
-            {
-                if (Regex.IsMatch(f.Value, @",+"))
-                { dim += f.Value.Length; }
-            }
-            return dim;
         }
 
     }

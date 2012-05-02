@@ -1086,8 +1086,7 @@ namespace Nana.Semantics
 
         public Nsp NewNsp(Token seed)
         {
-            Nsp n = new Nsp(seed.ValueImplicit, E);
-            n.Name = seed.ValueImplicit;
+            Nsp n = new Nsp(seed.Value, E);
             BeAMember(n);
             return n;
         }
