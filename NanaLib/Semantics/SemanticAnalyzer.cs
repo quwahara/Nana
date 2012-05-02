@@ -947,22 +947,13 @@ namespace Nana.Semantics
             string nameasm = AnalyzeName(ftyp, t);
             isCtor = nameasm == Nana.IMRs.IMRGenerator.InstCons;
 
-            TypAnalyzer typazr2 = FindUpTypeOf<TypAnalyzer>()
-                ?? FindUpTypeOf<AppAnalyzer>()
-                ;
-            Debug.Assert(typazr2 != null);
-
-            Ovld ovld = typazr2.Ty.FindOrNewOvld(nameasm);
-
             List<Token> prms = new List<Token>();
             Token prmpre = t.Find("@PrmDef");
             if (prmpre.Follows != null && prmpre.Follows.Length > 0)
             { Gate(prmpre.Follows[0]); }
 
+            Typ returnType = FindUpTypeOf<EnvAnalyzer>().E.BTY.Void;
             Token ty;
-
-            Typ voidtyp = FindUpTypeOf<EnvAnalyzer>().E.BTY.Void;
-            Typ returnType = voidtyp;
             if (isCtor)
             {
                 returnType = FindUpTypeIs<TypAnalyzer>().Ty;
@@ -974,13 +965,12 @@ namespace Nana.Semantics
 
             List<Typ> signature = prmls.ConvertAll<Typ>(delegate(Variable v) { return v.Att.TypGet; });
 
+            Ovld ovld = Ty.FindOrNewOvld(nameasm);
+
             if (ovld.Contains(signature.ToArray()))
             { throw new SemanticError("The function is already defined. Function name:" + nameasm, t); }
 
-            Fu = ovld.NewFun(nameasm, prmls, returnType);
-
-            base.Ns = Fu;
-
+            Ns = Fu = ovld.NewFun(nameasm, prmls, returnType);
             Fu.MthdAttrs = attrs;
 
             //  generate instance variable
