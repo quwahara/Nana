@@ -249,7 +249,6 @@ namespace Nana.Semantics
                 case "(":   /**/ u = CallFunc(t); break;
                 case "[":   /**/ u = Bracket(t); break;
                 case "`<":   /**/ u = Generics(t); break;
-                //case "<":   /**/ u = Generics(t); break;
 
                 default:
                     throw new InternalError(@"The operator is not supported: " + t.Value, t);
@@ -1380,20 +1379,16 @@ namespace Nana.Semantics
 
         public void EnsureBaseInstanceConstructorCallAll()
         {
-            foreach (FunAnalyzer aa in CollectTypeOf<FunAnalyzer>())
+            foreach (FunAnalyzer faz in CollectTypeOf<FunAnalyzer>())
             {
-                Typ mytyp
-                    = (aa.FindUpTypeOf<TypAnalyzer>()
-                    ?? aa.FindUpTypeOf<AppAnalyzer>()
-                    ).Ty
-                    ;
-                Fun fun = aa.Fu;
+                Fun fun = faz.Fu;
                 if (false == Nana.IMRs.IMRGenerator.IsInstCons(fun.Name))
                 { continue; }
-                Typ bty = mytyp.BaseTyp;
-                Fun callee = bty.FindOvld(".ctor").GetFunOf(bty, new Typ[] { }, mytyp);
+                Typ myty = faz.Ty;
+                Typ bsty = myty.BaseTyp;
+                Fun callee = bsty.FindOvld(".ctor").GetFunOf(bsty, new Typ[] { }, myty);
                 Sema instance = fun.FindVar("this");
-                fun.Exes.Add(new CallFun(bty, callee, instance, new Sema[] { }, false /*:isNewObj*/));
+                fun.Exes.Add(new CallFun(bsty, callee, instance, new Sema[] { }, false /*:isNewObj*/));
             }
         }
 
