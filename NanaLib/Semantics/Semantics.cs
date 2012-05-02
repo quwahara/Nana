@@ -32,7 +32,6 @@ namespace Nana.Semantics
         }
         public Typ TypGet = null;
         public Typ TypSet = null;
-        public Accessibility Acc = Accessibility.Public;
     }
 
     public class Sema
@@ -395,6 +394,7 @@ namespace Nana.Semantics
             Ovld o = FindOrNewOvld(ope);
             Fun f = o.NewFun(ope, vs, ret);
             f.IsOperator = true;
+            f.MthdAttrs = MethodAttributes.Public;
             return o;
         }
 
@@ -431,6 +431,7 @@ namespace Nana.Semantics
         public Fun NewFun(MethodBase mb)
         {
             Fun f = new Fun(mb, E);
+            f.MthdAttrs = mb.Attributes;
             Funs.Add(f);
             return BeAMember(f);
         }
@@ -441,7 +442,10 @@ namespace Nana.Semantics
 
             Predicate<Tuple2<Typ, Fun>> canAccess
                 = delegate(Tuple2<Typ, Fun> tf)
-                { return AccessibilityControl.CanAccess(tf.F2.Att.Acc, tf.F1, callertyp); };
+                {
+                    Accessibility acc = AccessibilityControl.FromMethodAttributes(tf.F2.MthdAttrs);
+                    return AccessibilityControl.CanAccess(acc, tf.F1, callertyp);
+                };
 
             List<Tuple2<Typ, Fun>> sel = new List<Tuple2<Typ, Fun>>();
             Tuple2<Typ, Fun> callee;
@@ -614,8 +618,6 @@ namespace Nana.Semantics
                     { NewParam(p.Name, E.FindOrNewRefType(p.ParameterType)); });
             IsReferencing = true;
             MthdAttrs = mb.Attributes;
-            if (MethodAttributes.SpecialName == (mb.Attributes & MethodAttributes.SpecialName))
-            { SpecialName = mb.Name; }
 
             Type tt = null;
 
@@ -629,7 +631,6 @@ namespace Nana.Semantics
                 else                    /**/ { tt = (mb as ConstructorInfo).DeclaringType; }
             }
             Att.TypGet = env.FindOrNewRefType(tt);
-            Att.Acc = AccessibilityControl.FromMethodAttributes(mb.Attributes);
         }
 
         public Variable NewThis(Typ typ)
@@ -866,12 +867,6 @@ namespace Nana.Semantics
             EnsureMembersList.Add(EnsureGenericMembersN);
         }
 
-        public Fun NewFun(MethodBase mb)
-        {
-            Ovld ovld = FindOrNewOvld(mb.Name);
-            return ovld.NewFun(mb);
-        }
-
         public Prop FindProp(string name)
         {
             EnsureMembers();
@@ -921,7 +916,8 @@ namespace Nana.Semantics
             
             ms.AddRange(refType.GetConstructors(flags_));
             ms.AddRange(refType.GetMethods(flags_));
-            ms.ConvertAll<Fun>(self.NewFun);
+            foreach (MethodBase m in ms)
+            { self.FindOrNewOvld(m.Name).NewFun(m); }
 
             new List<PropertyInfo>(refType.GetProperties(flags_))
                 .ConvertAll<Ovld>(self.NewProp);
@@ -965,7 +961,8 @@ namespace Nana.Semantics
                         ? TransGenericType(self, gfun_.Att.TypGet)
                         : self.E.BTY.Void
                         ;
-                    newovld_.NewFun(gfun_.Name, nvs, rettyp);
+                    Fun f = newovld_.NewFun(gfun_.Name, nvs, rettyp);
+                    f.MthdAttrs = gfun_.MthdAttrs;
                 }
             };
 

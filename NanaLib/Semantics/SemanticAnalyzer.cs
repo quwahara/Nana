@@ -952,7 +952,7 @@ namespace Nana.Semantics
             if (prmpre.Follows != null && prmpre.Follows.Length > 0)
             { Gate(prmpre.Follows[0]); }
 
-            Typ returnType = FindUpTypeOf<EnvAnalyzer>().E.BTY.Void;
+            Typ returnType = E.BTY.Void;
             Token ty;
             if (isCtor)
             {
@@ -993,13 +993,6 @@ namespace Nana.Semantics
             Variable v = new Variable(name, typ, Variable.VariableKind.Param);
             prmls.Add(v);
             return v;
-        }
-
-        public string ResolveFuncType(string func, bool isInTypDecl)
-        {
-            if (func != "fun") return func;
-            if (isInTypDecl) { return "vfun"; }
-            return "sfun";
         }
 
         static public string AnalyzeName(string ftyp, Token seed)

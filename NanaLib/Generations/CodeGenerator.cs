@@ -656,17 +656,7 @@ namespace Nana.Generations
                 b.Append(" ");
             }
 
-            string nm;
-            if (MethodAttributes.SpecialName != (f.MthdAttrs & MethodAttributes.SpecialName))
-            {
-                nm = f.Name;
-            }
-            else
-            {
-                nm = f.SpecialName;
-            }
-            b.Append(Qk(nm));
-
+            b.Append(Qk(f.Name));
             b.Append("(");
             List<Variable> prms = f.Params;
             if (prms.Count > 0)
