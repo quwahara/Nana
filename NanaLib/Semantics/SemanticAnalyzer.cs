@@ -290,7 +290,7 @@ namespace Nana.Semantics
 
             if (string.IsNullOrEmpty(t.ValueImplicit)) { t.ValueImplicit = t.Value; }
 
-            return AboveBlock.FindUp(t) as object ?? new Nmd(t);
+            return AboveBlock.FindUp(t) as object ?? new Nmd(t.Value);
         }
 
         public object Asgn(Token assign, Token give, Token take)
@@ -323,7 +323,7 @@ namespace Nana.Semantics
             }
             if (tu.GetType() == typeof(Nmd))
             {
-                tu = NewVar((tu as Nmd).Seed.Value, gv2.Att.TypGet);
+                tu = NewVar((tu as Nmd).Name, gv2.Att.TypGet);
             }
 
             return new Assign(gv2, tu as Sema, prepare);
@@ -340,7 +340,7 @@ namespace Nana.Semantics
             Nmd id = obj as Nmd;
             Typ ty = RequireTyp(t.Second);
 
-            return NewVar(id.Seed.Value, ty);
+            return NewVar(id.Name, ty);
         }
 
         public object Ope(Token t)
@@ -564,7 +564,7 @@ namespace Nana.Semantics
                     if (a.GetType() == typeof(Nmd))
                     {
                         Nmd n = a as Nmd;
-                        throw new SemanticError(string.Format("Assign value to variable:'{0}' before reference it", n.Name), n.Seed);
+                        throw new SemanticError(string.Format("Assign value to variable:'{0}' before reference it", n.Name));
                     }
                     if (false == (a is Sema))
                     { throw new SemanticError("Cannot be an argument", t.Second.Follows[0]); }
@@ -632,9 +632,8 @@ namespace Nana.Semantics
                 Token sec = t.Second;
                 if (sec.Group != "Id")
                 { throw new SyntaxError("Specify type, function or variable name", sec); }
-                sec.ValueImplicit = nsp.Name + "." + sec.Value;
-                comb = Gate(sec);
-                return comb;
+
+                return Gate(new Token(nsp.Name + "." + sec.Value, "Id"));
             }
 
             Typ y = null;
@@ -859,15 +858,11 @@ namespace Nana.Semantics
                 object specsem = Gate(spc);
                 if (specsem.GetType() != typeof(Nmd))
                 { throw new SyntaxError("Not a generic type", spc); }
-                //  Generic type name consists of name, "`" and count of type parameter.
-                Token ttt = (specsem as Nmd).Seed;
-                //ttt.Value += "`" + contents.Count.ToString();
-                ttt.ValueImplicit += "`" + tprms.Count.ToString();
-                tp = RequireTyp(ttt);
-                //TODO  require style get
-                //tp = Gate(ttt) as Typ2;
+
+                tp = RequireTyp(new Token((specsem as Nmd).Name + "`" + tprms.Count.ToString(), "Id"));
+
                 if (tp == null)
-                { throw new SyntaxError("Unkown generic type:" + ttt.ValueImplicit, ttt); }
+                { throw new SyntaxError("Unkown generic type:" + (specsem as Nmd).Name); }
             }
 
 
@@ -1233,6 +1228,7 @@ namespace Nana.Semantics
         public void AnalyzeApp()
         {
             base.Fun = base.Typ = base.App = FindUpTypeOf<EnvAnalyzer>().Env.NewApp(Seed);
+            
         }
 
         override public object FindUp(Token t)
@@ -1259,7 +1255,7 @@ namespace Nana.Semantics
 
         public void Prelude()
         {
-            Env = new Env(Seed);
+            Env = new Env();
             base.Nsp = Env;
             foreach (Token opt in Seed.Find("@CompileOptions").Follows)
             {
@@ -1435,9 +1431,11 @@ namespace Nana.Semantics
             if (null != (n = Env.Find(t.Value))) { return n; }
             if (imp && null != (n = Env.Find(t.ValueImplicit))) { return n; }
 
+            if (Env.TypeLdr.IsNamespace(t.Value))
+            { return Env.FindOrNewNsp(t.Value); }
+
             if (imp && Env.TypeLdr.IsNamespace(t.ValueImplicit))
             { return Env.FindOrNewNsp(t.ValueImplicit); }
-            //{ return Env.NewNsp(t.ValueImplicit); }
 
             Type type;
             if (imp && null != (type = Env.TypeLdr.GetTypeByName(t.ValueImplicit)))

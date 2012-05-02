@@ -271,23 +271,13 @@ namespace Nana.Generations
 
         public string BeginApp(App ap)
         {
-            string name = "";
-            if (ap.E.Seed.Contains("@CompileOptions/@out"))
-            {
-                name = Path.GetFileName(ap.E.Seed.Find("@CompileOptions/@out").Value);
-            }
-            else
-            {
-                name = ap.Name;
-            }
-
             StringBuilder b = new StringBuilder();
             b.Append(".assembly ")
-                .Append(Qk(Path.GetFileNameWithoutExtension(name)))
+                .Append(Qk(ap.AssemblyName))
                 .Append(" { }")
                 .AppendLine()
                 .Append(".module ")
-                .Append(name)
+                .Append(Qk(ap.ModuleName))
                 .AppendLine();
 
             foreach (Variable v in ap.Vars)

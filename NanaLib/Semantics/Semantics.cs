@@ -92,11 +92,9 @@ namespace Nana.Semantics
     public class Nmd : Sema
     {
         public string Name;
-        public Token Seed;
 
         public Nmd() { }
         public Nmd(string name) { Name = name; }
-        public Nmd(Token seed) : this(seed.Value) { Seed = seed; }
 
         public override string ToString() { return Name + ":" + typeof(Nmd).Name; }
     }
@@ -109,8 +107,8 @@ namespace Nana.Semantics
         public Env E;
         public LinkedList<Custom> Customs;
 
-        public Nsp(Token seed, Env env)
-            : base(seed)
+        public Nsp(string name, Env env)
+            : base(name)
         {
             E = env;
         }
@@ -196,8 +194,8 @@ namespace Nana.Semantics
         public List<Typ> ArrayTyps = new List<Typ>();
         public List<Typ> GenericTypInstances = new List<Typ>();
 
-        public Env(Token seed)
-            : base(seed, null)
+        public Env()
+            : base("", null)
         {
             E = this;
             BTY = new BuiltInTyp(this);
@@ -206,7 +204,7 @@ namespace Nana.Semantics
 
         public App NewApp(Token seed)
         {
-            Ap = new App(seed, this);
+            Ap = new App(seed.Value, this);
             return BeAMember(Ap);
         }
 
@@ -287,7 +285,9 @@ namespace Nana.Semantics
         public Nsp NewNsp(string ns)
         {
             EnsureMembers();
-            Nsp nsp = new Nsp(new Token(ns), this);
+            Nsp nsp = new Nsp(ns, this);
+            //
+            //Nsp nsp = new Nsp(new Token(ns), this);
             nsp.IsReferencing = true;
             return BeAMember(nsp);
         }
@@ -404,7 +404,7 @@ namespace Nana.Semantics
             Ovld o;
             if (false == Ovrlds.TryGetValue(ope, out o))
             {
-                o = new Ovld(new Token(ope), E);
+                o = new Ovld(ope, E);
                 Ovrlds.Add(ope, o);
             }
             return o;
@@ -415,14 +415,14 @@ namespace Nana.Semantics
     {
         public List<Fun> Funs = new List<Fun>();
 
-        public Ovld(Token seed, Env env)
-            : base(seed, env)
+        public Ovld(string name, Env env)
+            : base(name, env)
         {
         }
 
         public Fun NewFun(Token seed, List<Variable> params_, Typ returnTyp)
         {
-            Fun f = new Fun(seed, E);
+            Fun f = new Fun(seed.Value, E);
             f.SetParams(params_);
             f.SetReturnTyp(returnTyp);
             Funs.Add(f);
@@ -586,8 +586,8 @@ namespace Nana.Semantics
 
         public List<IMR> IMRs = new List<IMR>();
 
-        public Fun(Token seed, Env env)
-            : base(seed, env)
+        public Fun(string name, Env env)
+            : base(name, env)
         {
         }
 
@@ -608,7 +608,7 @@ namespace Nana.Semantics
         public MethodBase Mb;
 
         public Fun(MethodBase mb, Env env)
-            : base(new Token(mb.Name), env)
+            : base(mb.Name, env)
         {
             Mb = mb;
             new List<ParameterInfo>(mb.GetParameters()).ForEach(delegate(ParameterInfo p)
@@ -731,8 +731,8 @@ namespace Nana.Semantics
 
         public List<Nmd> DebuggerDisplayMembers { get { return Members_; } }
 
-        public Typ(Token seed, Env env)
-            : base(seed, env)
+        public Typ(string name, Env env)
+            : base(name, env)
         {
             _FullName = Name;
 
@@ -775,7 +775,7 @@ namespace Nana.Semantics
         {
             if (Members_.Exists(GetNamePredicate<Nmd>(name)))
             { throw new SemanticError("The name is already defined: " + name); }
-            Ovld ovl = new Ovld(new Token(name), E);
+            Ovld ovl = new Ovld(name, E);
             Ovlds.Add(ovl);
             BeAMember(ovl);
             return ovl;
@@ -784,7 +784,7 @@ namespace Nana.Semantics
         public Type RefType = null;
 
         public Typ(Type refType, Env env)
-            : base(new Token(refType.FullName ?? refType.Name), env)
+            : base(refType.FullName ?? refType.Name, env)
         {
             RefType = refType;
             IsValueType = refType.IsValueType;
@@ -816,7 +816,7 @@ namespace Nana.Semantics
         }
 
         public Typ(Typ typ, Env env, int dimension)
-            : base(new Token(typ._FullName + "[" + dimension + "]"), env)
+            : base(typ._FullName + "[" + dimension + "]", env)
         {
             Dimension = dimension;
             IsVector = dimension == 1;
@@ -832,7 +832,7 @@ namespace Nana.Semantics
         public Dictionary<string, Typ> GenericDic = null;
 
         public Typ(Typ genericTyp, Env env, Typ[] genericTypeParams)
-            : base(new Token(genericTyp.Name), env)
+            : base(genericTyp.Name, env)
         {
             GenericType = genericTyp;
             GenericTypeParams = genericTypeParams;
@@ -1071,19 +1071,22 @@ namespace Nana.Semantics
 
     public class App : Typ
     {
-        public App(Token seed, Env env)
-            : base(seed, env)
+        public string ModuleName;
+
+        public App(string name, Env env)
+            : base(name, env)
         {
             if (E != null)
             {
                 Name = Path.GetFileName(E.OutPath);
                 AssemblyName = Path.GetFileNameWithoutExtension(E.OutPath);
+                ModuleName = Path.GetFileName(E.OutPath);
             }
         }
 
         public Nsp NewNsp(Token seed)
         {
-            Nsp n = new Nsp(seed, E);
+            Nsp n = new Nsp(seed.ValueImplicit, E);
             n.Name = seed.ValueImplicit;
             BeAMember(n);
             return n;
@@ -1091,7 +1094,7 @@ namespace Nana.Semantics
 
         public Typ NewTyp(Token seed)
         {
-            Typ ty = new Typ(seed, E);
+            Typ ty = new Typ(seed.Value, E);
             ty.AssemblyName = AssemblyName;
             return BeAMember(ty);
         }
@@ -1113,7 +1116,7 @@ namespace Nana.Semantics
         public Fun Getter;
 
         public Prop(PropertyInfo p, Env env)
-            : base(new Token(p.Name), env)
+            : base(p.Name, env)
         {
             P = p;
             MethodInfo m;
