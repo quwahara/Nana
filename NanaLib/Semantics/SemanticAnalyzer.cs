@@ -1112,9 +1112,10 @@ namespace Nana.Semantics
         public void AnalyzeBaseTyp()
         {
             Token baseTypeDef = Seed.Find("@BaseTypeDef");
-            Ty.BaseTyp = baseTypeDef != null
+            Typ bsty = baseTypeDef != null
                 ? RequireTyp(baseTypeDef.Follows[0])
                 : E.BTY.Object;
+            Ty.SetBaseTyp(bsty);
         }
 
         public override object Find(string name)
@@ -1382,9 +1383,10 @@ namespace Nana.Semantics
             foreach (FunAnalyzer faz in CollectTypeOf<FunAnalyzer>())
             {
                 Fun fun = faz.Fu;
-                if (false == Nana.IMRs.IMRGenerator.IsInstCons(fun.Name))
-                { continue; }
+                if (false == Nana.IMRs.IMRGenerator.IsInstCons(fun.Name)) { continue; }
                 Typ myty = faz.Ty;
+                //  delegate derived class must not to call base class constructor
+                if (myty.IsDelegate) { continue; }
                 Typ bsty = myty.BaseTyp;
                 Fun callee = bsty.FindOvld(".ctor").GetFunOf(bsty, new Typ[] { }, myty);
                 Sema instance = fun.FindVar("this");

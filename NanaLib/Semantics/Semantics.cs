@@ -311,6 +311,7 @@ namespace Nana.Semantics
         public Typ Int;
         public Typ Array;
         public Typ String;
+        public Typ Delegate;
 
         public BuiltInTyp(Env e)
         {
@@ -321,6 +322,7 @@ namespace Nana.Semantics
             this.Int = e.FindOrNewRefType(typeof(int));
             this.Array = e.FindOrNewRefType(typeof(System.Array));
             this.String = e.FindOrNewRefType(typeof(string));
+            this.Delegate = e.FindOrNewRefType(typeof(System.Delegate));
         }
     }
 
@@ -743,9 +745,13 @@ namespace Nana.Semantics
             IsValueType = false;
         }
 
+        public bool IsDelegate = false;
+
         public void SetBaseTyp(Typ baseTyp)
         {
             BaseTyp = baseTyp;
+            if (E.BTY == null) { return; }
+            IsDelegate = E.BTY.Delegate.IsAssignableFrom(baseTyp);
         }
 
         public List<Variable> Flds = new List<Variable>();
