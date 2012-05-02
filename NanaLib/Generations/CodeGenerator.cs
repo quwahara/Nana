@@ -71,6 +71,37 @@ namespace Nana.Generations
             return string.Join(" ", ls.ToArray());
         }
 
+        static public string FromMethodImplAttributes(MethodImplAttributes atrs)
+        {
+            List<string> ls = new List<string>(0);
+
+            //Code Implementation Masks
+            switch (atrs & MethodImplAttributes.CodeTypeMask)
+            {
+                case MethodImplAttributes.IL: /* default for the flag */ break;
+                case MethodImplAttributes.Native: ls.Add("native"); break;
+                case MethodImplAttributes.OPTIL: ls.Add("optil"); break;
+                case MethodImplAttributes.Runtime: ls.Add("runtime"); break;
+            }
+            //Managed Masks
+            switch (atrs & MethodImplAttributes.ManagedMask)
+            {
+                case MethodImplAttributes.Unmanaged: ls.Add("unmanaged"); break;
+                case MethodImplAttributes.Managed: /* default for the flag */ break;
+            }
+            //Implementation Information and Interop Masks
+            switch (atrs & ((MethodImplAttributes)0x10D8))
+            {
+                case MethodImplAttributes.ForwardRef: ls.Add("forwardref"); break;
+                case MethodImplAttributes.PreserveSig: ls.Add("preservesig"); break;
+                case MethodImplAttributes.InternalCall: ls.Add("internalcall"); break;
+                case MethodImplAttributes.Synchronized: ls.Add("synchronized"); break;
+                case MethodImplAttributes.NoInlining: ls.Add("noinlining"); break;
+            }
+
+            return string.Join(" ", ls.ToArray());
+        }
+
         static public string TypeNameInSig(Typ t)
         {
             return TypeNameILSupported(t)
@@ -378,7 +409,13 @@ namespace Nana.Generations
                 )
                 );
 
-            b.Append(") {").AppendLine();
+            //>>
+            //b.Append(") {").AppendLine();
+            b.Append(")");
+            string impattrs = FromMethodImplAttributes(f.ImplAttrs);
+            if (impattrs.Length > 0)
+            { b.Append(' ').Append(impattrs); }
+            b.Append(" {").AppendLine();
 
             if (f.Customs != null)
             {

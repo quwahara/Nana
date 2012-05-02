@@ -16,12 +16,19 @@ using Nana;
 using Nana.Tokens;
 using Nana.Infr;
 
+public delegate string DDD(int xxx, int yyy);
+
 namespace UnitTest
 {
+
     public class Class0
     {
         private string Prv0()
         {
+            string vvv = "www";
+            Func<string, string> f = delegate(string ppp) { return ppp + vvv + "xxx"; };
+            string yyy = f("qqq");
+
             List<List<string>> lls = new List<List<string>>();
             List<string> sls = new List<string>();
             string sss = sls[99];
@@ -1093,14 +1100,16 @@ class C
         }
 
 
-        //[Test]
-        public void ZZZ()
-        {
+    //[Test]
+    public void ZZZ()
+    {
             Inp =
 @"
-`p(""a"")
-3 + 2           -> n
-""a"" + ""b""   -> s
+class MyD -> MulticastDelegate
+...
+    cons (obj:object, mtd:IntPtr) .. ,,
+    fun Invoke() .. ,,
+,,,
 ";
             EpcSyn = @"
 x
@@ -1111,52 +1120,6 @@ x
 ";
             Test();
         }
-
-
-        //        [Test]
-//        public void ZZZ()
-//        {
-
-//            Inp = @"
-//using System.IO
-//dir = ""..\\..\\..\\LICENSE""
-//fs = Directory.GetFiles(dir, ""*.cs"", SearchOption.AllDirectories)
-////fs = System.IO.Directory.GetFiles(dir, ""*.cs"", System.IO.SearchOption.AllDirectories)
-////System.IO.SearchOption.AllDirectories   -> opt
-////fs = System.IO.Directory.GetFiles(dir, ""*.cs"", opt)
-//
-////fun Main(argv:string[]):void
-////..
-//////    cont = System.IO.File.ReadAll(""li.nana"")
-//////    cont = System.IO.File.ReadAllText(""li.nana"")
-////    `p(cont)
-////,,
-//";
-//            Inp = @"try end";
-//            EpcSyn = "x";
-//            EpcIL = @"";
-
-//            Test();
-//        }
-
-//        [Test]
-//        public void ZZZ_a()
-//        {
-//            Inp = @"
-//a < b >
-//a < b , d > d
-//
-////a < b.c >
-////a < b . c , d . e >
-//
-////c < d
-////f > g
-////Substring(1, 3)
-//";
-//            EpcSyn = @"aa";
-//            EpcIL = @"";
-//            Test();
-//        }
 
         public void Test()
         {

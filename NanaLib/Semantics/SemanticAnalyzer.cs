@@ -1273,6 +1273,7 @@ namespace Nana.Semantics
         {
             EnsureAppExe();
             EnsureEntryPoint();
+            EnsureDelegateClassAll();
             EnsureFunctionReturnAll();
             RemoveReferencingType(E);
         }
@@ -1370,6 +1371,35 @@ namespace Nana.Semantics
                 Fun callee = bsty.FindOvld(".ctor").GetFunOf(bsty, new Typ[] { }, myty);
                 Sema instance = fun.FindVar("this");
                 fun.Exes.Add(new CallFun(bsty, callee, instance, new Sema[] { }, false /*:isNewObj*/));
+            }
+        }
+
+        public void EnsureDelegateClassAll()
+        {
+            List<Typ> tys = new List<Typ>();
+            foreach (TypAnalyzer taz in CollectTypeOf<TypAnalyzer>())
+            {
+                Typ ty = taz.Ty;
+                if (false == ty.IsDelegate) { continue; }
+                tys.Add(ty);
+            }
+
+            List<string> targs = new List<string>(
+                ".ctor,Invoke,BeginInvoke,EndInvoke"
+                .Split(new char[] { ',' }));
+
+            foreach (Typ ty in tys)
+            {
+                foreach (Ovld ov in ty.Ovlds)
+                {
+                    foreach (Fun f in ov.Funs)
+                    {
+                        if (false == targs.Contains(f.Name)) { continue; }
+                        f.MthdAttrs |= MethodAttributes.HideBySig
+                            | MethodAttributes.NewSlot;
+                        f.ImplAttrs |= MethodImplAttributes.Runtime;
+                    }
+                }
             }
         }
 

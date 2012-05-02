@@ -548,6 +548,7 @@ namespace Nana.Semantics
 
         public string SpecialName = "";
         public MethodAttributes MthdAttrs;
+        public MethodImplAttributes ImplAttrs = MethodImplAttributes.IL | MethodImplAttributes.Managed;
         public List<Variable> Params = new List<Variable>();
         public List<Variable> Vars = new List<Variable>();
 
