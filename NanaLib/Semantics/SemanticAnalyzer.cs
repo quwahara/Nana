@@ -937,18 +937,18 @@ namespace Nana.Semantics
             Ap = FindUpTypeOf<AppAnalyzer>().Ap;
             Ty = FindUpTypeIs<TypAnalyzer>().Ty;
 
-            Token t = Seed;
-            bool isStatic, isCtor;
+            Token s = Seed;
             bool isInTypDecl = false == (Ty is App);
-            string ftyp = ResolveFuncType(t.Value, isInTypDecl);
-
-            MethodAttributes attrs = AnalyzeAttrs(ftyp);
-            isStatic = (attrs & MethodAttributes.Static) == MethodAttributes.Static;
-            string nameasm = AnalyzeName(ftyp, t);
-            isCtor = nameasm == Nana.IMRs.IMRGenerator.InstCons;
+            
+            string ftyp = s.Value;
+            if (ftyp == "fun")
+            { ftyp = Ty is App ? "sfun" : "vfun"; }
+            
+            string nameasm = AnalyzeName(ftyp, s);
+            bool isCtor = nameasm == Nana.IMRs.IMRGenerator.InstCons;
 
             List<Token> prms = new List<Token>();
-            Token prmpre = t.Find("@PrmDef");
+            Token prmpre = s.Find("@PrmDef");
             if (prmpre.Follows != null && prmpre.Follows.Length > 0)
             { Gate(prmpre.Follows[0]); }
 
@@ -958,7 +958,7 @@ namespace Nana.Semantics
             {
                 returnType = FindUpTypeIs<TypAnalyzer>().Ty;
             }
-            else if (null != (ty = t.Find("@TypeSpec")))
+            else if (null != (ty = s.Find("@TypeSpec")))
             {
                 returnType = RequireTyp(ty.Follows[0]);
             }
@@ -968,9 +968,14 @@ namespace Nana.Semantics
             Ovld ovld = Ty.FindOrNewOvld(nameasm);
 
             if (ovld.Contains(signature.ToArray()))
-            { throw new SemanticError("The function is already defined. Function name:" + nameasm, t); }
+            { throw new SemanticError("The function is already defined. Function name:" + nameasm, s); }
 
             Ns = Fu = ovld.NewFun(nameasm, prmls, returnType);
+
+            MethodAttributes attrs = MethodAttributes.Public;
+            bool isStatic = ftyp[0] == 's';
+            if (isStatic) { attrs |= MethodAttributes.Static; }
+            if (ftyp == "vfun") { attrs |= MethodAttributes.Virtual; }
             Fu.MthdAttrs = attrs;
 
             //  generate instance variable
@@ -978,7 +983,7 @@ namespace Nana.Semantics
             {
                 TypAnalyzer typazr = FindUpTypeOf<TypAnalyzer>();
                 if (typazr == null)
-                { throw new SyntaxError("Cannot define instance constructor in this sapce", t); }
+                { throw new SyntaxError("Cannot define instance constructor in this sapce", s); }
                 Fu.NewThis(typazr.Ty);
             }
         }
@@ -995,15 +1000,6 @@ namespace Nana.Semantics
             if (func != "fun") return func;
             if (isInTypDecl) { return "vfun"; }
             return "sfun";
-        }
-
-        static public MethodAttributes AnalyzeAttrs(string ftyp)
-        {
-            MethodAttributes attrs;
-            attrs = MethodAttributes.Public;
-            if (ftyp == "sfun" || ftyp == "scons") { attrs |= MethodAttributes.Static; }
-            if (ftyp == "vfun") { attrs |= MethodAttributes.Virtual; }
-            return attrs;
         }
 
         static public string AnalyzeName(string ftyp, Token seed)
