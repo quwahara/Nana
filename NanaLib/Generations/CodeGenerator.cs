@@ -109,6 +109,8 @@ namespace Nana.Generations
             if (t.RefType == typeof(int)) { return "int32" + brk; }
             if (t.RefType == typeof(object)) { return "object" + brk; }
             if (t.RefType == typeof(string)) { return "string" + brk; }
+            if (t.RefType == typeof(IntPtr)) { return "native int" + brk; }
+            if (t.RefType == typeof(UIntPtr)) { return "native unsigned int" + brk; }
 
             return null;
         }
