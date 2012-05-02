@@ -286,8 +286,6 @@ namespace Nana.Semantics
         {
             EnsureMembers();
             Nsp nsp = new Nsp(ns, this);
-            //
-            //Nsp nsp = new Nsp(new Token(ns), this);
             nsp.IsReferencing = true;
             return BeAMember(nsp);
         }

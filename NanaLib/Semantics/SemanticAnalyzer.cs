@@ -80,11 +80,11 @@ namespace Nana.Semantics
 
         public Stack<Literal> Breaks;
         public Stack<Literal> Continues;
-        public Env Env;
-        public App App;
-        public Typ Typ;
-        public Fun Fun;
-        public Nsp Nsp;
+        public Env E;
+        public App Ap;
+        public Typ Ty;
+        public Fun Fu;
+        public Nsp Ns;
         public TmpVarGenerator TmpVarGen;
         public bool IsInFun;
 
@@ -96,7 +96,7 @@ namespace Nana.Semantics
             AboveBlock = above;
 
             EnvAnalyzer eaz = FindUpTypeOf<EnvAnalyzer>();
-            if (null != eaz) { Env = eaz.Env; }
+            if (null != eaz) { E = eaz.E; }
         }
 
         public Token GetTargetWithCustom(Token t)
@@ -129,27 +129,27 @@ namespace Nana.Semantics
 
         virtual public Variable NewVar(string name, Typ typ)
         {
-            return Fun.NewVar(name, typ);
+            return Fu.NewVar(name, typ);
         }
 
         public void FindUpNsps()
         {
-            App = FindUpTypeOf<AppAnalyzer>().App;
-            Typ = FindUpTypeIs<TypAnalyzer>().Typ;
-            Fun = FindUpTypeIs<FunAnalyzer>().Fun;
-            Nsp = FindUpTypeIs<BlockAnalyzer>().Nsp;
+            Ap = FindUpTypeOf<AppAnalyzer>().Ap;
+            Ty = FindUpTypeIs<TypAnalyzer>().Ty;
+            Fu = FindUpTypeIs<FunAnalyzer>().Fu;
+            Ns = FindUpTypeIs<BlockAnalyzer>().Ns;
         }
 
         public void AnalyzeLine()
         {
             FindUpNsps();
             
-            IsInFun = Fun.Att.CanGet;
-            TmpVarGen = new TmpVarGenerator(Env.GetTempName, NewVar);
+            IsInFun = Fu.Att.CanGet;
+            TmpVarGen = new TmpVarGenerator(E.GetTempName, NewVar);
             if (AboveBlock.RequiredReturnValue.Count == 0)
             {
                 Sema exe = RequireExec(Seed);
-                Fun.Exes.Add(exe);
+                Fu.Exes.Add(exe);
             }
             else
             {
@@ -259,17 +259,17 @@ namespace Nana.Semantics
 
         public object Num(Token t)
         {
-            return new Literal(int.Parse(t.Value), Env.BTY.Int, TmpVarGen);
+            return new Literal(int.Parse(t.Value), E.BTY.Int, TmpVarGen);
         }
 
         public object Str(Token t)
         {
-            return new Literal(t.Value.Substring(1, t.Value.Length - 2), Env.BTY.String);
+            return new Literal(t.Value.Substring(1, t.Value.Length - 2), E.BTY.String);
         }
 
         public object Bol(Token t)
         {
-            return new Literal(t.Value == "true", Env.BTY.Bool, TmpVarGen);
+            return new Literal(t.Value == "true", E.BTY.Bool, TmpVarGen);
         }
 
         public object Id(Token t)
@@ -288,7 +288,7 @@ namespace Nana.Semantics
                 return new BranchInfo(Continues.Peek());
             }
 
-            return AboveBlock.FindUp(t) as object ?? new Nmd(t.Value);
+            return AboveBlock.FindUp(t.Value) as object ?? new Nmd(t.Value);
         }
 
         public object Asgn(Token assign, Token give, Token take)
@@ -364,7 +364,7 @@ namespace Nana.Semantics
             cond = while_.Follows[0];
             do_ = while_.Follows[1];
 
-            string fix = Env.GetTempName();
+            string fix = E.GetTempName();
             Literal dolbl, endlbl;
 
             dolbl = new Literal("do" + fix, null);
@@ -446,7 +446,7 @@ namespace Nana.Semantics
                 rds &= rdstmp;
             }
 
-            string fix = Env.GetTempName();
+            string fix = E.GetTempName();
 
             return new TryStmt(fix, try_, catches.ToArray(), finally_, rds);
         }
@@ -477,7 +477,7 @@ namespace Nana.Semantics
                 if (f.Group == "Else") { else_ = f; continue; }
             }
 
-            string fix = Env.GetTempName();
+            string fix = E.GetTempName();
             List<Sema> lines = new List<Sema>();
 
             ifthen = new IfInfo.Component();
@@ -607,7 +607,7 @@ namespace Nana.Semantics
 
             Fun sig = null;
 
-            sig = ovl.GetFunOf(calleetyp, argtyps.ToArray(), Typ);
+            sig = ovl.GetFunOf(calleetyp, argtyps.ToArray(), Ty);
             if (sig == null) { throw new SyntaxError("It is not a member", t.First); }
 
             Sema instance = mbr == null ? null : mbr.Instance;
@@ -793,13 +793,13 @@ namespace Nana.Semantics
 
             if (ty != null && isEmpty)
             {
-                Typ typ = Env.FindOrNewArrayTyp(ty, contents.Count);
+                Typ typ = E.FindOrNewArrayTyp(ty, contents.Count);
                 return typ;
             }
 
             if (ty != null && isIndex)
             {
-                Typ typ = Env.FindOrNewArrayTyp(ty, contents.Count);
+                Typ typ = E.FindOrNewArrayTyp(ty, contents.Count);
 
                 Sema[] indexes = new List<object>(contents)
                     .ConvertAll<Sema>(delegate(object c) { return c as Sema; })
@@ -811,7 +811,7 @@ namespace Nana.Semantics
 
             if (arins != null && isEmpty)
             {
-                Typ typ = Env.FindOrNewArrayTyp(arins.Att.TypGet, contents.Count);
+                Typ typ = E.FindOrNewArrayTyp(arins.Att.TypGet, contents.Count);
 
                 Sema[] indexes = new List<object>(contents)
                     .ConvertAll<Sema>(delegate(object c) { return c as Sema; })
@@ -865,7 +865,7 @@ namespace Nana.Semantics
 
 
             //  find instance type
-            Typ typinst = Env.FindOrNewGenericTypInstance(tp, tprms.ToArray());
+            Typ typinst = E.FindOrNewGenericTypInstance(tp, tprms.ToArray());
             return typinst;
         }
     }
@@ -895,7 +895,7 @@ namespace Nana.Semantics
 
         public void AnalyzeBlock()
         {
-            Nsp = FindUpTypeIs<FunAnalyzer>().Fun;
+            Ns = FindUpTypeIs<FunAnalyzer>().Fu;
             foreach (SemanticAnalyzer a in Subs)
             {
                 if (a.GetType() != typeof(LineAnalyzer))
@@ -904,15 +904,15 @@ namespace Nana.Semantics
             }
         }
 
-        virtual public object Find(Token t)
+        virtual public object Find(string name)
         {
-            if (Nsp == null) { return null; }
-            return Nsp.Find(t.Value);
+            if (Ns == null) { return null; }
+            return Ns.Find(name);
         }
 
-        virtual public object FindUp(Token t)
+        virtual public object FindUp(string name)
         {
-            return Find(t) ?? (AboveBlock != null ? AboveBlock.FindUp(t) : null);
+            return Find(name) ?? (AboveBlock != null ? AboveBlock.FindUp(name) : null);
         }
 
     }
@@ -935,12 +935,12 @@ namespace Nana.Semantics
 
         public void AnalyzeFun()
         {
-            App = FindUpTypeOf<AppAnalyzer>().App;
-            Typ = FindUpTypeIs<TypAnalyzer>().Typ;
+            Ap = FindUpTypeOf<AppAnalyzer>().Ap;
+            Ty = FindUpTypeIs<TypAnalyzer>().Ty;
 
             Token t = Seed;
             bool isStatic, isCtor;
-            bool isInTypDecl = false == (Typ is App);
+            bool isInTypDecl = false == (Ty is App);
             string ftyp = ResolveFuncType(t.Value, isInTypDecl);
 
             MethodAttributes attrs = AnalyzeAttrs(ftyp);
@@ -953,7 +953,7 @@ namespace Nana.Semantics
                 ;
             Debug.Assert(typazr2 != null);
 
-            Ovld ovld = typazr2.Typ.FindOrNewOvld(nameasm);
+            Ovld ovld = typazr2.Ty.FindOrNewOvld(nameasm);
 
             List<Token> prms = new List<Token>();
             Token prmpre = t.Find("@PrmDef");
@@ -962,11 +962,11 @@ namespace Nana.Semantics
 
             Token ty;
 
-            Typ voidtyp = FindUpTypeOf<EnvAnalyzer>().Env.BTY.Void;
+            Typ voidtyp = FindUpTypeOf<EnvAnalyzer>().E.BTY.Void;
             Typ returnType = voidtyp;
             if (isCtor)
             {
-                returnType = FindUpTypeIs<TypAnalyzer>().Typ;
+                returnType = FindUpTypeIs<TypAnalyzer>().Ty;
             }
             else if (null != (ty = t.Find("@TypeSpec")))
             {
@@ -978,19 +978,19 @@ namespace Nana.Semantics
             if (ovld.Contains(signature.ToArray()))
             { throw new SemanticError("The function is already defined. Function name:" + nameasm, t); }
 
-            Fun = ovld.NewFun(nameasm, prmls, returnType);
+            Fu = ovld.NewFun(nameasm, prmls, returnType);
 
-            base.Nsp = Fun;
+            base.Ns = Fu;
 
-            Fun.MthdAttrs = attrs;
+            Fu.MthdAttrs = attrs;
 
             //  generate instance variable
-            if (Fun.IsInstance)
+            if (Fu.IsInstance)
             {
                 TypAnalyzer typazr = FindUpTypeOf<TypAnalyzer>();
                 if (typazr == null)
                 { throw new SyntaxError("Cannot define instance constructor in this sapce", t); }
-                Fun.NewThis(typazr.Typ);
+                Fu.NewThis(typazr.Ty);
             }
         }
 
@@ -1065,9 +1065,9 @@ namespace Nana.Semantics
             {
                 Typ calleetyp = o as Typ;
                 Ovld ovl = calleetyp.FindOvld(Nana.IMRs.IMRGenerator.InstCons);
-                Fun f = ovl.GetFunOf(calleetyp, new Typ[] { }, Typ);
+                Fun f = ovl.GetFunOf(calleetyp, new Typ[] { }, Ty);
                 if (f == null) { throw new SyntaxError("It is not a member", t.First); }
-                Nsp n = AboveBlock.Nsp;
+                Nsp n = AboveBlock.Ns;
                 if (n.Customs == null)
                 { n.Customs = new LinkedList<Custom>(); }
                 n.Customs.AddLast(new Custom(calleetyp, f, new Typ[] { }, new Custom.FieldOrProp[] { }));
@@ -1096,10 +1096,10 @@ namespace Nana.Semantics
             { throw new InternalError("Specify name to the type", s); }
 
             AppAnalyzer appazr = FindUpTypeOf<AppAnalyzer>();
-            App app = appazr.App;
+            App app = appazr.Ap;
             if (app.HasMember(name.Value))
             { throw new SemanticError("The type is already defined. Type name:" + name.Value, name); }
-            base.Nsp = base.Fun = base.Typ = app.NewTyp(name.Value);
+            base.Ns = base.Fu = base.Ty = app.NewTyp(name.Value);
 
             foreach (Token t in Seed.Find("@Block").Follows)
             {
@@ -1113,28 +1113,28 @@ namespace Nana.Semantics
         public void AnalyzeBaseTyp()
         {
             Token baseTypeDef = Seed.Find("@BaseTypeDef");
-            Typ.BaseTyp = baseTypeDef != null
+            Ty.BaseTyp = baseTypeDef != null
                 ? RequireTyp(baseTypeDef.Follows[0])
-                : Env.BTY.Object;
+                : E.BTY.Object;
         }
 
-        public override object Find(Token t)
+        public override object Find(string name)
         {
-            Nmd n = Typ.Find(t.Value);
+            Nmd n = Ty.Find(name);
             if (n == null)
             { return null; }
             Type nt = n.GetType();
             if (nt == typeof(Ovld))
-            { return new Member(Typ, n, null); }
+            { return new Member(Ty, n, null); }
             return n;
         }
 
         public override Variable NewVar(string name, Typ typ)
         {
-            if (Typ.HasMember(name))
-            { ErNameDuplication(new Token(name), Typ); }
+            if (Ty.HasMember(name))
+            { ErNameDuplication(new Token(name), Ty); }
 
-            return Typ.NewVar(name, typ);
+            return Ty.NewVar(name, typ);
         }
 
     }
@@ -1175,7 +1175,7 @@ namespace Nana.Semantics
 
         public void AnalyzeSrc()
         {
-            Typ ty = FindUpTypeOf<AppAnalyzer>().Typ;
+            Typ ty = FindUpTypeOf<AppAnalyzer>().Ty;
             UsingNsp.AddLast(ty.E.FindOrNewNsp("System"));
         }
 
@@ -1191,25 +1191,23 @@ namespace Nana.Semantics
             }
         }
 
-        public override object FindUp(Token t)
+        public override object FindUp(string name)
         {
             if (AboveBlock == null)
             { return null; }
 
-            object o = AboveBlock.FindUp(t);
+            object o = AboveBlock.FindUp(name);
             if (o != null) { return o; }
 
-            Token tmp = new Token();
-            tmp.Group = "Id";
             foreach (Nsp n in UsingNsp)
             {
-                tmp.Value = n.Name + "." + t.Value;
-                o = AboveBlock.FindUp(tmp);
+                o = AboveBlock.FindUp(n.Name + "." + name);
                 if (o != null) { return o; }
             }
 
             return null;
         }
+
     }
 
     public class AppAnalyzer : TypAnalyzer
@@ -1227,12 +1225,12 @@ namespace Nana.Semantics
 
         public void AnalyzeApp()
         {
-            base.Fun = base.Typ = base.App = FindUpTypeOf<EnvAnalyzer>().Env.NewApp(Seed.Value);
+            base.Fu = base.Ty = base.Ap = FindUpTypeOf<EnvAnalyzer>().E.NewApp(Seed.Value);
         }
 
-        override public object FindUp(Token t)
+        override public object FindUp(string name)
         {
-            return Find(t) ?? (AboveBlock != null ? AboveBlock.FindUp(t) : null);
+            return Find(name) ?? (AboveBlock != null ? AboveBlock.FindUp(name) : null);
         }
 
     }
@@ -1249,20 +1247,20 @@ namespace Nana.Semantics
             ea.Prelude();
             ea.Main();
             ea.Finale();
-            return ea.Env;
+            return ea.E;
         }
 
         public void Prelude()
         {
-            Env = new Env();
-            base.Nsp = Env;
+            E = new Env();
+            base.Ns = E;
             foreach (Token opt in Seed.Find("@CompileOptions").Follows)
             {
                 switch (opt.Group.ToLower())
                 {
-                    case "include":     /**/ Env.TypeLdr.InAssembly.Includes.Add(opt.Value); break;
-                    case "reference":   /**/ Env.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(opt.Value); break;
-                    case "out":         /**/ Env.OutPath = opt.Value; break;
+                    case "include":     /**/ E.TypeLdr.InAssembly.Includes.Add(opt.Value); break;
+                    case "reference":   /**/ E.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(opt.Value); break;
+                    case "out":         /**/ E.OutPath = opt.Value; break;
                     case "verbose":     /**/ break;
                     default:
                         if (opt.Group.ToLower().StartsWith("xxx")) { break; }
@@ -1297,7 +1295,7 @@ namespace Nana.Semantics
             EnsureAppExe();
             EnsureEntryPoint();
             EnsureFunctionReturnAll();
-            RemoveReferencingType(Env);
+            RemoveReferencingType(E);
         }
 
         public void AnalyzeAppAll()
@@ -1339,7 +1337,7 @@ namespace Nana.Semantics
         {
             foreach (TypAnalyzer ta in CollectTypeOf<TypAnalyzer>())
             {
-                Typ y = ta.Typ;
+                Typ y = ta.Ty;
                 if (y.Ovlds
                     .Exists(delegate(Ovld ao_)
                     {
@@ -1387,9 +1385,9 @@ namespace Nana.Semantics
                 Typ mytyp
                     = (aa.FindUpTypeOf<TypAnalyzer>()
                     ?? aa.FindUpTypeOf<AppAnalyzer>()
-                    ).Typ
+                    ).Ty
                     ;
-                Fun fun = aa.Fun;
+                Fun fun = aa.Fu;
                 if (false == Nana.IMRs.IMRGenerator.IsInstCons(fun.Name))
                 { continue; }
                 Typ bty = mytyp.BaseTyp;
@@ -1413,26 +1411,26 @@ namespace Nana.Semantics
             { a.AnalyzeCustom(); }
         }
 
-        public override object Find(Token t)
+        public override object Find(string name)
         {
-            if (TypeUtil.IsBuiltIn(t.Value))
-            { return Env.FindOrNewRefType(TypeUtil.FromBuiltIn(t.Value)); }
+            if (TypeUtil.IsBuiltIn(name))
+            { return E.FindOrNewRefType(TypeUtil.FromBuiltIn(name)); }
 
             {
                 Member m;
-                if (Env.BFN.Members.TryGetValue(t.Value, out m))
+                if (E.BFN.Members.TryGetValue(name, out m))
                 { return m; }
             }
 
             Nmd n;
-            if (null != (n = Env.Find(t.Value))) { return n; }
+            if (null != (n = E.Find(name))) { return n; }
 
-            if (Env.TypeLdr.IsNamespace(t.Value))
-            { return Env.FindOrNewNsp(t.Value); }
+            if (E.TypeLdr.IsNamespace(name))
+            { return E.FindOrNewNsp(name); }
 
-            Type type = Env.TypeLdr.GetTypeByName(t.Value);
+            Type type = E.TypeLdr.GetTypeByName(name);
             if (null != type)
-            { return Env.FindOrNewRefType(type); }
+            { return E.FindOrNewRefType(type); }
 
             return null;
         }
@@ -1440,13 +1438,13 @@ namespace Nana.Semantics
         public void EnsureAppExe()
         {
             AppAnalyzer appaz = CollectTypeOf<AppAnalyzer>().First.Value;
-            App app = appaz.App;
+            App app = appaz.Ap;
             if (app.Exes.Count == 0) { return; }
 
             Token t = GenFuncToken("scons", Fun.EntryPointNameImplicit, "void");
             FunAnalyzer funaz = new FunAnalyzer(t, appaz);
             funaz.AnalyzeFun();
-            Fun cctor = funaz.Fun;
+            Fun cctor = funaz.Fu;
             cctor.Exes.AddRange(app.Exes);
             app.Exes.Clear();
         }
@@ -1454,7 +1452,7 @@ namespace Nana.Semantics
         public void EnsureEntryPoint()
         {
             AppAnalyzer aa = CollectTypeOf<AppAnalyzer>().First.Value;
-            App app = aa.App;
+            App app = aa.Ap;
             List<Nmd> funs = app.FindDownAll(delegate(Nmd n) { return n is Fun; });
             List<Nmd> founds = funs.FindAll(delegate(Nmd f) { return  (f as Fun).IsEntryPoint; });
             if (founds.Count > 1)
@@ -1469,7 +1467,7 @@ namespace Nana.Semantics
         public void EnsureFunctionReturnAll()
         {
             AppAnalyzer aa = CollectTypeOf<AppAnalyzer>().First.Value;
-            App app = aa.App;
+            App app = aa.Ap;
 
             Predicate<Nmd> pred = delegate(Nmd n)
             { return n.GetType() == typeof(Fun); };
