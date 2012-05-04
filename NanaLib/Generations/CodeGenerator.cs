@@ -77,7 +77,7 @@ namespace Nana.Generations
             }
 
             // Type semantics flags
-            switch (atrs & TypeAttributes.ClassSemanticsMask)
+            switch (atrs & ((TypeAttributes)0x000005A0L))
             {
                 case TypeAttributes.Interface: ls.Add("interface"); break;
                 case TypeAttributes.Abstract: ls.Add("abstract"); break;

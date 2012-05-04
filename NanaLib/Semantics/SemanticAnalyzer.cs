@@ -551,26 +551,6 @@ namespace Nana.Semantics
             object first;
             Type firstty;
 
-            //// arguments
-            //object obj = Gate(t.Second);
-            //if (obj != EmptyS)
-            //{
-            //    Chain argschain = obj is Chain ? obj as Chain : new Chain(obj);
-            //    foreach (object a in argschain)
-            //    {
-            //        if (a.GetType() == typeof(Nmd))
-            //        {
-            //            Nmd n = a as Nmd;
-            //            throw new SemanticError(string.Format("Assign value to variable:'{0}' before reference it", n.Name));
-            //        }
-            //        if (false == (a is Sema))
-            //        { throw new SemanticError("Cannot be an argument", t.Second.Follows[0]); }
-            //        Sema v = a as Sema;
-            //        argvals.Add(v);
-            //        argtyps.Add(v.Att.TypGet);
-            //    }
-            //}
-
             first = Gate(t.First);
             if (first == null)
             { throw new SyntaxError("It is not a function or constructor", t.First); }
@@ -634,9 +614,7 @@ namespace Nana.Semantics
                     { throw new SemanticError(string.Format("Argument count must be 2 to create delegate but actual count is: {0}", argschain.Count.ToString())); }
 
                     Sema instance = argschain.First.Value as Sema;
-
-                    Member mbr2 = argschain.Last.Value as Member;
-
+                    Member funmbr = argschain.Last.Value as Member;
 
                     Ovld invokeovld = calleetyp.FindOvld("Invoke");
                     if (0 == invokeovld.Funs.Count)
@@ -645,10 +623,10 @@ namespace Nana.Semantics
                     { throw new SemanticError(string.Format("Two or more Invoke methods in delegate calss: {0}", invokeovld.Name)); }
 
                     Fun invokefun = invokeovld.Funs[0];
-                    Ovld mbrovld = mbr2.Value as Ovld;
+                    Ovld mbrovld = funmbr.Value as Ovld;
                     Fun ctor = calleetyp.FindOvld(".ctor").GetFunOf(calleetyp, new Typ[] { E.BTY.Object, E.BTY.IntPtr }, calleetyp);
-                    Fun targetfun = mbrovld.GetFunOf(mbr2.Ty, invokefun.Signature, Ty);
-                    return new CallFun(calleetyp, ctor, /**/ null, new Sema[] { instance, new LoadFun(mbr2.Ty, targetfun) }, isNewObj);
+                    Fun targetfun = mbrovld.GetFunOf(funmbr.Ty, invokefun.Signature, Ty);
+                    return new CallFun(calleetyp, ctor, /*instance=*/ null, new Sema[] { instance, new LoadFun(funmbr.Ty, targetfun) }, isNewObj);
                 }
             }
 

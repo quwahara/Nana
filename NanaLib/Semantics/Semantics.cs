@@ -752,6 +752,9 @@ namespace Nana.Semantics
             BaseTyp = baseTyp;
             if (E.BTY == null) { return; }
             IsDelegate = E.BTY.Delegate.IsAssignableFrom(baseTyp);
+            if (IsDelegate 
+                && (false == (TypeAttributes.Sealed == (TypAttributes & TypeAttributes.Sealed))))
+            { TypAttributes |= TypeAttributes.Sealed; }
         }
 
         public List<Variable> Flds = new List<Variable>();

@@ -1085,27 +1085,9 @@ class C
         }
 
 
-        Func<string, string> fff;
-
-        List<Func<string, string>> YYY()
+        [Test]
+        public void TC0504_MulticastDelegateInheritance()
         {
-            List<Func<string, string>> fls = new List<Func<string, string>>();
-
-            for (int i = 0; i < 3; ++i)
-            {
-                fls.Add(delegate(string ppp) { return i.ToString() + "nnn" + ppp; });
-            }
-
-            return fls;
-        }
-
-
-    //[Test]
-    public void ZZZ()
-    {
-        string xxx = ((int)MethodAttributes.CheckAccessOnOverride).ToString("x");
-
-
             Inp =
 @"
 class C
@@ -1123,11 +1105,72 @@ class MyD -> MulticastDelegate
 ,,,
 
 C() -> c
-c.M()
+MyD(c, C.M) -> d
+d.Invoke()
+";
+            EpcSyn = @"";
 
+            EpcIL = @".field static class [NanaFxt]C c
+.field static class [NanaFxt]MyD d
+.class public C {
+    .method public virtual void M() {
+        ldstr ""Hi""
+        call void [mscorlib]System.Console::WriteLine(string)
+        ret
+    }
+    .method public void .ctor() {
+        ldarg.0
+        call instance void object::.ctor()
+        ret
+    }
+}
+.class public sealed MyD extends [mscorlib]System.MulticastDelegate {
+    .method public hidebysig newslot void .ctor(object obj, native int mtd) runtime {
+    }
+    .method public newslot void Invoke() runtime {
+    }
+}
+.method public static void .cctor() {
+    newobj instance void [NanaFxt]C::.ctor()
+    stsfld class [NanaFxt]C c
+    ldsfld class [NanaFxt]C c
+    ldftn instance void [NanaFxt]C::M()
+    newobj instance void [NanaFxt]MyD::.ctor(object, native int)
+    stsfld class [NanaFxt]MyD d
+    ldsfld class [NanaFxt]MyD d
+    callvirt instance void [NanaFxt]MyD::Invoke()
+    ret
+}
+.method public static void '0'() {
+    .entrypoint
+    ret
+}
+";
+            Test();
+        }
 
+        //[Test]
+        public void ZZZ()
+        {
+            Inp =
+@"
+class C
+...
+    fun M()
+    ..
+        `p(""Hi"")
+    ,,
+,,,
 
+class MyD -> MulticastDelegate
+...
+    cons (obj:object, mtd:IntPtr) .. ,,
+    fun Invoke() .. ,,
+,,,
 
+C() -> c
+MyD(c, C.M) -> d
+d.Invoke()
 ";
             EpcSyn = @"
 x
