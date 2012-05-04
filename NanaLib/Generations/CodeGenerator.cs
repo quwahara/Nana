@@ -52,6 +52,71 @@ namespace Nana.Generations
             return b.ToString();
         }
 
+        static public string FromTypeAttributes(TypeAttributes atrs)
+        {
+            List<string> ls = new List<string>(0);
+            
+            // Visibility flags
+            switch (atrs & TypeAttributes.VisibilityMask)
+            {
+                case TypeAttributes.Public: ls.Add("public"); break;
+                case TypeAttributes.NestedPublic: ls.Add("nested public"); break;
+                case TypeAttributes.NestedPrivate: ls.Add("nested private"); break;
+                case TypeAttributes.NestedFamily: ls.Add("nested family"); break;
+                case TypeAttributes.NestedAssembly: ls.Add("nested assembly"); break;
+                case TypeAttributes.NestedFamANDAssem: ls.Add("nested famandassem"); break;
+                case TypeAttributes.NestedFamORAssem: ls.Add("nested famorassem"); break;
+            }
+
+            // Layout flags
+            switch (atrs & TypeAttributes.LayoutMask)
+            {
+                case TypeAttributes.AutoLayout: /* default for the flag */ break;
+                case TypeAttributes.SequentialLayout: ls.Add("sequential"); break;
+                case TypeAttributes.ExplicitLayout: ls.Add("explicit"); break;
+            }
+
+            // Type semantics flags
+            switch (atrs & TypeAttributes.ClassSemanticsMask)
+            {
+                case TypeAttributes.Interface: ls.Add("interface"); break;
+                case TypeAttributes.Abstract: ls.Add("abstract"); break;
+                case TypeAttributes.Sealed: ls.Add("sealed"); break;
+                case TypeAttributes.SpecialName: ls.Add("specialname"); break;
+            }
+
+            // Type implmentation flags
+            switch (atrs & ((TypeAttributes)0x00103000L))
+            {
+                case TypeAttributes.Import: ls.Add("import"); break;
+                case TypeAttributes.Serializable: ls.Add("serializable"); break;
+                case TypeAttributes.BeforeFieldInit: ls.Add("beforefieldinit"); break;
+            }
+
+            // string formatting flags
+            switch (atrs & TypeAttributes.StringFormatMask)
+            {
+                case TypeAttributes.AnsiClass: /* default for the flag */ break;
+                case TypeAttributes.UnicodeClass: ls.Add("unicode"); break;
+                case TypeAttributes.AutoClass: ls.Add("autochar"); break;
+            }
+
+            // reserved flags
+            switch (atrs & TypeAttributes.ReservedMask)
+            {
+                case TypeAttributes.RTSpecialName: ls.Add("rtspecialname"); break;
+            }
+
+            //  remainders
+            //Class
+            //CustomFormatClass
+            //CustomFormatMask
+            //HasSecurity
+            //NotPublic
+
+            return string.Join(" ", ls.ToArray());
+        }
+
         static public string FromMethodAttributes(MethodAttributes atrs)
         {
             List<string> ls = new List<string>(0);
@@ -380,12 +445,9 @@ namespace Nana.Generations
 
             StringBuilder b = new StringBuilder();
 
-            string accessibility = null;
-            if ((d.TypAttributes & TypeAttributes.Public) == TypeAttributes.Public) accessibility = "public";
-
             b.Append(GetCurrentIndent());
             b.Append(".class");
-            b.Append(" ").Append(accessibility);
+            b.Append(" ").Append(FromTypeAttributes(d.TypAttributes));
             b.Append(" ").Append(Qk(d.Name));
 
             Typ bty;
@@ -441,8 +503,6 @@ namespace Nana.Generations
                 )
                 );
 
-            //>>
-            //b.Append(") {").AppendLine();
             b.Append(")");
             string impattrs = FromMethodImplAttributes(f.ImplAttrs);
             if (impattrs.Length > 0)
@@ -542,9 +602,15 @@ namespace Nana.Generations
                 case C.EndFinally: return OpCodes.Endfinally.ToString();
                 case C.LdField: return LoadField(imr.TypV, imr.VariableV);
                 case C.StField: return StoreField(imr.TypV, imr.VariableV);
+                case C.LdFunction: return LoadFunction(imr);
 
             }
             throw new NotSupportedException();
+        }
+
+        public static string LoadFunction(IMR imr)
+        {
+            return S(OpCodes.Ldftn) + " instance " + Body(imr.TypV, imr.FunV);
         }
 
         static public string S(OpCode c) { return c.ToString(); }

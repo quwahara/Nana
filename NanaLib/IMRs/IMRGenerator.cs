@@ -35,6 +35,7 @@ namespace Nana.IMRs
         LdVariable,
         LdVariableA,
         LdField,
+        LdFunction,
 
         StArrayElement,
         StVariable,
@@ -156,6 +157,9 @@ namespace Nana.IMRs
 
         public IMR LoadField(Typ t, Variable v) { return Append(new IMR(C.LdField, t, v)); }
         public IMR StoreField(Typ t, Variable v) { return Append(new IMR(C.StField, t, v)); }
+
+
+        public IMR LoadFunction(Typ t, Fun f) { return Append(new IMR(C.LdFunction, t, f)); }
 
     }
 

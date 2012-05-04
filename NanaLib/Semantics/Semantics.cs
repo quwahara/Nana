@@ -311,6 +311,7 @@ namespace Nana.Semantics
         public Typ Array;
         public Typ String;
         public Typ Delegate;
+        public Typ IntPtr;
 
         public BuiltInTyp(Env e)
         {
@@ -322,6 +323,7 @@ namespace Nana.Semantics
             this.Array = e.FindOrNewRefType(typeof(System.Array));
             this.String = e.FindOrNewRefType(typeof(string));
             this.Delegate = e.FindOrNewRefType(typeof(System.Delegate));
+            this.IntPtr = e.FindOrNewRefType(typeof(System.IntPtr));
         }
     }
 
@@ -706,8 +708,6 @@ namespace Nana.Semantics
                 .ConvertAll<string>(delegate(Type item) { return GetNameForSignature(item); })
                 .ToArray());
         }
-
-
     }
 
     public class Typ : Fun
@@ -736,14 +736,12 @@ namespace Nana.Semantics
             : base(name, env)
         {
             _FullName = Name;
-
             TypAttributes
                 = TypeAttributes.Class
                 | TypeAttributes.Public
-                | TypeAttributes.AutoClass
+                | TypeAttributes.AutoLayout
                 | TypeAttributes.AnsiClass
                 ;
-
             IsValueType = false;
         }
 
@@ -1966,6 +1964,22 @@ namespace Nana.Semantics
             Att.TypGet = callee.Att.TypGet;
         }
 
+    }
+
+    public class LoadFun : Sema
+    {
+        public Typ Ty;
+        public Fun Fu;
+
+        public LoadFun(Typ ty, Fun fu)
+        {
+            Ty = ty; Fu = fu;
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            gen.LoadFunction(Ty, Fu);
+        }
     }
 
     public enum Accessibility

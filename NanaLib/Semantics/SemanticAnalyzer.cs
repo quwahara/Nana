@@ -551,25 +551,25 @@ namespace Nana.Semantics
             object first;
             Type firstty;
 
-            // arguments
-            object obj = Gate(t.Second);
-            if (obj != EmptyS)
-            {
-                Chain argschain = obj is Chain ? obj as Chain : new Chain(obj);
-                foreach (object a in argschain)
-                {
-                    if (a.GetType() == typeof(Nmd))
-                    {
-                        Nmd n = a as Nmd;
-                        throw new SemanticError(string.Format("Assign value to variable:'{0}' before reference it", n.Name));
-                    }
-                    if (false == (a is Sema))
-                    { throw new SemanticError("Cannot be an argument", t.Second.Follows[0]); }
-                    Sema v = a as Sema;
-                    argvals.Add(v);
-                    argtyps.Add(v.Att.TypGet);
-                }
-            }
+            //// arguments
+            //object obj = Gate(t.Second);
+            //if (obj != EmptyS)
+            //{
+            //    Chain argschain = obj is Chain ? obj as Chain : new Chain(obj);
+            //    foreach (object a in argschain)
+            //    {
+            //        if (a.GetType() == typeof(Nmd))
+            //        {
+            //            Nmd n = a as Nmd;
+            //            throw new SemanticError(string.Format("Assign value to variable:'{0}' before reference it", n.Name));
+            //        }
+            //        if (false == (a is Sema))
+            //        { throw new SemanticError("Cannot be an argument", t.Second.Follows[0]); }
+            //        Sema v = a as Sema;
+            //        argvals.Add(v);
+            //        argtyps.Add(v.Att.TypGet);
+            //    }
+            //}
 
             first = Gate(t.First);
             if (first == null)
@@ -596,23 +596,69 @@ namespace Nana.Semantics
                 ovl = first as Ovld;
             }
             bool isNewObj = false;
+            bool isDelegate = false;
             if (firstty == typeof(Typ))
             {
                 calleetyp = first as Typ;
                 isNewObj = true;
+                isDelegate = calleetyp.IsDelegate;
                 ovl = calleetyp.FindOvld(Nana.IMRs.IMRGenerator.InstCons);
             }
             Debug.Assert(ovl != null);
 
-            Fun sig = null;
+            // arguments
+            object obj = Gate(t.Second);
+            if (obj != EmptyS)
+            {
+                Chain argschain = obj is Chain ? obj as Chain : new Chain(obj);
+                if (false == isDelegate)
+                {
+                    foreach (object a in argschain)
+                    {
+                        if (a.GetType() == typeof(Nmd))
+                        {
+                            Nmd n = a as Nmd;
+                            throw new SemanticError(string.Format("Assign value to variable:'{0}' before reference it", n.Name));
+                        }
+                        if (false == (a is Sema))
+                        { throw new SemanticError("Cannot be an argument", t.Second.Follows[0]); }
+                        Sema v = a as Sema;
+                        argvals.Add(v);
+                        argtyps.Add(v.Att.TypGet);
+                    }
+                }
+                else
+                {
+                    //  create delegate
+                    if (2 != argschain.Count)
+                    { throw new SemanticError(string.Format("Argument count must be 2 to create delegate but actual count is: {0}", argschain.Count.ToString())); }
 
-            sig = ovl.GetFunOf(calleetyp, argtyps.ToArray(), Ty);
-            if (sig == null) { throw new SyntaxError("It is not a member", t.First); }
+                    Sema instance = argschain.First.Value as Sema;
 
-            Sema instance = mbr == null ? null : mbr.Instance;
+                    Member mbr2 = argschain.Last.Value as Member;
 
 
-            return new CallFun(calleetyp, sig, instance, argvals.ToArray(), isNewObj);
+                    Ovld invokeovld = calleetyp.FindOvld("Invoke");
+                    if (0 == invokeovld.Funs.Count)
+                    { throw new SemanticError(string.Format("No Invoke method in delegate calss: {0}", invokeovld.Name)); }
+                    if (2 <= invokeovld.Funs.Count)
+                    { throw new SemanticError(string.Format("Two or more Invoke methods in delegate calss: {0}", invokeovld.Name)); }
+
+                    Fun invokefun = invokeovld.Funs[0];
+                    Ovld mbrovld = mbr2.Value as Ovld;
+                    Fun ctor = calleetyp.FindOvld(".ctor").GetFunOf(calleetyp, new Typ[] { E.BTY.Object, E.BTY.IntPtr }, calleetyp);
+                    Fun targetfun = mbrovld.GetFunOf(mbr2.Ty, invokefun.Signature, Ty);
+                    return new CallFun(calleetyp, ctor, /**/ null, new Sema[] { instance, new LoadFun(mbr2.Ty, targetfun) }, isNewObj);
+                }
+            }
+
+            {
+                Fun sig = null;
+                sig = ovl.GetFunOf(calleetyp, argtyps.ToArray(), Ty);
+                if (sig == null) { throw new SyntaxError("It is not a member", t.First); }
+                Sema instance = mbr == null ? null : mbr.Instance;
+                return new CallFun(calleetyp, sig, instance, argvals.ToArray(), isNewObj);
+            }
         }
 
         public object Dot(Token t)
@@ -1479,7 +1525,11 @@ namespace Nana.Semantics
             { return n.GetType() == typeof(Fun); };
 
             foreach (Fun a in app.FindDownAll(pred))
-            { FunAnalyzer.EnusureReturn(a); }
+            {
+                if (MethodImplAttributes.Runtime == (a.ImplAttrs & MethodImplAttributes.Runtime))
+                { continue; }
+                FunAnalyzer.EnusureReturn(a);
+            }
         }
 
         public static void RemoveReferencingType(Env env)
