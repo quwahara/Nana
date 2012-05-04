@@ -1084,7 +1084,6 @@ class C
             Test();
         }
 
-
         [Test]
         public void TC0504_MulticastDelegateInheritance()
         {
@@ -1171,6 +1170,7 @@ class MyD -> MulticastDelegate
 C() -> c
 MyD(c, C.M) -> d
 d.Invoke()
+d()
 ";
             EpcSyn = @"
 x

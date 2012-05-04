@@ -556,41 +556,46 @@ namespace Nana.Semantics
             { throw new InternalError("Could not analyze the token for callee function", t.First); }
 
             firstty = first.GetType();
-            {
-                bool canCall = false;
-                canCall |= firstty == typeof(Member);
-                canCall |= firstty == typeof(Ovld);
-                canCall |= firstty == typeof(Typ);
-                if (false == canCall)
-                { throw new SemanticError("Cannot call it. It is not a function constructor", t); }
-            }
+            bool dottedMethodCall = firstty == typeof(Member);
+            bool notDottedMethodCall = firstty == typeof(Ovld);
+            bool constructorCall = firstty == typeof(Typ);
+
+            if (false == (dottedMethodCall | notDottedMethodCall | constructorCall))
+            { throw new SemanticError("Cannot call it. It is not a function constructor", t); }
 
             Ovld ovl = null;
-            Member mbr = null;
+            Sema instance = null;
             Typ calleetyp = null;
-            if (firstty == typeof(Member))
+            bool isNewObj = false;
+            bool isDelegate = false;
+
+            if (dottedMethodCall)
             {
-                mbr = first as Member;
-                if (mbr.Value.GetType() != typeof(Ovld))
-                { throw new NotImplementedException(); }
+                Member mbr = first as Member;
 
                 calleetyp = mbr.Ty;
+                if (null == calleetyp)
+                { throw new InternalError("Could not get Typ for declaring the callee function", t); }
+
                 ovl = mbr.Value as Ovld;
+                if (null == ovl)
+                { throw new InternalError("Could not get overload for the callee function", t); }
+
+                instance = mbr.Instance;
             }
-            if (firstty == typeof(Ovld))
+            else if (notDottedMethodCall)
             {
                 ovl = first as Ovld;
             }
-            bool isNewObj = false;
-            bool isDelegate = false;
-            if (firstty == typeof(Typ))
+            else if (constructorCall)
             {
                 calleetyp = first as Typ;
                 isNewObj = true;
                 isDelegate = calleetyp.IsDelegate;
                 ovl = calleetyp.FindOvld(Nana.IMRs.IMRGenerator.InstCons);
+                if (null == ovl)
+                { throw new SemanticError(string.Format("No constructor for the type:{0}", calleetyp.Name), t); }
             }
-            Debug.Assert(ovl != null);
 
             // arguments
             object obj = Gate(t.Second);
@@ -619,29 +624,39 @@ namespace Nana.Semantics
                     if (2 != argschain.Count)
                     { throw new SemanticError(string.Format("Argument count must be 2 to create delegate but actual count is: {0}", argschain.Count.ToString())); }
 
-                    Sema instance = argschain.First.Value as Sema;
+                    //  put instance for invoking
+                    Sema trginst = argschain.First.Value as Sema;
+                    argvals.Add(trginst);
+                    argtyps.Add(trginst.Att.TypGet);
+                    
+                    //  to detect target method, retrieve signature of Invoke() method
+                    Ovld invkovl = calleetyp.FindOvld("Invoke");
+                    if (0 == invkovl.Funs.Count)
+                    { throw new SemanticError(string.Format("No Invoke method in delegate calss: {0}", invkovl.Name)); }
+                    if (2 <= invkovl.Funs.Count)
+                    { throw new SemanticError(string.Format("Two or more Invoke methods in delegate calss: {0}", invkovl.Name)); }
+                    Typ[] invksig = invkovl.Funs[0].Signature;
+                    
+                    //  retrieve target method
                     Member funmbr = argschain.Last.Value as Member;
-
-                    Ovld invokeovld = calleetyp.FindOvld("Invoke");
-                    if (0 == invokeovld.Funs.Count)
-                    { throw new SemanticError(string.Format("No Invoke method in delegate calss: {0}", invokeovld.Name)); }
-                    if (2 <= invokeovld.Funs.Count)
-                    { throw new SemanticError(string.Format("Two or more Invoke methods in delegate calss: {0}", invokeovld.Name)); }
-
-                    Fun invokefun = invokeovld.Funs[0];
                     Ovld mbrovld = funmbr.Value as Ovld;
-                    Fun ctor = calleetyp.FindOvld(".ctor").GetFunOf(calleetyp, new Typ[] { E.BTY.Object, E.BTY.IntPtr }, calleetyp);
-                    Fun targetfun = mbrovld.GetFunOf(funmbr.Ty, invokefun.Signature, Ty);
-                    return new CallFun(calleetyp, ctor, /*instance=*/ null, new Sema[] { instance, new LoadFun(funmbr.Ty, targetfun) }, isNewObj);
+                    Fun targetfun = mbrovld.GetFunOf(funmbr.Ty, invksig, Ty);
+                    
+                    //  put function loading to arguments
+                    LoadFun ldfun = new LoadFun(funmbr.Ty, targetfun);
+                    argvals.Add(ldfun);
+                    argtyps.Add(ldfun.Att.TypGet);
+
+                    //  load constructor overload in MulticastDelegate class 
+                    ovl = calleetyp.FindOvld(".ctor");
                 }
             }
 
             {
-                Fun sig = null;
-                sig = ovl.GetFunOf(calleetyp, argtyps.ToArray(), Ty);
-                if (sig == null) { throw new SyntaxError("It is not a member", t.First); }
-                Sema instance = mbr == null ? null : mbr.Instance;
-                return new CallFun(calleetyp, sig, instance, argvals.ToArray(), isNewObj);
+                Fun calleefun = ovl.GetFunOf(calleetyp, argtyps.ToArray(), Ty);
+                if (calleefun == null)
+                { throw new SemanticError(string.Format("No method matches for the calling: {0}", ovl.Name), t); }
+                return new CallFun(calleetyp, calleefun, instance, argvals.ToArray(), isNewObj);
             }
         }
 
@@ -651,7 +666,6 @@ namespace Nana.Semantics
             Debug.Assert(t.Second != null);
 
             object holder = Gate(t.First);
-            object comb = null;
 
             if (holder.GetType() == typeof(Nsp))
             {

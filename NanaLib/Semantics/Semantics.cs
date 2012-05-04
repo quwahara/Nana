@@ -885,16 +885,13 @@ namespace Nana.Semantics
 
         public bool IsAssignableFrom(Typ y)
         {
-            Typ self = this;
-            do
+            Typ bty = y;
+            while (bty != null)
             {
-                if (self == y) { return true; }
-                if (self.IsReferencing && y.IsReferencing)
-                {
-                    return self.RefType.IsAssignableFrom(y.RefType);
-                }
-                self = self.BaseTyp;
-            } while (self != null);
+                if (bty == this)
+                { return true; }
+                bty = bty.BaseTyp;
+            }
             return false;
         }
 
@@ -1977,6 +1974,7 @@ namespace Nana.Semantics
         public LoadFun(Typ ty, Fun fu)
         {
             Ty = ty; Fu = fu;
+            Att.TypGet = ty.E.BTY.IntPtr;
         }
 
         public override void Give(IMRGenerator gen)
