@@ -375,6 +375,8 @@ namespace Nana.Syntaxes
                 0funcdec    _(  (.@0    Expr.s? _)  ) 0typedec.r 0attrdec.r 0bodydec.r          -- PrmDef
                 0typedec    _(  :.?@0   Expr.s  _)                                                  --  TypeSpec
 
+            `(  Expr.s? )   0typedec.r  0bodydec.r
+
             (.@0        Expr.s  )               --  Prior
             [.@0        Expr.s  ]               --  Prior
             
@@ -525,10 +527,10 @@ namespace Nana.Syntaxes
                         if ("?*".Contains(def.Appearance))
                         {
                             Token xs = Exprs(def.EndDefs);
-                            if (xs == null)
-                            { ++i; }
-                            else
+                            if (null != xs)
                             { result.Add(xs); }
+                            else if ("*" == def.Appearance)
+                            { ++i; }
                         }
                         else
                         {
