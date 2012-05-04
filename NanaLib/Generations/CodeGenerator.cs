@@ -54,20 +54,52 @@ namespace Nana.Generations
 
         static public string FromMethodAttributes(MethodAttributes atrs)
         {
-            if (atrs == MethodAttributes.PrivateScope) return "PrivateScope";
+            List<string> ls = new List<string>(0);
 
-            Array vs = Enum.GetValues(typeof(MethodAttributes));
-            string[] ns = Enum.GetNames(typeof(MethodAttributes));
-            MethodAttributes v = MethodAttributes.PrivateScope, vv;
-            List<string> ls = new List<string>();
-            for (int i = vs.Length - 1; i >= 0; i--)
+            //Accessibility flags
+            switch (atrs & MethodAttributes.MemberAccessMask)
             {
-                vv = v;
-                v = (MethodAttributes)vs.GetValue(i);
-                if (v == MethodAttributes.PrivateScope || v == vv || (atrs & v) != v) continue;
-                ls.Add(ns[i]);
-                if ((int)v <= 7) break;
+                case MethodAttributes.PrivateScope: ls.Add("privatescope"); break;
+                case MethodAttributes.Private: ls.Add("private"); break;
+                case MethodAttributes.FamANDAssem: ls.Add("famandassem"); break;
+                case MethodAttributes.Assembly: ls.Add("assembly"); break;
+                case MethodAttributes.Family: ls.Add("family"); break;
+                case MethodAttributes.FamORAssem: ls.Add("famorassem"); break;
+                case MethodAttributes.Public: ls.Add("public"); break;
             }
+
+            //Contruct flags
+            switch (atrs & ((MethodAttributes)0x00F0))
+            {
+                case MethodAttributes.Static: ls.Add("static"); break;
+                case MethodAttributes.Final: ls.Add("final"); break;
+                case MethodAttributes.Virtual: ls.Add("virtual"); break;
+                case MethodAttributes.HideBySig: ls.Add("hidebysig"); break;
+            }
+
+            //Virtual method table (v-table) cotrol flags
+            switch (atrs & ((MethodAttributes)0x0300))
+            {
+                case MethodAttributes.NewSlot: ls.Add("newslot"); break;
+                case MethodAttributes.CheckAccessOnOverride: ls.Add("strict"); break;
+            }
+
+            //Implimentation flags
+            switch (atrs & ((MethodAttributes)0x2C08))
+            {
+                case MethodAttributes.Abstract: ls.Add("abstract"); break;
+                case MethodAttributes.SpecialName: ls.Add("specialname"); break;
+                case MethodAttributes.PinvokeImpl: ls.Add("pinvokeimpl"); break;
+                case MethodAttributes.UnmanagedExport: ls.Add("unmanagedexp"); break;
+            }
+
+            //Reserved flags
+            switch (atrs & ((MethodAttributes)0xD000))
+            {
+                case MethodAttributes.RTSpecialName: ls.Add("rtspecialname"); break;
+                case MethodAttributes.RequireSecObject: ls.Add("reqsecobj"); break;
+            }
+
             return string.Join(" ", ls.ToArray());
         }
 

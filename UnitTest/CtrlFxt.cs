@@ -205,12 +205,12 @@ namespace UnitTest
     +---[T])
 ";
 
-            EpcIL = @".method static public void .cctor() {
+            EpcIL = @".method public static void .cctor() {
     ldstr ""Hello, World!""
     call void [mscorlib]System.Console::WriteLine(string)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -236,7 +236,7 @@ namespace UnitTest
 
             EpcIL = @".field static string s
 .field static int32 $000001
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 1
     stsfld int32 $000001
     ldsflda int32 $000001
@@ -244,7 +244,7 @@ namespace UnitTest
     stsfld string s
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -273,12 +273,12 @@ namespace UnitTest
     +---[T])
 ";
 
-            EpcIL = @".method static public void .cctor() {
+            EpcIL = @".method public static void .cctor() {
     ldstr ""Hello, World!""
     call void [mscorlib]System.Console::WriteLine(string)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -325,7 +325,7 @@ namespace UnitTest
 
             EpcIL = @".field static string sss
 .field static int32 len
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldstr ""abcde""
     ldc.i4 1
     ldc.i4 3
@@ -340,7 +340,7 @@ namespace UnitTest
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -392,12 +392,12 @@ class sub
 ";
 
             EpcIL = @".class public 'sub' {
-    .method static public void Main() {
+    .method public static void Main() {
         .entrypoint
         call void [NanaFxt]'sub'::'pop'()
         ret
     }
-    .method static public void 'pop'() {
+    .method public static void 'pop'() {
         ret
     }
     .method public void .ctor() {
@@ -455,12 +455,12 @@ class A
 ";
 
             EpcIL = @".class public A {
-    .method static public int32 Main() {
+    .method public static int32 Main() {
         .entrypoint
         ldc.i4 1
         ret
     }
-    .method static public bool IfElse() {
+    .method public static bool IfElse() {
         ldc.i4.1
         brfalse else$000001
         ldc.i4.1
@@ -471,7 +471,7 @@ else$000001:
         ret
 endif$000001:
     }
-    .method static public bool IfElifElse() {
+    .method public static bool IfElifElse() {
         ldc.i4.1
         brfalse elif$000002_1
         ldc.i4.1
@@ -488,7 +488,7 @@ else$000002:
         ret
 endif$000002:
     }
-    .method static public bool IfElifElifElse() {
+    .method public static bool IfElifElifElse() {
         ldc.i4.1
         brfalse elif$000003_1
         ldc.i4.1
@@ -548,7 +548,7 @@ class A
 ";
 
             EpcIL = @".class public A {
-    .method static public int32 Main() {
+    .method public static int32 Main() {
         .entrypoint
         ldc.i4.1
         brfalse else$000001
@@ -790,7 +790,7 @@ fun Main():void
 ,,
         ";
             EpcSyn = @"";
-            EpcIL = @".method static public void Main() {
+            EpcIL = @".method public static void Main() {
     .custom instance void [mscorlib]System.STAThreadAttribute::.ctor()
     .entrypoint
     call void [System.Windows.Forms]System.Windows.Forms.Application::EnableVisualStyles()
@@ -822,7 +822,7 @@ fun Main():void
 ,,
         ";
             EpcSyn = @"";
-            EpcIL = @".method static public void Main() {
+            EpcIL = @".method public static void Main() {
     .custom instance void [mscorlib]System.STAThreadAttribute::.ctor()
     .entrypoint
     .locals (
@@ -875,7 +875,7 @@ end
 ";
 
             EpcIL = @".field static class [mscorlib]System.Exception ex
-.method static public void .cctor() {
+.method public static void .cctor() {
     .try {
     .try {
     newobj instance void [mscorlib]System.Exception::.ctor()
@@ -896,7 +896,7 @@ exitcatch$000001:
 exitfinally$000001:
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -948,7 +948,7 @@ System.Console.WriteLine(i)
 ";
             EpcIL = @".field static class [mscorlib]System.Collections.Generic.List`1<string> ls
 .field static int32 i
-.method static public void .cctor() {
+.method public static void .cctor() {
     newobj instance void class [mscorlib]System.Collections.Generic.List`1<string>::.ctor()
     stsfld class [mscorlib]System.Collections.Generic.List`1<string> ls
     ldsfld class [mscorlib]System.Collections.Generic.List`1<string> ls
@@ -959,7 +959,7 @@ System.Console.WriteLine(i)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1017,7 +1017,7 @@ System.Console.WriteLine(i)
 ";
             EpcIL = @".field static class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>> ls
 .field static int32 i
-.method static public void .cctor() {
+.method public static void .cctor() {
     newobj instance void class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>>::.ctor()
     stsfld class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>> ls
     ldsfld class [mscorlib]System.Collections.Generic.List`1<class [mscorlib]System.Collections.Generic.List`1<string>> ls
@@ -1027,7 +1027,7 @@ System.Console.WriteLine(i)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1056,7 +1056,7 @@ class C
 
             EpcIL = @".class public C {
     .field int32 Field
-    .method static public void Main() {
+    .method public static void Main() {
         .entrypoint
         .locals (
             class [NanaFxt]C c
@@ -1103,13 +1103,31 @@ class C
     //[Test]
     public void ZZZ()
     {
+        string xxx = ((int)MethodAttributes.CheckAccessOnOverride).ToString("x");
+
+
             Inp =
 @"
+class C
+...
+    fun M()
+    ..
+        `p(""Hi"")
+    ,,
+,,,
+
 class MyD -> MulticastDelegate
 ...
     cons (obj:object, mtd:IntPtr) .. ,,
     fun Invoke() .. ,,
 ,,,
+
+C() -> c
+c.M()
+
+
+
+
 ";
             EpcSyn = @"
 x

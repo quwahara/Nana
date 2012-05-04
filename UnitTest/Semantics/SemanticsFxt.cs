@@ -192,7 +192,7 @@ namespace UnitTest.Semantics.Try
 //        ret
 //    }
 //}
-//.method static public void '0'() {
+//.method public static void '0'() {
 //    .entrypoint
 //    ret
 //}
@@ -244,7 +244,7 @@ namespace UnitTest.Semantics.Try
 //";
 //            Epc +=
 //@".class public T102_Class1Func1P0 {
-//    .method static public void Main() {
+//    .method public static void Main() {
 //        .entrypoint
 //        ret
 //    }
@@ -366,7 +366,7 @@ end
 ";
             Epc +=
 @".class public CallRefFuncP0 {
-    .method static public void Main() {
+    .method public static void Main() {
         .entrypoint
         call void [mscorlib]System.Console::WriteLine()
         ret
@@ -395,7 +395,7 @@ end
 ";
             Epc +=
 @".class public CallRefFuncP1 {
-    .method static public void Main() {
+    .method public static void Main() {
         .entrypoint
         ldstr ""P1""
         call void [mscorlib]System.Console::WriteLine(string)
@@ -428,12 +428,12 @@ end
 ";
             Epc +=
 @".class public CallDecFuncP0 {
-    .method static public void Main() {
+    .method public static void Main() {
         .entrypoint
         call void [Call]CallDecFuncP0::Sub()
         ret
     }
-    .method static public void Sub() {
+    .method public static void Sub() {
         ret
     }
     .method public void .ctor() {
@@ -464,13 +464,13 @@ end
 ";
             Epc +=
 @".class public CallDecFuncP1 {
-    .method static public void Main() {
+    .method public static void Main() {
         .entrypoint
         ldstr ""st""
         call void [Call]CallDecFuncP1::Sub(string)
         ret
     }
-    .method static public void Sub(string s) {
+    .method public static void Sub(string s) {
         ldarg s
         call void [mscorlib]System.Console::WriteLine(string)
         ret
@@ -503,14 +503,14 @@ end
 ";
             Epc +=
 @".class public CallDecFuncP2 {
-    .method static public void Main() {
+    .method public static void Main() {
         .entrypoint
         ldstr ""st""
         ldstr ""ring""
         call void [Call]CallDecFuncP2::Sub(string, string)
         ret
     }
-    .method static public void Sub(string s, string t) {
+    .method public static void Sub(string s, string t) {
         ldarg t
         call void [mscorlib]System.Console::WriteLine(string)
         ret
@@ -536,7 +536,7 @@ System.Console.WriteLine(s)
             Epc +=
 @".field static object o
 .field static string s
-.method static public void .cctor() {
+.method public static void .cctor() {
     newobj instance void object::.ctor()
     stsfld object o
     ldsfld object o
@@ -546,7 +546,7 @@ System.Console.WriteLine(s)
     call void [mscorlib]System.Console::WriteLine(string)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -565,7 +565,7 @@ System.Console.WriteLine(s)
             Epc +=
 @".field static class [UnitTest]UnitTest.Class0 c0
 .field static string s
-.method static public void .cctor() {
+.method public static void .cctor() {
     newobj instance void [UnitTest]UnitTest.Class0::.ctor()
     stsfld class [UnitTest]UnitTest.Class0 c0
     ldsfld class [UnitTest]UnitTest.Class0 c0
@@ -575,7 +575,7 @@ System.Console.WriteLine(s)
     call void [mscorlib]System.Console::WriteLine(string)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -592,14 +592,14 @@ System.Console.WriteLine(a)
 ";
             Epc +=
 @".field static string a
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldstr ""xxx""
     stsfld string a
     ldsfld string a
     call void [mscorlib]System.Console::WriteLine(string)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -615,12 +615,12 @@ a:int <- 10
 ";
             Epc +=
 @".field static int32 a
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 10
     stsfld int32 a
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -644,7 +644,7 @@ end
 ";
             Epc +=
 @".class public CallRefFuncP0 {
-    .method static public void Main() {
+    .method public static void Main() {
         .entrypoint
         .locals (
             int32 n
@@ -692,7 +692,7 @@ end
         ret
     }
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -713,7 +713,7 @@ end
 ";
             Epc +=
 @".class public T102_Class1Func1P0 {
-    .method static public void Main() {
+    .method public static void Main() {
         .entrypoint
         ret
     }
@@ -743,11 +743,11 @@ end
 ";
             Epc +=
 @".class public Class1Func2P0 {
-    .method static public void Main() {
+    .method public static void Main() {
         .entrypoint
         ret
     }
-    .method static public void Sub() {
+    .method public static void Sub() {
         ret
     }
     .method public void .ctor() {
@@ -773,7 +773,7 @@ end
 ";
             Epc +=
 @".class public Class1Func1P1 {
-    .method static public void Main(string s) {
+    .method public static void Main(string s) {
         .entrypoint
         ret
     }
@@ -800,7 +800,7 @@ end
 ";
             Epc +=
 @".class public Class1Func1P2 {
-    .method static public void Main(string s, string t) {
+    .method public static void Main(string s, string t) {
         .entrypoint
         ret
     }
@@ -837,7 +837,7 @@ System.Console.WriteLine(v)
 ";
             Epc +=
 @".field static bool v
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4.1
     ldc.i4.1
     ceq
@@ -871,7 +871,7 @@ System.Console.WriteLine(v)
     call void [mscorlib]System.Console::WriteLine(bool)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -895,7 +895,7 @@ System.Console.WriteLine(i)
 ";
             Epc +=
 @".field static int32 i
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 1
     ldc.i4 2
     add
@@ -928,7 +928,7 @@ System.Console.WriteLine(i)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -955,7 +955,7 @@ System.Console.WriteLine(i)
 ";
             Epc +=
 @".field static bool i
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 1
     ldc.i4 1
     ceq
@@ -997,7 +997,7 @@ System.Console.WriteLine(i)
     call void [mscorlib]System.Console::WriteLine(bool)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1014,7 +1014,7 @@ System.Console.WriteLine(s)
 ";
             Epc +=
 @".field static string s
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldstr ""a""
     ldstr ""b""
     call string string::Concat(string, string)
@@ -1023,7 +1023,7 @@ System.Console.WriteLine(s)
     call void [mscorlib]System.Console::WriteLine(string)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1046,7 +1046,7 @@ if true then
 end
 ";
             Epc +=
-@".method static public void .cctor() {
+@".method public static void .cctor() {
     ldc.i4.1
     brfalse endif$000001
     ldstr ""true""
@@ -1055,7 +1055,7 @@ end
 endif$000001:
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1074,7 +1074,7 @@ else
 end
 ";
             Epc +=
-@".method static public void .cctor() {
+@".method public static void .cctor() {
     ldc.i4.1
     brfalse else$000001
     ldstr ""then""
@@ -1086,7 +1086,7 @@ else$000001:
 endif$000001:
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1105,7 +1105,7 @@ elif true then
 end
 ";
             Epc +=
-@".method static public void .cctor() {
+@".method public static void .cctor() {
     ldc.i4.1
     brfalse elif$000001_1
     ldstr ""then""
@@ -1120,7 +1120,7 @@ elif$000001_1:
 endif$000001:
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1141,7 +1141,7 @@ else
 end
 ";
             Epc +=
-@".method static public void .cctor() {
+@".method public static void .cctor() {
     ldc.i4.1
     brfalse elif$000001_1
     ldstr ""then""
@@ -1159,7 +1159,7 @@ else$000001:
 endif$000001:
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1180,7 +1180,7 @@ elif true then
 end
 ";
             Epc +=
-@".method static public void .cctor() {
+@".method public static void .cctor() {
     ldc.i4.1
     brfalse elif$000001_1
     ldstr ""then""
@@ -1201,7 +1201,7 @@ elif$000001_2:
 endif$000001:
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1224,7 +1224,7 @@ else
 end
 ";
             Epc +=
-@".method static public void .cctor() {
+@".method public static void .cctor() {
     ldc.i4.1
     brfalse elif$000001_1
     ldstr ""then""
@@ -1248,7 +1248,7 @@ else$000001:
 endif$000001:
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1269,7 +1269,7 @@ while false do
 end
 ";
             Epc +=
-@".method static public void .cctor() {
+@".method public static void .cctor() {
 do$000001:
     ldc.i4.0
     brfalse endwhile$000001
@@ -1285,7 +1285,7 @@ do$000001:
 endwhile$000001:
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1335,7 +1335,7 @@ System.Console.WriteLine(b)
             Epc +=
 @".field static int32[] a
 .field static int32 b
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 3
     newarr int32
     stsfld int32[] a
@@ -1351,7 +1351,7 @@ System.Console.WriteLine(b)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1371,7 +1371,7 @@ System.Console.WriteLine(b[0])
             Epc +=
 @".field static int32[] a
 .field static int32[] b
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 3
     newarr int32
     stsfld int32[] a
@@ -1387,7 +1387,7 @@ System.Console.WriteLine(b[0])
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1407,7 +1407,7 @@ System.Console.WriteLine(a[1])
             Epc +=
 @".field static int32[] a
 .field static int32 i
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 3
     newarr int32
     stsfld int32[] a
@@ -1431,7 +1431,7 @@ System.Console.WriteLine(a[1])
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1454,7 +1454,7 @@ System.Console.WriteLine(a[0] + a[3])
 ";
             Epc +=
 @".field static int32[] a
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 4
     newarr int32
     stsfld int32[] a
@@ -1498,7 +1498,7 @@ System.Console.WriteLine(a[0] + a[3])
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1518,7 +1518,7 @@ System.Console.WriteLine(b)
             Epc +=
 @".field static int32[] a
 .field static object b
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 3
     newarr int32
     stsfld int32[] a
@@ -1534,7 +1534,7 @@ System.Console.WriteLine(b)
     call void [mscorlib]System.Console::WriteLine(object)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1551,7 +1551,7 @@ System.Console.WriteLine(a.Length)
 ";
             Epc +=
 @".field static int32[] a
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 3
     newarr int32
     stsfld int32[] a
@@ -1560,7 +1560,7 @@ System.Console.WriteLine(a.Length)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1578,7 +1578,7 @@ System.Console.WriteLine(b)
             Epc +=
 @".field static int32 b
 .field static int32[] $000001
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 5
     newarr int32
     stsfld int32[] $000001
@@ -1594,7 +1594,7 @@ System.Console.WriteLine(b)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1618,7 +1618,7 @@ System.Console.WriteLine(b)
             Epc +=
 @".field static int32[0...,0...] a
 .field static int32 b
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 3
     ldc.i4 5
     newobj instance void int32[0...,0...]::.ctor(int32, int32)
@@ -1637,7 +1637,7 @@ System.Console.WriteLine(b)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1657,7 +1657,7 @@ System.Console.WriteLine(b[3, 1])
             Epc +=
 @".field static int32[0...,0...] a
 .field static int32[0...,0...] b
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 9
     ldc.i4 7
     newobj instance void int32[0...,0...]::.ctor(int32, int32)
@@ -1676,7 +1676,7 @@ System.Console.WriteLine(b[3, 1])
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1718,7 +1718,7 @@ System.Console.WriteLine(a[1, 2])
             Epc +=
 @".field static int32[0...,0...] a
 .field static int32 i
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 4
     ldc.i4 5
     newobj instance void int32[0...,0...]::.ctor(int32, int32)
@@ -1863,7 +1863,7 @@ System.Console.WriteLine(a[1, 2])
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -1901,7 +1901,7 @@ System.Console.WriteLine(a[3, 3])
 ";
             Epc +=
 @".field static int32[0...,0...] a
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 4
     ldc.i4 5
     newobj instance void int32[0...,0...]::.ctor(int32, int32)
@@ -2034,7 +2034,7 @@ System.Console.WriteLine(a[3, 3])
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2054,7 +2054,7 @@ System.Console.WriteLine(b)
             Epc +=
 @".field static int32[0...,0...] a
 .field static object b
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 7
     ldc.i4 9
     newobj instance void int32[0...,0...]::.ctor(int32, int32)
@@ -2073,7 +2073,7 @@ System.Console.WriteLine(b)
     call void [mscorlib]System.Console::WriteLine(object)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2090,7 +2090,7 @@ System.Console.WriteLine(a.Length)
 ";
             Epc +=
 @".field static int32[0...,0...] a
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 5
     ldc.i4 7
     newobj instance void int32[0...,0...]::.ctor(int32, int32)
@@ -2100,7 +2100,7 @@ System.Console.WriteLine(a.Length)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2118,7 +2118,7 @@ System.Console.WriteLine(b)
             Epc +=
 @".field static int32 b
 .field static int32[0...,0...] $000001
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 7
     ldc.i4 5
     newobj instance void int32[0...,0...]::.ctor(int32, int32)
@@ -2137,7 +2137,7 @@ System.Console.WriteLine(b)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2158,7 +2158,7 @@ fun Main(args:string[]):void
 ,,
 ";
             Epc +=
-@".method static public void Main(string[] args) {
+@".method public static void Main(string[] args) {
     .entrypoint
     .locals (
         int32[0...,0...,0...] i
@@ -2203,7 +2203,7 @@ System.Console.WriteLine(b)
             Epc +=
 @".field static int32[][] a
 .field static int32 b
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 9
     newarr int32[]
     stsfld int32[][] a
@@ -2228,7 +2228,7 @@ System.Console.WriteLine(b)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2249,7 +2249,7 @@ System.Console.WriteLine(b[0][1])
             Epc +=
 @".field static int32[][] a
 .field static int32[][] b
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 9
     newarr int32[]
     stsfld int32[][] a
@@ -2274,7 +2274,7 @@ System.Console.WriteLine(b[0][1])
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2295,7 +2295,7 @@ System.Console.WriteLine(a[1][3])
             Epc +=
 @".field static int32[][] a
 .field static int32 i
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 9
     newarr int32[]
     stsfld int32[][] a
@@ -2332,7 +2332,7 @@ System.Console.WriteLine(a[1][3])
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2355,7 +2355,7 @@ System.Console.WriteLine(a[3][5])
 ";
             Epc +=
 @".field static int32[][] a
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 21
     newarr int32[]
     stsfld int32[][] a
@@ -2410,7 +2410,7 @@ System.Console.WriteLine(a[3][5])
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2430,7 +2430,7 @@ System.Console.WriteLine(a[1].GetValue(3))
 ";
             Epc +=
 @".field static int32[][] a
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 17
     newarr int32[]
     stsfld int32[][] a
@@ -2458,7 +2458,7 @@ System.Console.WriteLine(a[1].GetValue(3))
     call void [mscorlib]System.Console::WriteLine(object)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2476,7 +2476,7 @@ System.Console.WriteLine(a[0].Length)
 ";
             Epc +=
 @".field static int32[][] a
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 3
     newarr int32[]
     stsfld int32[][] a
@@ -2492,7 +2492,7 @@ System.Console.WriteLine(a[0].Length)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2511,7 +2511,7 @@ System.Console.WriteLine(b)
 @".field static int32 b
 .field static int32[][] $000001
 .field static int32[] $000002
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 11
     newarr int32[]
     stsfld int32[][] $000001
@@ -2542,7 +2542,7 @@ System.Console.WriteLine(b)
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2568,7 +2568,7 @@ System.Console.WriteLine(s)
             Epc +=
 @".field static class [UnitTest]UnitTest.Class0 c0
 .field static string s
-.method static public void .cctor() {
+.method public static void .cctor() {
     newobj instance void [UnitTest]UnitTest.Class0::.ctor()
     stsfld class [UnitTest]UnitTest.Class0 c0
     ldsfld class [UnitTest]UnitTest.Class0 c0
@@ -2578,7 +2578,7 @@ System.Console.WriteLine(s)
     call void [mscorlib]System.Console::WriteLine(string)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2659,7 +2659,7 @@ end
         call instance void [UnitTest]UnitTest.Class0::.ctor()
         ret
     }
-    .method static public void Main() {
+    .method public static void Main() {
         .entrypoint
         .locals (
             class [AccessModifiersFxt]A a
@@ -2692,7 +2692,7 @@ namespace UnitTest.Semantics.Precedings
             ";
             Epc +=
 @".field static int32 a
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 1
     ldc.i4 2
     add
@@ -2705,7 +2705,7 @@ namespace UnitTest.Semantics.Precedings
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2724,7 +2724,7 @@ namespace UnitTest.Semantics.Precedings
             ";
             Epc +=
 @".field static int32 a
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldc.i4 1
     ldc.i4 2
     add
@@ -2741,7 +2741,7 @@ namespace UnitTest.Semantics.Precedings
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2761,12 +2761,12 @@ namespace UnitTest.Semantics.Tutorial
             Inp = @"`p(""Hello, world!"")
 ";
             Epc +=
-@".method static public void .cctor() {
+@".method public static void .cctor() {
     ldstr ""Hello, world!""
     call void [mscorlib]System.Console::WriteLine(string)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
@@ -2787,7 +2787,7 @@ namespace UnitTest.Semantics.Tutorial
             Epc +=
 @".field static string 'sub'
 .field static int32 len
-.method static public void .cctor() {
+.method public static void .cctor() {
     ldstr ""abcde""
     ldc.i4 1
     ldc.i4 3
@@ -2802,7 +2802,7 @@ namespace UnitTest.Semantics.Tutorial
     call void [mscorlib]System.Console::WriteLine(int32)
     ret
 }
-.method static public void '0'() {
+.method public static void '0'() {
     .entrypoint
     ret
 }
