@@ -1106,6 +1106,7 @@ class MyD -> MulticastDelegate
 C() -> c
 MyD(c, C.M) -> d
 d.Invoke()
+d()
 ";
             EpcSyn = @"";
 
@@ -1136,6 +1137,8 @@ d.Invoke()
     ldftn instance void [NanaFxt]C::M()
     newobj instance void [NanaFxt]MyD::.ctor(object, native int)
     stsfld class [NanaFxt]MyD d
+    ldsfld class [NanaFxt]MyD d
+    callvirt instance void [NanaFxt]MyD::Invoke()
     ldsfld class [NanaFxt]MyD d
     callvirt instance void [NanaFxt]MyD::Invoke()
     ret

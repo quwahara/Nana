@@ -559,15 +559,21 @@ namespace Nana.Semantics
             bool dottedMethodCall = firstty == typeof(Member);
             bool notDottedMethodCall = firstty == typeof(Ovld);
             bool constructorCall = firstty == typeof(Typ);
+            bool delegateCall = false;
+            if (first is Sema)
+            {
+                Typ typget = (first as Sema).Att.TypGet;
+                if (null != typget) { delegateCall = typget.IsDelegate; }
+            }
 
-            if (false == (dottedMethodCall | notDottedMethodCall | constructorCall))
+            if (false == (dottedMethodCall | notDottedMethodCall | constructorCall | delegateCall))
             { throw new SemanticError("Cannot call it. It is not a function constructor", t); }
 
             Ovld ovl = null;
             Sema instance = null;
             Typ calleetyp = null;
             bool isNewObj = false;
-            bool isDelegate = false;
+            bool delegateConstructorCall = false;
 
             if (dottedMethodCall)
             {
@@ -591,8 +597,16 @@ namespace Nana.Semantics
             {
                 calleetyp = first as Typ;
                 isNewObj = true;
-                isDelegate = calleetyp.IsDelegate;
+                delegateConstructorCall = calleetyp.IsDelegate;
                 ovl = calleetyp.FindOvld(Nana.IMRs.IMRGenerator.InstCons);
+                if (null == ovl)
+                { throw new SemanticError(string.Format("No constructor for the type:{0}", calleetyp.Name), t); }
+            }
+            else if (delegateCall)
+            {
+                instance = first as Sema;
+                calleetyp = instance.Att.TypGet;
+                ovl = calleetyp.FindOvld("Invoke");
                 if (null == ovl)
                 { throw new SemanticError(string.Format("No constructor for the type:{0}", calleetyp.Name), t); }
             }
@@ -602,7 +616,7 @@ namespace Nana.Semantics
             if (obj != EmptyS)
             {
                 Chain argschain = obj is Chain ? obj as Chain : new Chain(obj);
-                if (false == isDelegate)
+                if (false == delegateConstructorCall)
                 {
                     foreach (object a in argschain)
                     {
@@ -646,9 +660,6 @@ namespace Nana.Semantics
                     LoadFun ldfun = new LoadFun(funmbr.Ty, targetfun);
                     argvals.Add(ldfun);
                     argtyps.Add(ldfun.Att.TypGet);
-
-                    //  load constructor overload in MulticastDelegate class 
-                    ovl = calleetyp.FindOvld(".ctor");
                 }
             }
 
