@@ -552,12 +552,18 @@ namespace Nana.Semantics
             Type firstty;
 
             first = Gate(t.First);
-            if (first == null)
-            { throw new SyntaxError("It is not a function or constructor", t.First); }
-            firstty = first.GetType();
+            if (null == first)
+            { throw new InternalError("Could not analyze the token for callee function", t.First); }
 
-            if (firstty != typeof(Member) && firstty != typeof(Ovld) && firstty != typeof(Typ))
-            { throw new SyntaxError("It is not a function or constructor", t.First); }
+            firstty = first.GetType();
+            {
+                bool canCall = false;
+                canCall |= firstty == typeof(Member);
+                canCall |= firstty == typeof(Ovld);
+                canCall |= firstty == typeof(Typ);
+                if (false == canCall)
+                { throw new SemanticError("Cannot call it. It is not a function constructor", t); }
+            }
 
             Ovld ovl = null;
             Member mbr = null;
