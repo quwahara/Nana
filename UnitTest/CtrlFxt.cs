@@ -1151,29 +1151,44 @@ d()
             Test();
         }
 
-        //[Test]
-        public void ZZZ()
+        [Test]
+        public void TC0505_SweepStackOnLeaving()
         {
             Inp =
 @"
 class C
 ...
-    fun M()
-    ..
-        `p(""Hi"")
-    ,,
+    fun F() ..  object() ,,
 ,,,
+";
+            EpcSyn = @"";
 
-class MyD -> MulticastDelegate
-...
-    cons (obj:object, mtd:IntPtr) .. ,,
-    fun Invoke() .. ,,
-,,,
-
-C() -> c
-MyD(c, C.M) -> d
-d.Invoke()
-d()
+            EpcIL = 
+@".class public C {
+    .method public virtual void F() {
+        newobj instance void object::.ctor()
+        pop
+        ret
+    }
+    .method public void .ctor() {
+        ldarg.0
+        call instance void object::.ctor()
+        ret
+    }
+}
+.method public static void '0'() {
+    .entrypoint
+    ret
+}
+";
+            Test();
+        }
+        //[Test]
+        public void ZZZ()
+        {
+            Inp =
+@"
+`() .. ,,
 ";
             EpcSyn = @"
 x

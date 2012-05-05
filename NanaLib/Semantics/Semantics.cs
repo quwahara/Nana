@@ -563,6 +563,7 @@ namespace Nana.Semantics
         }
 
         public bool IsConstructor { get { return Nana.IMRs.IMRGenerator.IsAnyCons(Name); } }
+        public bool IsInstanceConstructor { get { return IsInstance && IsConstructor; } }
         public bool IsEntryPoint { get { return Name == EntryPointNameDefault || Name == EntryPointNameImplicit; } }
         public bool IsInherited = false;
         public bool IsStatic { get { return (MthdAttrs & MethodAttributes.Static) == MethodAttributes.Static; } }
@@ -785,6 +786,11 @@ namespace Nana.Semantics
             Ovlds.Add(ovl);
             BeAMember(ovl);
             return ovl;
+        }
+
+        public Fun NewOvldAndFun(string name, List<Variable> params_, Typ returnTyp)
+        {
+            return NewOvld(name).NewFun(name, params_, returnTyp);
         }
 
         public Type RefType = null;
@@ -1395,7 +1401,12 @@ namespace Nana.Semantics
             Args = args;
             IsNewObj = isNewObj;
             Att.CanExec_ = true;
-            Att.TypGet = callee.Att.TypGet;
+
+            if ((isNewObj && callee.IsInstanceConstructor)
+                || false == callee.IsConstructor)
+            {
+                Att.TypGet = callee.Att.TypGet;
+            }
         }
 
         public void LoadInstance(IMRGenerator gen)
@@ -1445,8 +1456,7 @@ namespace Nana.Semantics
         public override void Exec(IMRGenerator gen)
         {
             Give(gen);
-            if (false == Att.CanGet || Callee.IsConstructor)
-            { return; }
+            if (false == Att.CanGet) { return; }
             gen.Pop();
         }
 
@@ -1545,7 +1555,7 @@ namespace Nana.Semantics
 
         public override void Exec(IMRGenerator gen)
         {
-            S.Exec(gen);
+            S.Give(gen);
             gen.Throw();
         }
     }
