@@ -227,8 +227,8 @@ namespace Nana.Semantics
                 Token classtkn = CreateClassToken(clsname, /*basename*/ null);
                 Token classblk = classtkn.Find("@Block");
 
-                Token contkn = GenFuncToken2("cons", /* name */ null, /* returnType */ null);
-                Token funtkn = GenFuncToken2("nfun", "'0impl'", "void");
+                Token contkn = CreateFncToken("cons", /* name */ null, /* returnType */ null);
+                Token funtkn = CreateFncToken("nfun", "'0impl'", "void");
                 classblk.FlwsAdd(contkn);
                 classblk.FlwsAdd(funtkn);
 
@@ -264,9 +264,9 @@ namespace Nana.Semantics
                 Token classtkn = CreateClassToken(dlgname, "System.MulticastDelegate");
                 Token classblk = classtkn.Find("@Block");
 
-                Token contkn = GenFuncToken2("cons", /* name */ null, /* returnType */ null);
+                Token contkn = CreateFncToken("cons", /* name */ null, /* returnType */ null);
                 contkn.Find("@PrmDef").FlwsAdd(CreateParamToken(new string[] { "obj:object", "mth:System.IntPtr" }));
-                Token funtkn = GenFuncToken2("nfun", "Invoke", "void");
+                Token funtkn = CreateFncToken("nfun", "Invoke", "void");
 
                 classblk.FlwsAdd(contkn);
                 classblk.FlwsAdd(funtkn);
@@ -342,7 +342,7 @@ namespace Nana.Semantics
             return root;
         }
 
-        static public Token GenFuncToken2(string func, string name, string returnType)
+        static public Token CreateFncToken(string func, string name, string returnType)
         {
             Debug.Assert(false == string.IsNullOrEmpty(func));
 
@@ -1552,36 +1552,11 @@ namespace Nana.Semantics
                     }))
                 { continue; }
 
-                Token t = GenFuncToken("cons", /* name */ null, /* returnType */ null);
+                Token t = CreateFncToken("cons", /* name */ null, /* returnType */ null);
                 FunAnalyzer aa = new FunAnalyzer(t, ta);
                 ta.Subs.AddLast(aa);
                 aa.AnalyzeFun();
             }
-        }
-
-        static public Token GenFuncToken(string func, string name, string returnType)
-        {
-            Debug.Assert(false == string.IsNullOrEmpty(func));
-
-            Token f;
-
-            f = new Token(func);
-
-            if (string.IsNullOrEmpty(name) == false)
-            { f.FlwsAdd(name); }
-
-            f.FlwsAdd("(", "PrmDef").FlwsAdd(")");
-
-            if (string.IsNullOrEmpty(returnType) == false)
-            {
-                f.FlwsAdd(":", "TypeSpec");
-                f.FlwsTail.FlwsAdd(returnType, "Id");
-            }
-
-            f.FlwsAdd("..", "Block");
-            f.FlwsTail.Follows = new Token[0];
-
-            return f;
         }
 
         public void EnsureBaseInstanceConstructorCallAll()
@@ -1676,7 +1651,7 @@ namespace Nana.Semantics
             App app = appaz.Ap;
             if (app.Exes.Count == 0) { return; }
 
-            Token t = GenFuncToken("scons", Fun.EntryPointNameImplicit, "void");
+            Token t = CreateFncToken("scons", Fun.EntryPointNameImplicit, "void");
             FunAnalyzer funaz = new FunAnalyzer(t, appaz);
             funaz.AnalyzeFun();
             Fun cctor = funaz.Fu;
@@ -1695,7 +1670,7 @@ namespace Nana.Semantics
             if (founds.Count == 1)
             { return; }
 
-            Token t = GenFuncToken("sfun", Fun.EntryPointNameImplicit, "void");
+            Token t = CreateFncToken("sfun", Fun.EntryPointNameImplicit, "void");
             (new FunAnalyzer(t, aa)).AnalyzeFun();
         }
 
