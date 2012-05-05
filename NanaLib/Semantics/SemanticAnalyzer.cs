@@ -203,10 +203,168 @@ namespace Nana.Semantics
                 case "_End_Cma_":   /**/ u = Cma(t); break;
                 case "Throw":       /**/ u = Throw(t); break;
                 case "Try":         /**/ u = Try(t); break;
+                case "Cls":         /**/ u = Closure(t); break;
                 default:
                     throw new SemanticError(string.Format("'{0}' cannot be in there", t.Value), t);
             }
             return u;
+        }
+
+        public static readonly string ClosurePrefix = "'0clsr";
+
+        public object Closure(Token t)
+        {
+            AppAnalyzer az = FindUpTypeOf<AppAnalyzer>();
+            string tmpnm = E.GetTempName();
+            Token prmdef = null;
+            if (")" != t.Follows[0].Value)
+            { prmdef = t.Follows[0]; }
+
+            Token typspc = t.Find("@TypeSpec");
+
+            string clsname = ClosurePrefix + tmpnm + "'";
+            {
+                Token classtkn = CreateClassToken(clsname, /*basename*/ null);
+                Token classblk = classtkn.Find("@Block");
+
+                Token contkn = GenFuncToken2("cons", /* name */ null, /* returnType */ null);
+                Token funtkn = GenFuncToken2("nfun", "'0impl'", "void");
+                classblk.FlwsAdd(contkn);
+                classblk.FlwsAdd(funtkn);
+
+                if (null != prmdef)
+                { funtkn.Find("@PrmDef").FlwsAdd(prmdef); }
+                if (null != typspc)
+                { funtkn.Find("@TypeSpec").Follows = typspc.Follows; }
+
+                funtkn.Find("@Block").Follows = t.Find("@Block").Follows;
+
+                TypAnalyzer taz = new TypAnalyzer(classtkn, FindUpTypeOf<AppAnalyzer>());
+
+                taz.ConstructSubs();
+                taz.AnalyzeTyp();
+
+                List<SemanticAnalyzer> blks = new List<SemanticAnalyzer>(2);
+                foreach (FunAnalyzer f in taz.CollectTypeOf<FunAnalyzer>())
+                {
+                    f.AnalyzeFun();
+                    blks.AddRange(f.Subs);
+                }
+                foreach (SemanticAnalyzer blk in blks)
+                {
+                    if (typeof(BlockAnalyzer) != blk.GetType()) { continue; }
+                    (blk as BlockAnalyzer).AnalyzeBlock();
+                }
+
+                az.Subs.AddLast(taz);
+            }
+
+            string dlgname = "'0dlgt" + tmpnm + "'";
+            {
+                Token classtkn = CreateClassToken(dlgname, "System.MulticastDelegate");
+                Token classblk = classtkn.Find("@Block");
+
+                Token contkn = GenFuncToken2("cons", /* name */ null, /* returnType */ null);
+                contkn.Find("@PrmDef").FlwsAdd(CreateParamToken(new string[] { "obj:object", "mth:System.IntPtr" }));
+                Token funtkn = GenFuncToken2("nfun", "Invoke", "void");
+
+                classblk.FlwsAdd(contkn);
+                classblk.FlwsAdd(funtkn);
+
+                if (null != prmdef)
+                { funtkn.Find("@PrmDef").FlwsAdd(prmdef); }
+                if (null != typspc)
+                { funtkn.Find("@TypeSpec").Follows = typspc.Follows; }
+
+                TypAnalyzer taz = new TypAnalyzer(classtkn, FindUpTypeOf<AppAnalyzer>());
+
+                taz.ConstructSubs();
+                taz.AnalyzeTyp();
+                taz.AnalyzeBaseTyp();
+                foreach (FunAnalyzer f in taz.CollectTypeOf<FunAnalyzer>())
+                { f.AnalyzeFun(); }
+
+                az.Subs.AddLast(taz);
+            }
+
+            Typ clstyp = AboveBlock.FindUp(clsname) as Typ;
+            Fun clscon = clstyp.FindOvld(".ctor").Funs[0];
+            Sema inst = new CallFun(clstyp, clscon, /*instance*/ null, new Sema[0], /*isNewObj*/ true);
+            Fun clsfun = clstyp.FindOvld("'0impl'").Funs[0];
+
+            Typ dlgtyp = AboveBlock.FindUp(dlgname) as Typ;
+            Fun dlgcon = dlgtyp.FindOvld(".ctor").Funs[0];
+
+            Sema[] args = new Sema[] { inst, new LoadFun(clstyp, clsfun) };
+
+            return new CallFun(dlgtyp, dlgcon, /*instance*/ null, args, /*isNewObj*/ true);
+        }
+
+        public static Token CreateParamToken(string[] nameAndTypes)
+        {
+            Token cur = null;
+            Token cma = null;
+            foreach (string nt in nameAndTypes)
+            {
+                if (null != cma)
+                {
+                    Token tmp = cma;
+                    cma = new Token(",", "_End_Cma_");
+                    cma.First = tmp;
+                }
+
+                string[] spl = nt.Split(new char[] { ':' });
+                cur = new Token(":", "Typ");
+                cur.First = new Token(spl[0], "Id");
+                cur.Second = new Token(spl[1], "Id");
+
+                if (cma == null)
+                { cma = cur; }
+                else
+                { cma.Second = cur; }
+            }
+
+            return cma;
+        }
+
+        public static Token CreateClassToken(string name, string basename)
+        {
+            Token  root  = new Token("class", "TypeDef");
+            root.FlwsAdd(name, "Name");
+            if (null != basename)
+            {
+                Token bs = new Token("->", "BaseTypeDef");
+                bs.FlwsAdd(basename, "Id");
+                root.FlwsAdd(bs);
+            }
+            root.FlwsAdd("...", "Block")
+                .FlwsAdd(",,,");
+            return root;
+        }
+
+        static public Token GenFuncToken2(string func, string name, string returnType)
+        {
+            Debug.Assert(false == string.IsNullOrEmpty(func));
+
+            Token f;
+
+            f = new Token(func, "Fnc");
+
+            if (string.IsNullOrEmpty(name) == false)
+            { f.FlwsAdd(name); }
+
+            f.FlwsAdd("(", "PrmDef").FlwsAdd(")");
+
+            if (string.IsNullOrEmpty(returnType) == false)
+            {
+                f.FlwsAdd(":", "TypeSpec");
+                f.FlwsTail.FlwsAdd(returnType, "Id");
+            }
+
+            f.FlwsAdd("..", "Block");
+            f.FlwsTail.Follows = new Token[0];
+
+            return f;
         }
 
         public object Cma(Token t)
@@ -922,11 +1080,20 @@ namespace Nana.Semantics
             Typ typinst = E.FindOrNewGenericTypInstance(tp, tprms.ToArray());
             return typinst;
         }
+
+        public override string ToString()
+        {
+            return (Seed.Find("@Name") ?? Token.Empty).Value + ":" + GetType().Name.Replace("Analyzer", "Az")
+                + (null != AboveBlock ? ">" + AboveBlock.ToString() : "")
+                ;
+        }
+
     }
 
     public class BlockAnalyzer : LineAnalyzer
     {
         public Stack<ReturnValue> RequiredReturnValue = new Stack<ReturnValue>();
+        public bool IsClosure = false;
 
         public BlockAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
@@ -937,6 +1104,10 @@ namespace Nana.Semantics
                 Subs.AddLast(new CustomAnalyzer(c, this));
                 c = c.Custom;
             }
+
+            TypAnalyzer tyz = FindUpTypeOf<TypAnalyzer>();
+            if (null != tyz && null != tyz.Seed)
+            { IsClosure = (tyz.Seed.Find("@Name") ?? Token.Empty).Value.StartsWith(ClosurePrefix); }
         }
 
         public override void ConstructSubs()
@@ -1463,7 +1634,10 @@ namespace Nana.Semantics
             foreach (SrcAnalyzer a in CollectTypeOf<SrcAnalyzer>())
             { a.AnalyzeBlock(); }
             foreach (BlockAnalyzer a in CollectTypeOf<BlockAnalyzer>())
-            { a.AnalyzeBlock(); }
+            {
+                if (a.IsClosure) { continue; }
+                a.AnalyzeBlock();
+            }
         }
 
         public void AnalyzeCustomAll()

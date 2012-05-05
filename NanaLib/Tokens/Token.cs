@@ -18,6 +18,7 @@ namespace Nana.Tokens
         public static string ZSourceValue  /**/ = "0Source";
         public static string ZEndValue     /**/ = "0End";
         public static Token ZEnd;
+        public static Token Empty           /**/ = new Token("", "");
 
         /// <summary>
         /// left binding power (a terminology of Tdop)

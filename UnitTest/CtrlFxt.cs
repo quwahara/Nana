@@ -1183,23 +1183,96 @@ class C
 ";
             Test();
         }
+        
+        [Test]
+        public void TC0505_LimitedSupportClosure()
+        {
+            Inp =
+@"
+gv  = ""global variable""
+`() ..  cv1 = gv    ,,
+
+fun Main()
+..
+    `() ..  cv2 = gv    ,,
+,,
+";
+            EpcSyn = @"";
+
+            EpcIL = 
+@".field static string gv
+.method public static void Main() {
+    .entrypoint
+    newobj instance void [NanaFxt]'0clsr$000002'::.ctor()
+    ldftn instance void [NanaFxt]'0clsr$000002'::'0impl'()
+    newobj instance void [NanaFxt]'0dlgt$000002'::.ctor(object, native int)
+    pop
+    ret
+}
+.class public '0clsr$000001' {
+    .method public void .ctor() {
+        ret
+    }
+    .method public void '0impl'() {
+        .locals (
+            string cv1
+        )
+        ldsfld string gv
+        stloc cv1
+        ret
+    }
+}
+.class public sealed '0dlgt$000001' extends [mscorlib]System.MulticastDelegate {
+    .method public hidebysig newslot void .ctor(object obj, native int mth) runtime {
+    }
+    .method public hidebysig newslot void Invoke() runtime {
+    }
+}
+.class public '0clsr$000002' {
+    .method public void .ctor() {
+        ret
+    }
+    .method public void '0impl'() {
+        .locals (
+            string cv2
+        )
+        ldsfld string gv
+        stloc cv2
+        ret
+    }
+}
+.class public sealed '0dlgt$000002' extends [mscorlib]System.MulticastDelegate {
+    .method public hidebysig newslot void .ctor(object obj, native int mth) runtime {
+    }
+    .method public hidebysig newslot void Invoke() runtime {
+    }
+}
+.method public static void .cctor() {
+    ldstr ""global variable""
+    stsfld string gv
+    newobj instance void [NanaFxt]'0clsr$000001'::.ctor()
+    ldftn instance void [NanaFxt]'0clsr$000001'::'0impl'()
+    newobj instance void [NanaFxt]'0dlgt$000001'::.ctor(object, native int)
+    pop
+    ret
+}
+";
+            Test();
+        }
+
         //[Test]
         public void ZZZ()
         {
             Inp =
 @"
-`() .. ,,
 ";
-            EpcSyn = @"
-x
-";
+            EpcSyn = @"";
 
-            EpcIL = @"
-x
+            EpcIL =
+@"
 ";
             Test();
         }
-
         public void Test()
         {
             Func<TestCase, string> f = delegate(TestCase c)
