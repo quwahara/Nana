@@ -280,7 +280,7 @@ namespace Nana.Semantics
                 ?? NewGenericTypInstance(typ, genericTypeParams);
         }
 
-        public Nsp NewNsp(string ns)
+        public override Nsp NewNsp(string ns)
         {
             EnsureMembers();
             Nsp nsp = new Nsp(ns, this);
@@ -1089,7 +1089,7 @@ namespace Nana.Semantics
             }
         }
 
-        public Nsp NewNsp(string name)
+        public virtual Nsp NewNsp(string name)
         {
             Nsp n = new Nsp(name, E);
             BeAMember(n);
