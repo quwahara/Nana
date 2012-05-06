@@ -35,17 +35,17 @@ namespace Nana.Semantics
             { s.ConstructSubs(); }
         }
 
-        public LinkedList<T> CollectTypeIs<T>() where T : class
-        {
-            LinkedList<T> ls = new LinkedList<T>();
-            foreach (SemanticAnalyzer sub in Subs)
-            {
-                if (sub is T) { ls.AddLast(sub as T); }
-                foreach (T it in sub.CollectTypeIs<T>())
-                { ls.AddLast(it); }
-            }
-            return ls;
-        }
+        //public LinkedList<T> CollectTypeIs<T>() where T : class
+        //{
+        //    LinkedList<T> ls = new LinkedList<T>();
+        //    foreach (SemanticAnalyzer sub in Subs)
+        //    {
+        //        if (sub is T) { ls.AddLast(sub as T); }
+        //        foreach (T it in sub.CollectTypeIs<T>())
+        //        { ls.AddLast(it); }
+        //    }
+        //    return ls;
+        //}
 
         public LinkedList<T> CollectTypeOf<T>() where T : SemanticAnalyzer
         {
@@ -64,10 +64,10 @@ namespace Nana.Semantics
             return Above == null ? null : Above is T ? Above as T : Above.FindUpTypeIs<T>();
         }
 
-        public T FindUpTypeOf<T>() where T : SemanticAnalyzer
-        {
-            return Above == null ? null : Above.GetType() == typeof(T) ? Above as T : Above.FindUpTypeOf<T>();
-        }
+        //public T FindUpTypeOf<T>() where T : SemanticAnalyzer
+        //{
+        //    return Above == null ? null : Above.GetType() == typeof(T) ? Above as T : Above.FindUpTypeOf<T>();
+        //}
 
         public void ErNameDuplication(Token dupname, Blk n)
         { throw new SemanticError(string.Format("The {0} is already defined in {1}", dupname.Value, n.Name), dupname); }
@@ -1176,10 +1176,9 @@ namespace Nana.Semantics
             //  generate instance variable
             if (Fu.IsInstance)
             {
-                TypAnalyzer typazr = FindUpTypeOf<TypAnalyzer>();
-                if (typazr == null)
+                if (Tyz == null)
                 { throw new SyntaxError("Cannot define instance constructor in this sapce", s); }
-                Fu.NewThis(typazr.Ty);
+                Fu.NewThis(Tyz.Ty);
             }
         }
 
@@ -1436,6 +1435,22 @@ namespace Nana.Semantics
             Bl = Fu = Ty = Ap = E.NewApp(Seed.Value);
         }
 
+        public void AnalyzeAppExes()
+        {
+            //  Ap.Exes holds semantics to be opecode in global.
+            if (Ap.Exes.Count == 0) { return; }
+
+            //  Thanks of IL spec, we cannot write opecode in global.
+            //  So we create the module class constructor and write opecode in it,
+            //  instead of writing opecode in global. 
+            Token t = CreateFncToken("scons", /* name */ null, /* returnType */ null);
+            FunAnalyzer fuz = NewFuz(t, Apz);
+            fuz.AnalyzeFun();
+            Fun cctor = fuz.Fu;
+            cctor.Exes.AddRange(Ap.Exes);
+            Ap.Exes.Clear();
+        }
+
         override public object FindUp(string name)
         {
             return Find(name) ?? (AboveBlock != null ? AboveBlock.FindUp(name) : null);
@@ -1503,7 +1518,7 @@ namespace Nana.Semantics
 
         public void Finale()
         {
-            EnsureAppExe();
+            EnsureApz();
             EnsureEntryPoint();
             EnsureDelegateClassAll();
             EnsureFunctionReturnAll();
@@ -1651,20 +1666,9 @@ namespace Nana.Semantics
             return null;
         }
 
-        public void EnsureAppExe()
+        public void EnsureApz()
         {
-            //  ap.Exes holds semantics to be opecode in global.
-            App ap = Apz.Ap;
-            if (ap.Exes.Count == 0) { return; }
-
-            //  Thanks of IL spec, we cannot write opecode in global.
-            //  So we create the module class constructor, because of to write opecode in global. 
-            Token t = CreateFncToken("scons", /* name */ null, /* returnType */ null);
-            FunAnalyzer funaz = Apz.NewFuz(t, Apz);
-            funaz.AnalyzeFun();
-            Fun cctor = funaz.Fu;
-            cctor.Exes.AddRange(ap.Exes);
-            ap.Exes.Clear();
+            Apz.AnalyzeAppExes();
         }
 
         public void EnsureEntryPoint()
