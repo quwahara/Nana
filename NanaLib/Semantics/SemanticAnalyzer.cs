@@ -1120,9 +1120,8 @@ namespace Nana.Semantics
                 c = c.Custom;
             }
 
-            TypAnalyzer tyz = FindUpTypeOf<TypAnalyzer>();
-            if (null != tyz && null != tyz.Seed)
-            { IsClosure = (tyz.Seed.Find("@Name") ?? Token.Empty).Value.StartsWith(ClosurePrefix); }
+            if (null != Tyz && null != Tyz.Seed)
+            { IsClosure = (Tyz.Seed.Find("@Name") ?? Token.Empty).Value.StartsWith(ClosurePrefix); }
         }
 
         public void CopyAboveAnalyzers(BlockAnalyzer above)
@@ -1573,13 +1572,13 @@ namespace Nana.Semantics
 
         public void AnalyzeTypAll()
         {
-            foreach (TypAnalyzer a in CollectTypeOf<TypAnalyzer>())
+            foreach (TypAnalyzer a in Apz.Tyzs)
             { a.AnalyzeTyp(); }
         }
 
         public void AnalyzeBaseTypAll()
         {
-            foreach (TypAnalyzer a in CollectTypeOf<TypAnalyzer>())
+            foreach (TypAnalyzer a in Apz.Tyzs)
             { a.AnalyzeBaseTyp(); }
         }
 
@@ -1591,7 +1590,7 @@ namespace Nana.Semantics
 
         public void EnsureTypAll()
         {
-            foreach (TypAnalyzer ta in CollectTypeOf<TypAnalyzer>())
+            foreach (TypAnalyzer ta in Apz.Tyzs)
             {
                 Typ y = ta.Ty;
                 if (y.Ovlds
@@ -1628,9 +1627,9 @@ namespace Nana.Semantics
         public void EnsureDelegateClassAll()
         {
             List<Typ> tys = new List<Typ>();
-            foreach (TypAnalyzer taz in CollectTypeOf<TypAnalyzer>())
+            foreach (TypAnalyzer tyz in Apz.Tyzs)
             {
-                Typ ty = taz.Ty;
+                Typ ty = tyz.Ty;
                 if (false == ty.IsDelegate) { continue; }
                 tys.Add(ty);
             }
