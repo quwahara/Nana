@@ -1542,7 +1542,7 @@ namespace Nana.Semantics
 
         public void AnalyzeAppAll()
         {
-            CollectTypeOf<AppAnalyzer>().First.Value.AnalyzeApp();
+            Apz.AnalyzeApp();
         }
 
         public void AnalyzeSrcAll()
@@ -1683,23 +1683,21 @@ namespace Nana.Semantics
 
         public void EnsureAppExe()
         {
-            AppAnalyzer appaz = CollectTypeOf<AppAnalyzer>().First.Value;
-            App app = appaz.Ap;
-            if (app.Exes.Count == 0) { return; }
+            App ap = Apz.Ap;
+            if (ap.Exes.Count == 0) { return; }
 
             Token t = CreateFncToken("scons", Fun.EntryPointNameImplicit, "void");
-            FunAnalyzer funaz = new FunAnalyzer(t, appaz);
+            FunAnalyzer funaz = new FunAnalyzer(t, Apz);
             funaz.AnalyzeFun();
             Fun cctor = funaz.Fu;
-            cctor.Exes.AddRange(app.Exes);
-            app.Exes.Clear();
+            cctor.Exes.AddRange(ap.Exes);
+            ap.Exes.Clear();
         }
 
         public void EnsureEntryPoint()
         {
-            AppAnalyzer aa = CollectTypeOf<AppAnalyzer>().First.Value;
-            App app = aa.Ap;
-            List<Nmd> funs = app.FindDownAll(delegate(Nmd n) { return n is Fun; });
+            App ap = Apz.Ap;
+            List<Nmd> funs = ap.FindDownAll(delegate(Nmd n) { return n is Fun; });
             List<Nmd> founds = funs.FindAll(delegate(Nmd f) { return  (f as Fun).IsEntryPoint; });
             if (founds.Count > 1)
             { throw new SyntaxError("Specify one entry point. There were two entry points or more."); }
@@ -1707,22 +1705,21 @@ namespace Nana.Semantics
             { return; }
 
             Token t = CreateFncToken("sfun", Fun.EntryPointNameImplicit, "void");
-            (new FunAnalyzer(t, aa)).AnalyzeFun();
+            (new FunAnalyzer(t, Apz)).AnalyzeFun();
         }
 
         public void EnsureFunctionReturnAll()
         {
-            AppAnalyzer aa = CollectTypeOf<AppAnalyzer>().First.Value;
-            App app = aa.Ap;
+            App ap = Apz.Ap;
 
             Predicate<Nmd> pred = delegate(Nmd n)
             { return n.GetType() == typeof(Fun); };
 
-            foreach (Fun a in app.FindDownAll(pred))
+            foreach (Fun f in ap.FindDownAll(pred))
             {
-                if (MethodImplAttributes.Runtime == (a.ImplAttrs & MethodImplAttributes.Runtime))
+                if (MethodImplAttributes.Runtime == (f.ImplAttrs & MethodImplAttributes.Runtime))
                 { continue; }
-                FunAnalyzer.EnusureReturn(a);
+                FunAnalyzer.EnusureReturn(f);
             }
         }
 
