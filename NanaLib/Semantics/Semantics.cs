@@ -152,23 +152,6 @@ namespace Nana.Semantics
             return Members.Find(GetNamePredicate<Nmd>(name));
         }
 
-        virtual public Nmd FindByNamePath(string namepath)
-        {
-            Debug.Assert(false == string.IsNullOrEmpty(namepath));
-            return FindByNamePath(new Queue<string>(namepath.Split(new char[] { '/' })));
-        }
-
-        virtual public Nmd FindByNamePath(Queue<string> namepath)
-        {
-            Debug.Assert(namepath != null && namepath.Count > 0);
-
-            Nmd n = Find(namepath.Dequeue());
-            if (namepath.Count == 0) { return n; }
-            Nsp nsp = n as Nsp;
-            if (nsp == null) { return null; }
-            return nsp.FindByNamePath(namepath);
-        }
-
         public override string ToString()
         {
             return Bty.New().Add("{").Nv("Name", Name).Add("}").Add(":").Add(GetType().Name).ToS();
