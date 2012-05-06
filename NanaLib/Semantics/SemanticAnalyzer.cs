@@ -18,13 +18,6 @@ namespace Nana.Semantics
 {
     public class SemanticAnalyzer
     {
-        public EnvAnalyzer Ez;
-        public AppAnalyzer Apz;
-        public SrcAnalyzer Srz;
-        public TypAnalyzer Tyz;
-        public FunAnalyzer Fuz;
-        public BlockAnalyzer Blz;
-
         //  structures
         public SemanticAnalyzer Above;
         public LinkedList<SemanticAnalyzer> Subs = new LinkedList<SemanticAnalyzer>();
@@ -222,6 +215,8 @@ namespace Nana.Semantics
         public object Closure(Token t)
         {
             AppAnalyzer apz = AboveBlock.Apz;
+            SrcAnalyzer srz = AboveBlock.Srz;
+
             string tmpnm = E.GetTempName();
             Token prmdef = null;
             if (")" != t.Follows[0].Value)
@@ -246,7 +241,7 @@ namespace Nana.Semantics
 
                 funtkn.Find("@Block").Follows = t.Find("@Block").Follows;
 
-                TypAnalyzer taz = new TypAnalyzer(classtkn, apz);
+                TypAnalyzer taz = srz.NewTyz(classtkn);
                 
                 taz.ConstructSubs();
                 taz.AnalyzeTyp();
@@ -283,7 +278,7 @@ namespace Nana.Semantics
                 if (null != typspc)
                 { funtkn.Find("@TypeSpec").Follows = typspc.Follows; }
 
-                TypAnalyzer taz = new TypAnalyzer(classtkn, apz);
+                TypAnalyzer taz = srz.NewTyz(classtkn);
 
                 taz.ConstructSubs();
                 taz.AnalyzeTyp();
@@ -1099,6 +1094,13 @@ namespace Nana.Semantics
 
     public class BlockAnalyzer : LineAnalyzer
     {
+        public EnvAnalyzer Ez;
+        public AppAnalyzer Apz;
+        public SrcAnalyzer Srz;
+        public TypAnalyzer Tyz;
+        public FunAnalyzer Fuz;
+        public BlockAnalyzer Blz;
+
         public static readonly BlockAnalyzer EmptyBlz = new BlockAnalyzer();
         public BlockAnalyzer() : base(null, null) { }
 
@@ -1393,7 +1395,7 @@ namespace Nana.Semantics
                 Token targ = t.Group != "Cstm" ? t : GetTargetWithCustom(t);
                 switch (targ.Group)
                 {
-                    case "TypeDef": a = new TypAnalyzer(targ, this); break;
+                    case "TypeDef": a = NewTyz(targ); break;
                     case "Fnc": a = new FunAnalyzer(targ, this); break;
                     case "Using":
                         if (UsingSeeds == null) { UsingSeeds = new LinkedList<Token>(); }
@@ -1405,6 +1407,13 @@ namespace Nana.Semantics
                 { Subs.AddLast(a); }
             }
             ConstructSubsAll();
+        }
+
+        public TypAnalyzer NewTyz(Token seed)
+        {
+            TypAnalyzer tyz = new TypAnalyzer(seed, this);
+            Apz.Tyzs.AddLast(tyz);
+            return tyz;
         }
 
         public void AnalyzeSrc()
@@ -1446,6 +1455,7 @@ namespace Nana.Semantics
     public class AppAnalyzer : TypAnalyzer
     {
         public LinkedList<SrcAnalyzer> Srzs = new LinkedList<SrcAnalyzer>();
+        public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
 
         public AppAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
