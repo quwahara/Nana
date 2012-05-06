@@ -1433,81 +1433,9 @@ namespace Nana.Semantics
             ConstructSubsAll();
         }
 
-        public void AnalyzeApp()
+        public void AnalyzeAppAll()
         {
-            Bl = Fu = Ty = Ap = E.NewApp(Seed.Value);
-        }
-
-        public void AnalyzeAppExes()
-        {
-            //  Ap.Exes holds semantics to be opecode in global.
-            if (Ap.Exes.Count == 0) { return; }
-
-            //  Thanks of IL spec, we cannot write opecode in global.
-            //  So we create the module class constructor and write opecode in it,
-            //  instead of writing opecode in global. 
-            Token t = CreateFncToken("scons", /* name */ null, /* returnType */ null);
-            FunAnalyzer fuz = NewFuz(t, Apz);
-            fuz.AnalyzeFun();
-            Fun cctor = fuz.Fu;
-            cctor.Exes.AddRange(Ap.Exes);
-            Ap.Exes.Clear();
-        }
-
-        override public object FindUp(string name)
-        {
-            return Find(name) ?? (AboveBlock != null ? AboveBlock.FindUp(name) : null);
-        }
-
-    }
-
-    public class EnvAnalyzer : AppAnalyzer
-    {
-        public EnvAnalyzer(Token seed)
-            : base(seed, /*above*/ BlockAnalyzer.EmptyBlz)
-        {
-            Ez = this;
-        }
-
-        public static Env Run(Token root)
-        {
-            EnvAnalyzer ea = new EnvAnalyzer(root);
-            ea.Prelude();
-            ea.Main();
-            ea.Finale();
-            return ea.E;
-        }
-
-        public void Prelude()
-        {
-            Bl = Fu = Ty = Ap = E = new Env();
-
-            foreach (Token opt in Seed.Find("@CompileOptions").Follows)
-            {
-                switch (opt.Group.ToLower())
-                {
-                    case "include":     /**/ E.TypeLdr.InAssembly.Includes.Add(opt.Value); break;
-                    case "reference":   /**/ E.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(opt.Value); break;
-                    case "out":         /**/ E.OutPath = opt.Value; break;
-                    case "verbose":     /**/ break;
-                    default:
-                        if (opt.Group.ToLower().StartsWith("xxx")) { break; }
-                        throw new InternalError("The compile option is not supported: " + opt.Group, opt);
-                }
-            }
-            ConstructSubs();
-        }
-
-        public override void ConstructSubs()
-        {
-            Apz = new AppAnalyzer(Seed.Find("@Syntax"), this);
-            Subs.AddLast(Apz);
-            ConstructSubsAll();
-        }
-
-        public void Main()
-        {
-            AnalyzeAppAll();
+            AnalyzeApp();
             AnalyzeSrcAll();
             AnalyzeTypAll();
             AnalyzeUsingAll();
@@ -1517,43 +1445,38 @@ namespace Nana.Semantics
             EnsureBaseInstanceConstructorCallAll();
             AnalyzeBlockAll();
             AnalyzeCustomAll();
-        }
-
-        public void Finale()
-        {
-            EnsureApz();
+            AnalyzeAppExes();
             EnsureEntryPoint();
             EnsureDelegateClassAll();
             EnsureFunctionReturnAll();
-            RemoveReferencingType(E);
         }
 
-        public void AnalyzeAppAll()
+        public void AnalyzeApp()
         {
-            Apz.AnalyzeApp();
+            Bl = Fu = Ty = Ap = E.NewApp(Seed.Value);
         }
 
         public void AnalyzeSrcAll()
         {
-            foreach (SrcAnalyzer a in Apz.Srzs)
+            foreach (SrcAnalyzer a in Srzs)
             { a.AnalyzeSrc(); }
-        }
-
-        public void AnalyzeUsingAll()
-        {
-            foreach (SrcAnalyzer a in Apz.Srzs)
-            { a.AnalyzeUsing(); }
         }
 
         public void AnalyzeTypAll()
         {
-            foreach (TypAnalyzer a in Apz.Tyzs)
+            foreach (TypAnalyzer a in Tyzs)
             { a.AnalyzeTyp(); }
+        }
+
+        public void AnalyzeUsingAll()
+        {
+            foreach (SrcAnalyzer a in Srzs)
+            { a.AnalyzeUsing(); }
         }
 
         public void AnalyzeBaseTypAll()
         {
-            foreach (TypAnalyzer a in Apz.Tyzs)
+            foreach (TypAnalyzer a in Tyzs)
             { a.AnalyzeBaseTyp(); }
         }
 
@@ -1565,7 +1488,7 @@ namespace Nana.Semantics
 
         public void EnsureTypAll()
         {
-            foreach (TypAnalyzer ta in Apz.Tyzs)
+            foreach (TypAnalyzer ta in Tyzs)
             {
                 Typ y = ta.Ty;
                 if (y.Ovlds
@@ -1599,10 +1522,55 @@ namespace Nana.Semantics
             }
         }
 
+        public void AnalyzeBlockAll()
+        {
+            foreach (SrcAnalyzer a in Srzs)
+            { a.AnalyzeBlock(); }
+            foreach (BlockAnalyzer a in CollectTypeOf<BlockAnalyzer>())
+            {
+                if (a.IsClosure) { continue; }
+                a.AnalyzeBlock();
+            }
+        }
+
+        public void AnalyzeCustomAll()
+        {
+            foreach (CustomAnalyzer a in CollectTypeOf<CustomAnalyzer>())
+            { a.AnalyzeCustom(); }
+        }
+
+        public void AnalyzeAppExes()
+        {
+            //  Ap.Exes holds semantics to be opecode in global.
+            if (Ap.Exes.Count == 0) { return; }
+
+            //  Thanks of IL spec, we cannot write opecode in global.
+            //  So we create the module class constructor and write opecode in it,
+            //  instead of writing opecode in global. 
+            Token t = CreateFncToken("scons", /* name */ null, /* returnType */ null);
+            FunAnalyzer fuz = NewFuz(t, Apz);
+            fuz.AnalyzeFun();
+            Fun cctor = fuz.Fu;
+            cctor.Exes.AddRange(Ap.Exes);
+            Ap.Exes.Clear();
+        }
+
+        public void EnsureEntryPoint()
+        {
+            List<Fun> founds = Ap.AllFuns.FindAll(delegate(Fun f) { return f.IsEntryPoint; });
+            if (founds.Count > 1)
+            { throw new SyntaxError("Specify one entry point. There were two entry points or more."); }
+            if (founds.Count == 1)
+            { return; }
+
+            Token t = CreateFncToken("sfun", Fun.EntryPointNameImplicit, "void");
+            NewFuz(t, Apz).AnalyzeFun();
+        }
+
         public void EnsureDelegateClassAll()
         {
             List<Typ> tys = new List<Typ>();
-            foreach (TypAnalyzer tyz in Apz.Tyzs)
+            foreach (TypAnalyzer tyz in Tyzs)
             {
                 Typ ty = tyz.Ty;
                 if (false == ty.IsDelegate) { continue; }
@@ -1628,21 +1596,74 @@ namespace Nana.Semantics
             }
         }
 
-        public void AnalyzeBlockAll()
+        public void EnsureFunctionReturnAll()
         {
-            foreach (SrcAnalyzer a in Apz.Srzs)
-            { a.AnalyzeBlock(); }
-            foreach (BlockAnalyzer a in CollectTypeOf<BlockAnalyzer>())
+            foreach (Fun f in Ap.AllFuns)
             {
-                if (a.IsClosure) { continue; }
-                a.AnalyzeBlock();
+                if (MethodImplAttributes.Runtime == (f.ImplAttrs & MethodImplAttributes.Runtime))
+                { continue; }
+                FunAnalyzer.EnusureReturn(f);
             }
         }
 
-        public void AnalyzeCustomAll()
+        override public object FindUp(string name)
         {
-            foreach (CustomAnalyzer a in CollectTypeOf<CustomAnalyzer>())
-            { a.AnalyzeCustom(); }
+            return Find(name) ?? (AboveBlock != null ? AboveBlock.FindUp(name) : null);
+        }
+
+    }
+
+    public class EnvAnalyzer : AppAnalyzer
+    {
+        public EnvAnalyzer(Token seed)
+            : base(seed, /*above*/ BlockAnalyzer.EmptyBlz)
+        {
+            Ez = this;
+        }
+
+        public static Env Run(Token root)
+        {
+            EnvAnalyzer ez = new EnvAnalyzer(root);
+            ez.AnalyzeEnv();
+            return ez.E;
+        }
+
+        public void AnalyzeEnv()
+        {
+            PrepareEnv();
+            AnalyzeCompileOptions();
+            ConstructSubs();
+            Apz.AnalyzeAppAll();
+            RemoveReferencingType(E);
+        }
+
+        public void PrepareEnv()
+        {
+            Bl = Fu = Ty = Ap = E = new Env();
+        }
+
+        public void AnalyzeCompileOptions()
+        {
+            foreach (Token opt in Seed.Find("@CompileOptions").Follows)
+            {
+                switch (opt.Group.ToLower())
+                {
+                    case "include":     /**/ E.TypeLdr.InAssembly.Includes.Add(opt.Value); break;
+                    case "reference":   /**/ E.TypeLdr.InAssembly.LoadFrameworkClassLibrarie(opt.Value); break;
+                    case "out":         /**/ E.OutPath = opt.Value; break;
+                    case "verbose":     /**/ break;
+                    default:
+                        if (opt.Group.ToLower().StartsWith("xxx")) { break; }
+                        throw new InternalError("The compile option is not supported: " + opt.Group, opt);
+                }
+            }
+        }
+
+        public override void ConstructSubs()
+        {
+            Apz = new AppAnalyzer(Seed.Find("@Syntax"), this);
+            Subs.AddLast(Apz);
+            ConstructSubsAll();
         }
 
         public override object Find(string name)
@@ -1667,33 +1688,6 @@ namespace Nana.Semantics
             { return E.FindOrNewRefType(type); }
 
             return null;
-        }
-
-        public void EnsureApz()
-        {
-            Apz.AnalyzeAppExes();
-        }
-
-        public void EnsureEntryPoint()
-        {
-            List<Fun> founds = Apz.Ap.AllFuns.FindAll(delegate(Fun f) { return f.IsEntryPoint; });
-            if (founds.Count > 1)
-            { throw new SyntaxError("Specify one entry point. There were two entry points or more."); }
-            if (founds.Count == 1)
-            { return; }
-
-            Token t = CreateFncToken("sfun", Fun.EntryPointNameImplicit, "void");
-            Apz.NewFuz(t, Apz).AnalyzeFun();
-        }
-
-        public void EnsureFunctionReturnAll()
-        {
-            foreach (Fun f in Apz.Ap.AllFuns)
-            {
-                if (MethodImplAttributes.Runtime == (f.ImplAttrs & MethodImplAttributes.Runtime))
-                { continue; }
-                FunAnalyzer.EnusureReturn(f);
-            }
         }
 
         public static void RemoveReferencingType(Env env)
