@@ -146,15 +146,6 @@ namespace Nana.Semantics
             return BeAMember(v);
         }
 
-        public List<Nmd> FindDownAll(Predicate<Nmd> pred)
-        {
-            List<Nmd> founds = new List<Nmd>();
-            founds.AddRange(Members.FindAll(pred));
-            Members.ForEach(delegate(Nmd n)
-            { if (n is Blk) { founds.AddRange((n as Blk).FindDownAll(pred)); } });
-            return founds;
-        }
-
         virtual public Nmd Find(string name)
         {
             return Members.Find(GetNamePredicate<Nmd>(name));
@@ -1060,6 +1051,9 @@ namespace Nana.Semantics
 
     public class App : Typ
     {
+        /// <summary>Holds all Funs under the this App</summary>
+        public List<Fun> AllFuns = new List<Fun>();
+
         public string ModuleName;
 
         public App(string name, Env env)

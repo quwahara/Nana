@@ -95,7 +95,7 @@ namespace Nana.IMRs
             Predicate<Nmd> pred = delegate(Nmd n)
             { return n.GetType() == typeof(Fun); };
 
-            foreach (Fun f in app.FindDownAll(pred))
+            foreach (Fun f in app.AllFuns)
             {
                 foreach (Sema x in f.Exes)
                 { x.Exec(this); }

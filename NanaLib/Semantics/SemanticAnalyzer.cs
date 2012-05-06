@@ -1180,6 +1180,9 @@ namespace Nana.Semantics
                 { throw new SyntaxError("Cannot define instance constructor in this sapce", s); }
                 Fu.NewThis(Tyz.Ty);
             }
+
+            //  record Fun to be convenience
+            Apz.Ap.AllFuns.Add(Fu);
         }
 
         public override Variable NewVar(string name, Typ typ)
@@ -1673,9 +1676,7 @@ namespace Nana.Semantics
 
         public void EnsureEntryPoint()
         {
-            App ap = Apz.Ap;
-            List<Nmd> funs = ap.FindDownAll(delegate(Nmd n) { return n is Fun; });
-            List<Nmd> founds = funs.FindAll(delegate(Nmd f) { return  (f as Fun).IsEntryPoint; });
+            List<Fun> founds = Apz.Ap.AllFuns.FindAll(delegate(Fun f) { return f.IsEntryPoint; });
             if (founds.Count > 1)
             { throw new SyntaxError("Specify one entry point. There were two entry points or more."); }
             if (founds.Count == 1)
@@ -1687,12 +1688,7 @@ namespace Nana.Semantics
 
         public void EnsureFunctionReturnAll()
         {
-            App ap = Apz.Ap;
-
-            Predicate<Nmd> pred = delegate(Nmd n)
-            { return n.GetType() == typeof(Fun); };
-
-            foreach (Fun f in ap.FindDownAll(pred))
+            foreach (Fun f in Apz.Ap.AllFuns)
             {
                 if (MethodImplAttributes.Runtime == (f.ImplAttrs & MethodImplAttributes.Runtime))
                 { continue; }
