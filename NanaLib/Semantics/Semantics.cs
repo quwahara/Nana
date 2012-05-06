@@ -46,7 +46,6 @@ namespace Nana.Semantics
     public class Member
     {
         public Typ Ty;
-
         public Nmd Value;
         public Sema Instance;
 
@@ -99,10 +98,11 @@ namespace Nana.Semantics
 
     public class Nsp : Nmd
     {
+        public Env E;
+        public bool IsReferencing = false;
+
         public List<Nmd> Members_ = new List<Nmd>();
         public List<Action<Nsp>> EnsureMembersList = new List<Action<Nsp>>();
-        public bool IsReferencing = false;
-        public Env E;
         public LinkedList<Custom> Customs;
 
         public Nsp(string name, Env env)
@@ -176,7 +176,7 @@ namespace Nana.Semantics
         public List<Typ> GenericTypInstances = new List<Typ>();
 
         public Env()
-            : base("", null)
+            : base(/*name*/ "", /*env*/ null)
         {
             E = this;
             BTY = new BuiltInTyp(this);
@@ -1304,14 +1304,6 @@ namespace Nana.Semantics
         public Sema Prepare;
         public Sema GiveVal;
         public Sema TakeVar;
-
-        public Assign(Sema give, Sema take)
-        {
-            GiveVal = give;
-            TakeVar = take;
-            Att.TypGet = take.Att.TypGet;
-            Att.TypSet = take.Att.TypSet;
-        }
 
         public Assign(Sema give, Sema take, Sema prepare)
         {
