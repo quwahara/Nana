@@ -1442,6 +1442,8 @@ namespace Nana.Semantics
 
     public class EnvAnalyzer : AppAnalyzer
     {
+        public AppAnalyzer Apz;
+
         public EnvAnalyzer(Token seed)
             : base(seed, null)
         { }
@@ -1477,7 +1479,8 @@ namespace Nana.Semantics
 
         public override void ConstructSubs()
         {
-            Subs.AddLast(new AppAnalyzer(Seed.Find("@Syntax"), this));
+            Apz = new AppAnalyzer(Seed.Find("@Syntax"), this);
+            Subs.AddLast(Apz);
             ConstructSubsAll();
         }
 
