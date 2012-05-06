@@ -221,7 +221,7 @@ namespace Nana.Semantics
 
         public object Closure(Token t)
         {
-            AppAnalyzer az = FindUpTypeOf<AppAnalyzer>();
+            AppAnalyzer apz = AboveBlock.Apz;
             string tmpnm = E.GetTempName();
             Token prmdef = null;
             if (")" != t.Follows[0].Value)
@@ -246,8 +246,8 @@ namespace Nana.Semantics
 
                 funtkn.Find("@Block").Follows = t.Find("@Block").Follows;
 
-                TypAnalyzer taz = new TypAnalyzer(classtkn, FindUpTypeOf<AppAnalyzer>());
-
+                TypAnalyzer taz = new TypAnalyzer(classtkn, apz);
+                
                 taz.ConstructSubs();
                 taz.AnalyzeTyp();
 
@@ -263,7 +263,7 @@ namespace Nana.Semantics
                     (blk as BlockAnalyzer).AnalyzeBlock();
                 }
 
-                az.Subs.AddLast(taz);
+                apz.Subs.AddLast(taz);
             }
 
             string dlgname = "'0dlgt" + tmpnm + "'";
@@ -283,7 +283,7 @@ namespace Nana.Semantics
                 if (null != typspc)
                 { funtkn.Find("@TypeSpec").Follows = typspc.Follows; }
 
-                TypAnalyzer taz = new TypAnalyzer(classtkn, FindUpTypeOf<AppAnalyzer>());
+                TypAnalyzer taz = new TypAnalyzer(classtkn, apz);
 
                 taz.ConstructSubs();
                 taz.AnalyzeTyp();
@@ -291,7 +291,7 @@ namespace Nana.Semantics
                 foreach (FunAnalyzer f in taz.CollectTypeOf<FunAnalyzer>())
                 { f.AnalyzeFun(); }
 
-                az.Subs.AddLast(taz);
+                apz.Subs.AddLast(taz);
             }
 
             Typ clstyp = AboveBlock.FindUp(clsname) as Typ;
@@ -1445,6 +1445,8 @@ namespace Nana.Semantics
 
     public class AppAnalyzer : TypAnalyzer
     {
+        public LinkedList<SrcAnalyzer> Srzs = new LinkedList<SrcAnalyzer>();
+
         public AppAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
         {
@@ -1455,7 +1457,11 @@ namespace Nana.Semantics
         public override void ConstructSubs()
         {
             foreach (Token t in Seed.Select("@Source"))
-            { Subs.AddLast(new SrcAnalyzer(t, this)); }
+            {
+                SrcAnalyzer srz = new SrcAnalyzer(t, this);
+                Subs.AddLast(srz);
+                Srzs.AddLast(srz);
+            }
             ConstructSubsAll();
         }
 
@@ -1545,13 +1551,13 @@ namespace Nana.Semantics
 
         public void AnalyzeSrcAll()
         {
-            foreach (SrcAnalyzer a in CollectTypeOf<SrcAnalyzer>())
+            foreach (SrcAnalyzer a in Apz.Srzs)
             { a.AnalyzeSrc(); }
         }
 
         public void AnalyzeUsingAll()
         {
-            foreach (SrcAnalyzer a in CollectTypeOf<SrcAnalyzer>())
+            foreach (SrcAnalyzer a in Apz.Srzs)
             { a.AnalyzeUsing(); }
         }
 
@@ -1640,7 +1646,7 @@ namespace Nana.Semantics
 
         public void AnalyzeBlockAll()
         {
-            foreach (SrcAnalyzer a in CollectTypeOf<SrcAnalyzer>())
+            foreach (SrcAnalyzer a in Apz.Srzs)
             { a.AnalyzeBlock(); }
             foreach (BlockAnalyzer a in CollectTypeOf<BlockAnalyzer>())
             {
