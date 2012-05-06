@@ -95,8 +95,8 @@ namespace Nana.Semantics
             Continues = new Stack<Literal>();
             AboveBlock = above;
 
-            EnvAnalyzer eaz = FindUpTypeOf<EnvAnalyzer>();
-            if (null != eaz) { E = eaz.E; }
+            if (null != above && null != above.Ez)
+            { E = AboveBlock.Ez.E; }
         }
 
         public Token GetTargetWithCustom(Token t)
@@ -247,7 +247,7 @@ namespace Nana.Semantics
                 taz.AnalyzeTyp();
 
                 List<SemanticAnalyzer> blks = new List<SemanticAnalyzer>(2);
-                foreach (FunAnalyzer f in taz.CollectTypeOf<FunAnalyzer>())
+                foreach (FunAnalyzer f in taz.Fuzs)
                 {
                     f.AnalyzeFun();
                     blks.AddRange(f.Subs);
@@ -283,7 +283,7 @@ namespace Nana.Semantics
                 taz.ConstructSubs();
                 taz.AnalyzeTyp();
                 taz.AnalyzeBaseTyp();
-                foreach (FunAnalyzer f in taz.CollectTypeOf<FunAnalyzer>())
+                foreach (FunAnalyzer f in taz.Fuzs)
                 { f.AnalyzeFun(); }
 
                 apz.Subs.AddLast(taz);
@@ -1143,7 +1143,7 @@ namespace Nana.Semantics
 
         public void AnalyzeBlock()
         {
-            Ns = FindUpTypeIs<FunAnalyzer>().Fu;
+            Ns = Fuz.Fu;
             foreach (SemanticAnalyzer a in Subs)
             {
                 if (a.GetType() != typeof(LineAnalyzer))
@@ -1171,7 +1171,7 @@ namespace Nana.Semantics
             : base(seed, above)
         {
             CopyAboveAnalyzers(above);
-            Fuz = this;
+            Blz = Fuz = this;
         }
 
         public override void ConstructSubs()
@@ -1187,7 +1187,7 @@ namespace Nana.Semantics
         public void AnalyzeFun()
         {
             Ap = Apz.Ap;
-            Ty = FindUpTypeIs<TypAnalyzer>().Ty;
+            Ty = Tyz.Ty;
 
             Token s = Seed;
             bool isInTypDecl = false == (Ty is App);
@@ -1208,7 +1208,7 @@ namespace Nana.Semantics
             Token ty;
             if (isCtor)
             {
-                returnType = FindUpTypeIs<TypAnalyzer>().Ty;
+                returnType = Tyz.Ty;
             }
             else if (null != (ty = s.Find("@TypeSpec")))
             {
@@ -1307,17 +1307,22 @@ namespace Nana.Semantics
 
     public class TypAnalyzer : FunAnalyzer
     {
+        public LinkedList<FunAnalyzer> Fuzs = new LinkedList<FunAnalyzer>();
+
         public TypAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
         {
             CopyAboveAnalyzers(above);
-            Tyz = this;
+            Blz = Fuz = Tyz = this;
         }
 
         public override void ConstructSubs()
         {
             foreach (Token t in Seed.Select("@Block/@Fnc"))
-            { Subs.AddLast(new FunAnalyzer(t, this)); }
+            {
+                FunAnalyzer fuz = NewFuz(t, this);
+                Subs.AddLast(fuz);
+            }
             ConstructSubsAll();
         }
 
@@ -1351,6 +1356,13 @@ namespace Nana.Semantics
             Ty.SetBaseTyp(bsty);
         }
 
+        public FunAnalyzer NewFuz(Token seed, BlockAnalyzer above)
+        {
+            FunAnalyzer fuz = new FunAnalyzer(seed, above);
+            Fuzs.AddLast(fuz);
+            return fuz;
+        }
+
         public override object Find(string name)
         {
             Nmd n = Ty.Find(name);
@@ -1381,7 +1393,7 @@ namespace Nana.Semantics
             : base(seed, above)
         {
             CopyAboveAnalyzers(above);
-            Srz = this;
+            Blz = Srz = this;
         }
 
         public override void ConstructSubs()
@@ -1395,7 +1407,7 @@ namespace Nana.Semantics
                 switch (targ.Group)
                 {
                     case "TypeDef": a = NewTyz(targ); break;
-                    case "Fnc": a = new FunAnalyzer(targ, this); break;
+                    case "Fnc": a = Apz.NewFuz(targ, this); break;
                     case "Using":
                         if (UsingSeeds == null) { UsingSeeds = new LinkedList<Token>(); }
                         UsingSeeds.AddLast(targ);
@@ -1460,7 +1472,7 @@ namespace Nana.Semantics
             : base(seed, above)
         {
             CopyAboveAnalyzers(above);
-            Apz = this;
+            Blz = Fuz = Tyz = Apz = this;
         }
 
         public override void ConstructSubs()
@@ -1602,7 +1614,7 @@ namespace Nana.Semantics
                 { continue; }
 
                 Token t = CreateFncToken("cons", /* name */ null, /* returnType */ null);
-                FunAnalyzer aa = new FunAnalyzer(t, ta);
+                FunAnalyzer aa = ta.NewFuz(t, ta);
                 ta.Subs.AddLast(aa);
                 aa.AnalyzeFun();
             }
@@ -1696,11 +1708,14 @@ namespace Nana.Semantics
 
         public void EnsureAppExe()
         {
+            //  ap.Exes holds semantics to be opecode in global.
             App ap = Apz.Ap;
             if (ap.Exes.Count == 0) { return; }
 
-            Token t = CreateFncToken("scons", Fun.EntryPointNameImplicit, "void");
-            FunAnalyzer funaz = new FunAnalyzer(t, Apz);
+            //  Thanks of IL spec, we cannot write opecode in global.
+            //  So we create the module class constructor, because of to write opecode in global. 
+            Token t = CreateFncToken("scons", /* name */ null, /* returnType */ null);
+            FunAnalyzer funaz = Apz.NewFuz(t, Apz);
             funaz.AnalyzeFun();
             Fun cctor = funaz.Fu;
             cctor.Exes.AddRange(ap.Exes);
@@ -1718,7 +1733,7 @@ namespace Nana.Semantics
             { return; }
 
             Token t = CreateFncToken("sfun", Fun.EntryPointNameImplicit, "void");
-            (new FunAnalyzer(t, Apz)).AnalyzeFun();
+            Apz.NewFuz(t, Apz).AnalyzeFun();
         }
 
         public void EnsureFunctionReturnAll()
