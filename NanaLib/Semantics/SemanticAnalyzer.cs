@@ -876,64 +876,7 @@ namespace Nana.Semantics
             return new Member(y, mbr, v);
         }
 
-        static public readonly Token Empty = new Token("(Empty)", "Empty");
-        static public readonly Token Comma = new Token(",", "Factor");
         static public readonly Sema EmptyS = new Sema();
-
-        /// <summary>
-        /// collect separated tokens in circumfixes by commas
-        /// </summary>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        static public Token[] Circumfixed(Token t)
-        {
-            Token[] fs;
-            List<Token> fs2;
-            List<Token> ls;
-            string prev;
-
-            fs = t != null && t.Follows != null
-                    ? t.Follows
-                    : new Token[0]
-                    ;
-
-            // separate ',,'(consecutive commas) into one token
-            fs2 = new List<Token>();
-            foreach (Token f in fs)
-            {
-                if (Regex.IsMatch(f.Value, @",,+") == false)
-                { fs2.Add(f); continue; }
-
-                foreach (char c in f.Value)
-                { fs2.Add(Comma); }
-            }
-
-            // for first token collection
-            prev = ",";
-            // for last token collection. a sentinel
-            fs2.Add(Comma);
-            ls = new List<Token>();
-            foreach (Token f in fs2)
-            {
-                if (f.Value == ",")
-                {
-                    // no token between commas
-                    if (prev == ",") { ls.Add(Empty); }
-                }
-                else if (prev == ",")
-                {
-                    // there is a token after comma
-                    ls.Add(f);
-                }
-                else
-                {
-                    throw new SyntaxError("bad separated form by comma", f);
-                }
-                prev = f.Value;
-            }
-
-            return ls.ToArray();
-        }
 
         public object Bracket(Token t)
         {
