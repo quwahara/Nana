@@ -69,7 +69,7 @@ namespace Nana.Semantics
             return Above == null ? null : Above.GetType() == typeof(T) ? Above as T : Above.FindUpTypeOf<T>();
         }
 
-        public void ErNameDuplication(Token dupname, Nsp n)
+        public void ErNameDuplication(Token dupname, Blk n)
         { throw new SemanticError(string.Format("The {0} is already defined in {1}", dupname.Value, n.Name), dupname); }
 
     }
@@ -84,7 +84,7 @@ namespace Nana.Semantics
         public App Ap;
         public Typ Ty;
         public Fun Fu;
-        public Nsp Ns;
+        public Blk Bl;
         public TmpVarGenerator TmpVarGen;
         public bool IsInFun;
 
@@ -137,7 +137,7 @@ namespace Nana.Semantics
             Ap = AboveBlock.Ap;
             Ty = FindUpTypeIs<TypAnalyzer>().Ty;
             Fu = FindUpTypeIs<FunAnalyzer>().Fu;
-            Ns = FindUpTypeIs<BlockAnalyzer>().Ns;
+            Bl = FindUpTypeIs<BlockAnalyzer>().Bl;
         }
 
         public void AnalyzeLine()
@@ -838,9 +838,9 @@ namespace Nana.Semantics
 
             object holder = Gate(t.First);
 
-            if (holder.GetType() == typeof(Nsp))
+            if (holder.GetType() == typeof(Blk))
             {
-                Nsp nsp = holder as Nsp;
+                Blk nsp = holder as Blk;
                 Token sec = t.Second;
                 if (sec.Group != "Id")
                 { throw new SyntaxError("Specify type, function or variable name", sec); }
@@ -1086,7 +1086,7 @@ namespace Nana.Semantics
 
         public void AnalyzeBlock()
         {
-            Ns = Fuz.Fu;
+            Bl = Fu = Fuz.Fu;
             foreach (SemanticAnalyzer a in Subs)
             {
                 if (a.GetType() != typeof(LineAnalyzer))
@@ -1097,8 +1097,8 @@ namespace Nana.Semantics
 
         virtual public object Find(string name)
         {
-            if (Ns == null) { return null; }
-            return Ns.Find(name);
+            if (Bl == null) { return null; }
+            return Bl.Find(name);
         }
 
         virtual public object FindUp(string name)
@@ -1165,7 +1165,7 @@ namespace Nana.Semantics
             if (ovld.Contains(signature.ToArray()))
             { throw new SemanticError("The function is already defined. Function name:" + nameasm, s); }
 
-            Ns = Fu = ovld.NewFun(nameasm, prmls, returnType);
+            Bl = Fu = ovld.NewFun(nameasm, prmls, returnType);
 
             MethodAttributes attrs = MethodAttributes.Public;
             bool isStatic = ftyp[0] == 's';
@@ -1240,7 +1240,7 @@ namespace Nana.Semantics
                 Ovld ovl = calleetyp.FindOvld(Nana.IMRs.IMRGenerator.InstCons);
                 Fun f = ovl.GetFunOf(calleetyp, new Typ[] { }, Ty);
                 if (f == null) { throw new SyntaxError("It is not a member", t.First); }
-                Nsp n = AboveBlock.Ns;
+                Blk n = AboveBlock.Bl;
                 if (n.Customs == null)
                 { n.Customs = new LinkedList<Custom>(); }
                 n.Customs.AddLast(new Custom(calleetyp, f, new Typ[] { }, new Custom.FieldOrProp[] { }));
@@ -1279,7 +1279,8 @@ namespace Nana.Semantics
             App ap = Apz.Ap;
             if (ap.HasMember(name.Value))
             { throw new SemanticError("The type is already defined. Type name:" + name.Value, name); }
-            base.Ns = base.Fu = base.Ty = ap.NewTyp(name.Value);
+            
+            Bl = Fu = Ty = ap.NewTyp(name.Value);
 
             foreach (Token t in Seed.Find("@Block").Follows)
             {
@@ -1330,7 +1331,7 @@ namespace Nana.Semantics
     public class SrcAnalyzer : BlockAnalyzer
     {
         public LinkedList<Token> UsingSeeds;
-        public LinkedList<Nsp> UsingNsp = new LinkedList<Nsp>();
+        public LinkedList<Blk> UsingNsp = new LinkedList<Blk>();
 
         public SrcAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
@@ -1372,6 +1373,7 @@ namespace Nana.Semantics
 
         public void AnalyzeSrc()
         {
+            Fu = Ty = Ap = Apz.Ap;
             UsingNsp.AddLast(Apz.E.FindOrNewNsp("System"));
         }
 
@@ -1381,9 +1383,9 @@ namespace Nana.Semantics
             foreach (Token s in UsingSeeds)
             {
                 object o = Gate(s.Follows[0]);
-                if (o.GetType() != typeof(Nsp))
+                if (o.GetType() != typeof(Blk))
                 { throw new SemanticError("Specify namespace", s); }
-                UsingNsp.AddLast(o as Nsp);
+                UsingNsp.AddLast(o as Blk);
             }
         }
 
@@ -1395,7 +1397,7 @@ namespace Nana.Semantics
             object o = AboveBlock.FindUp(name);
             if (o != null) { return o; }
 
-            foreach (Nsp n in UsingNsp)
+            foreach (Blk n in UsingNsp)
             {
                 o = AboveBlock.FindUp(n.Name + "." + name);
                 if (o != null) { return o; }
@@ -1431,7 +1433,7 @@ namespace Nana.Semantics
 
         public void AnalyzeApp()
         {
-            base.Fu = base.Ty = base.Ap = FindUpTypeOf<EnvAnalyzer>().E.NewApp(Seed.Value);
+            Bl = Fu = Ty = Ap = E.NewApp(Seed.Value);
         }
 
         override public object FindUp(string name)
@@ -1460,8 +1462,8 @@ namespace Nana.Semantics
 
         public void Prelude()
         {
-            E = new Env();
-            base.Ns = E;
+            Bl = Fu = Ty = Ap = E = new Env();
+
             foreach (Token opt in Seed.Find("@CompileOptions").Follows)
             {
                 switch (opt.Group.ToLower())

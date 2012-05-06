@@ -273,7 +273,7 @@ namespace Nana.Generations
             return b.ToString();
         }
 
-        public string GenerateCode(Nsp d)
+        public string GenerateCode(Blk d)
         {
             StringBuilder b = new StringBuilder();
             
@@ -284,9 +284,9 @@ namespace Nana.Generations
 
             d.Members
                 .FindAll(delegate(Nmd n)
-                { return n is Nsp; })
-                .ConvertAll<Nsp>(delegate(Nmd n)
-                { return n as Nsp; })
+                { return n is Blk; })
+                .ConvertAll<Blk>(delegate(Nmd n)
+                { return n as Blk; })
                 .ConvertAll<string>(GenerateCode)
                 .ConvertAll<StringBuilder>(b.Append);
             
@@ -327,37 +327,37 @@ namespace Nana.Generations
             return b.ToString();
         }
 
-        public string CallBegin(Nsp n)
+        public string CallBegin(Blk n)
         {
             StringBuilder b = new StringBuilder();
             Type t = n.GetType();
             if (t == typeof(Env)) { b.Append(BeginEnv(n as Env)); }
             if (t == typeof(App)) { b.Append(BeginApp(n as App)); }
-            if (t == typeof(Nsp)) { b.Append(BeginNsp(n)); }
+            if (t == typeof(Blk)) { b.Append(BeginNsp(n)); }
             if (t == typeof(Typ)) { b.Append(BeginTyp(n as Typ)); }
             if (t == typeof(Fun)) { b.Append(BeginActn(n as Fun)); }
             return b.ToString();
         }
 
-        public string CallEnd(Nsp n)
+        public string CallEnd(Blk n)
         {
             StringBuilder b = new StringBuilder();
             Type t = n.GetType();
             if (t == typeof(Env)) { b.Append(EndEnv(n as Env)); }
             if (t == typeof(App)) { b.Append(EndApp(n as App)); }
-            if (t == typeof(Nsp)) { b.Append(EndNsp(n)); }
+            if (t == typeof(Blk)) { b.Append(EndNsp(n)); }
             if (t == typeof(Typ)) { b.Append(EndTyp(n as Typ)); }
             if (t == typeof(Fun)) { b.Append(EndActn(n as Fun)); }
             return b.ToString();
         }
 
-        public string BeginNsp(Nsp d)
+        public string BeginNsp(Blk d)
         {
             if (d.IsReferencing) { return ""; }
             return "";
         }
 
-        public string EndNsp(Nsp d)
+        public string EndNsp(Blk d)
         {
             if (d.IsReferencing) { return ""; }
             return "";

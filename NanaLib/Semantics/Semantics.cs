@@ -96,16 +96,17 @@ namespace Nana.Semantics
         public override string ToString() { return Name + ":" + typeof(Nmd).Name; }
     }
 
-    public class Nsp : Nmd
+    public class Blk : Nmd
     {
         public Env E;
         public bool IsReferencing = false;
 
         public List<Nmd> Members_ = new List<Nmd>();
-        public List<Action<Nsp>> EnsureMembersList = new List<Action<Nsp>>();
+        public List<Action<Blk>> EnsureMembersList = new List<Action<Blk>>();
         public LinkedList<Custom> Customs;
+        public List<Variable> Vars = new List<Variable>();
 
-        public Nsp(string name, Env env)
+        public Blk(string name, Env env)
             : base(name)
         {
             E = env;
@@ -114,9 +115,9 @@ namespace Nana.Semantics
         public void EnsureMembers()
         {
             if (EnsureMembersList.Count == 0) { return; }
-            List<Action<Nsp>> tmp = EnsureMembersList;
-            EnsureMembersList = new List<Action<Nsp>>();
-            tmp.ForEach(delegate(Action<Nsp> a) { a(this); });
+            List<Action<Blk>> tmp = EnsureMembersList;
+            EnsureMembersList = new List<Action<Blk>>();
+            tmp.ForEach(delegate(Action<Blk> a) { a(this); });
         }
 
         public List<Nmd> Members
@@ -138,12 +139,19 @@ namespace Nana.Semantics
             return member;
         }
 
+        virtual public Variable NewVar(string name, Typ typ)
+        {
+            Variable v = new Variable(name, typ, Variable.VariableKind.Local);
+            Vars.Add(v);
+            return BeAMember(v);
+        }
+
         public List<Nmd> FindDownAll(Predicate<Nmd> pred)
         {
             List<Nmd> founds = new List<Nmd>();
             founds.AddRange(Members.FindAll(pred));
             Members.ForEach(delegate(Nmd n)
-            { if (n is Nsp) { founds.AddRange((n as Nsp).FindDownAll(pred)); } });
+            { if (n is Blk) { founds.AddRange((n as Blk).FindDownAll(pred)); } });
             return founds;
         }
 
@@ -159,6 +167,7 @@ namespace Nana.Semantics
 
         static public Predicate<T> GetNamePredicate<T>(string name) where T : Nmd
         { return delegate(T v) { return v.Name == name; }; }
+
     }
 
     public class Env : App
@@ -263,21 +272,21 @@ namespace Nana.Semantics
                 ?? NewGenericTypInstance(typ, genericTypeParams);
         }
 
-        public override Nsp NewNsp(string ns)
+        public override Blk NewNsp(string ns)
         {
             EnsureMembers();
-            Nsp nsp = new Nsp(ns, this);
+            Blk nsp = new Blk(ns, this);
             nsp.IsReferencing = true;
             return BeAMember(nsp);
         }
 
-        public Nsp FindNsp(string ns)
+        public Blk FindNsp(string ns)
         {
             EnsureMembers();
-            return Members_.Find(GetNamePredicate<Nmd>(ns)) as Nsp;
+            return Members_.Find(GetNamePredicate<Nmd>(ns)) as Blk;
         }
 
-        public Nsp FindOrNewNsp(string ns)
+        public Blk FindOrNewNsp(string ns)
         {
             return FindNsp(ns) ?? NewNsp(ns);
         }
@@ -395,7 +404,7 @@ namespace Nana.Semantics
         }
     }
 
-    public class Ovld : Nsp
+    public class Ovld : Blk
     {
         public List<Fun> Funs = new List<Fun>();
 
@@ -526,7 +535,7 @@ namespace Nana.Semantics
 
     }
 
-    public class Fun : Nsp
+    public class Fun : Blk
     {
         static public readonly string EntryPointNameDefault = "Main";
         static public readonly string EntryPointNameImplicit = "'0'";
@@ -535,7 +544,6 @@ namespace Nana.Semantics
         public MethodAttributes MthdAttrs;
         public MethodImplAttributes ImplAttrs = MethodImplAttributes.IL | MethodImplAttributes.Managed;
         public List<Variable> Params = new List<Variable>();
-        public List<Variable> Vars = new List<Variable>();
 
         public Typ[] Signature
         {
@@ -632,13 +640,6 @@ namespace Nana.Semantics
         {
             Variable v = new Variable(name, typ, Variable.VariableKind.Param);
             Params.Add(v);
-            return BeAMember(v);
-        }
-
-        virtual public Variable NewVar(string name, Typ typ)
-        {
-            Variable v = new Variable(name, typ, Variable.VariableKind.Local);
-            Vars.Add(v);
             return BeAMember(v);
         }
 
@@ -884,7 +885,7 @@ namespace Nana.Semantics
             return false;
         }
 
-        static public void EnsureMembers(Nsp self)
+        static public void EnsureMembers(Blk self)
         {
             if (false == self is Typ) { return; }
             EnsureMembers(self as Typ);
@@ -911,7 +912,7 @@ namespace Nana.Semantics
                 .ConvertAll<Ovld>(self.NewProp);
         }
 
-        static public void EnsureGenericMembersN(Nsp self)
+        static public void EnsureGenericMembersN(Blk self)
         {
             if (false == self is Typ) { return; }
             EnsureGenericMembers(self as Typ);
@@ -1072,9 +1073,9 @@ namespace Nana.Semantics
             }
         }
 
-        public virtual Nsp NewNsp(string name)
+        public virtual Blk NewNsp(string name)
         {
-            Nsp n = new Nsp(name, E);
+            Blk n = new Blk(name, E);
             BeAMember(n);
             return n;
         }
