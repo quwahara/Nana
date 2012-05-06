@@ -18,6 +18,13 @@ namespace Nana.Semantics
 {
     public class SemanticAnalyzer
     {
+        public EnvAnalyzer Ez;
+        public AppAnalyzer Apz;
+        public SrcAnalyzer Srz;
+        public TypAnalyzer Tyz;
+        public FunAnalyzer Fuz;
+        public BlockAnalyzer Blz;
+
         //  structures
         public SemanticAnalyzer Above;
         public LinkedList<SemanticAnalyzer> Subs = new LinkedList<SemanticAnalyzer>();
@@ -1092,12 +1099,18 @@ namespace Nana.Semantics
 
     public class BlockAnalyzer : LineAnalyzer
     {
+        public static readonly BlockAnalyzer EmptyBlz = new BlockAnalyzer();
+        public BlockAnalyzer() : base(null, null) { }
+
         public Stack<ReturnValue> RequiredReturnValue = new Stack<ReturnValue>();
         public bool IsClosure = false;
 
         public BlockAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
         {
+            CopyAboveAnalyzers(above);
+            Blz = this;
+
             Token c = Seed.Custom;
             while (c != null)
             {
@@ -1108,6 +1121,15 @@ namespace Nana.Semantics
             TypAnalyzer tyz = FindUpTypeOf<TypAnalyzer>();
             if (null != tyz && null != tyz.Seed)
             { IsClosure = (tyz.Seed.Find("@Name") ?? Token.Empty).Value.StartsWith(ClosurePrefix); }
+        }
+
+        public void CopyAboveAnalyzers(BlockAnalyzer above)
+        {
+            Fuz = above.Fuz;
+            Tyz = above.Tyz;
+            Srz = above.Srz;
+            Apz = above.Apz;
+            Ez = above.Ez;
         }
 
         public override void ConstructSubs()
@@ -1146,7 +1168,10 @@ namespace Nana.Semantics
     {
         public FunAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
-        { }
+        {
+            CopyAboveAnalyzers(above);
+            Fuz = this;
+        }
 
         public override void ConstructSubs()
         {
@@ -1283,7 +1308,10 @@ namespace Nana.Semantics
     {
         public TypAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
-        { }
+        {
+            CopyAboveAnalyzers(above);
+            Tyz = this;
+        }
 
         public override void ConstructSubs()
         {
@@ -1352,6 +1380,8 @@ namespace Nana.Semantics
         public SrcAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
         {
+            CopyAboveAnalyzers(above);
+            Srz = this;
         }
 
         public override void ConstructSubs()
@@ -1419,7 +1449,10 @@ namespace Nana.Semantics
     {
         public AppAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
-        { }
+        {
+            CopyAboveAnalyzers(above);
+            Apz = this;
+        }
 
         public override void ConstructSubs()
         {
@@ -1442,11 +1475,11 @@ namespace Nana.Semantics
 
     public class EnvAnalyzer : AppAnalyzer
     {
-        public AppAnalyzer Apz;
-
         public EnvAnalyzer(Token seed)
-            : base(seed, null)
-        { }
+            : base(seed, /*above*/ BlockAnalyzer.EmptyBlz)
+        {
+            Ez = this;
+        }
 
         public static Env Run(Token root)
         {
