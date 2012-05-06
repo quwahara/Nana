@@ -141,7 +141,7 @@ namespace Nana.Semantics
 
         public void FindUpNsps()
         {
-            Ap = FindUpTypeOf<AppAnalyzer>().Ap;
+            Ap = AboveBlock.Ap;
             Ty = FindUpTypeIs<TypAnalyzer>().Ty;
             Fu = FindUpTypeIs<FunAnalyzer>().Fu;
             Ns = FindUpTypeIs<BlockAnalyzer>().Ns;
@@ -1185,7 +1185,7 @@ namespace Nana.Semantics
 
         public void AnalyzeFun()
         {
-            Ap = FindUpTypeOf<AppAnalyzer>().Ap;
+            Ap = Apz.Ap;
             Ty = FindUpTypeIs<TypAnalyzer>().Ty;
 
             Token s = Seed;
@@ -1327,11 +1327,10 @@ namespace Nana.Semantics
             if (name == null || string.IsNullOrEmpty(name.Value))
             { throw new InternalError("Specify name to the type", s); }
 
-            AppAnalyzer appazr = FindUpTypeOf<AppAnalyzer>();
-            App app = appazr.Ap;
-            if (app.HasMember(name.Value))
+            App ap = Apz.Ap;
+            if (ap.HasMember(name.Value))
             { throw new SemanticError("The type is already defined. Type name:" + name.Value, name); }
-            base.Ns = base.Fu = base.Ty = app.NewTyp(name.Value);
+            base.Ns = base.Fu = base.Ty = ap.NewTyp(name.Value);
 
             foreach (Token t in Seed.Find("@Block").Follows)
             {
@@ -1410,8 +1409,7 @@ namespace Nana.Semantics
 
         public void AnalyzeSrc()
         {
-            Typ ty = FindUpTypeOf<AppAnalyzer>().Ty;
-            UsingNsp.AddLast(ty.E.FindOrNewNsp("System"));
+            UsingNsp.AddLast(Apz.E.FindOrNewNsp("System"));
         }
 
         public void AnalyzeUsing()
