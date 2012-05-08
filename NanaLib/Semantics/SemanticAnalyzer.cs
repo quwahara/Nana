@@ -1043,6 +1043,7 @@ namespace Nana.Semantics
         public TypAnalyzer Tyz;
         public FunAnalyzer Fuz;
         public BlockAnalyzer Blz;
+        public List<LineAnalyzer> Lizs;
 
         public static readonly BlockAnalyzer EmptyBlz = new BlockAnalyzer();
         public BlockAnalyzer() : base(null, null) { }
@@ -1082,19 +1083,27 @@ namespace Nana.Semantics
         {
             if (Seed.Follows == null) { return; }
             foreach (Token f in Seed.Follows)
-            { Subs.AddLast(new LineAnalyzer(f, this)); }
+            {
+                LineAnalyzer liz = NewLiz(f);
+                Subs.AddLast(liz);
+            }
             ConstructSubsAll();
+        }
+
+        public LineAnalyzer NewLiz(Token t)
+        {
+            LineAnalyzer liz = new LineAnalyzer(t, this);
+            if (null == Lizs) { Lizs = new List<LineAnalyzer>(); }
+            Lizs.Add(liz);
+            return liz;
         }
 
         public void AnalyzeBlock()
         {
             Bl = Fu = Fuz.Fu;
-            foreach (SemanticAnalyzer a in Subs)
-            {
-                if (a.GetType() != typeof(LineAnalyzer))
-                { continue; }
-                (a as LineAnalyzer).AnalyzeLine(); 
-            }
+            if (null == Lizs) { return; }
+            foreach (LineAnalyzer z in Lizs)
+            { z.AnalyzeLine(); }
         }
 
         virtual public object Find(string name)
@@ -1361,7 +1370,7 @@ namespace Nana.Semantics
                         if (UsingSeeds == null) { UsingSeeds = new LinkedList<Token>(); }
                         UsingSeeds.AddLast(targ);
                         break;
-                    default: a = new LineAnalyzer(targ, this); break;
+                    default: a = NewLiz(targ); break;
                 }
                 if (a != null)
                 { Subs.AddLast(a); }
