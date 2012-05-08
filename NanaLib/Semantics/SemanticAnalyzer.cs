@@ -1306,6 +1306,7 @@ namespace Nana.Semantics
         {
             FunAnalyzer fuz = new FunAnalyzer(seed, above);
             Fuzs.AddLast(fuz);
+            Apz.AllFuzs.Add(fuz);
             return fuz;
         }
 
@@ -1414,6 +1415,7 @@ namespace Nana.Semantics
     {
         public LinkedList<SrcAnalyzer> Srzs = new LinkedList<SrcAnalyzer>();
         public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
+        public List<FunAnalyzer> AllFuzs = new List<FunAnalyzer>();
 
         public AppAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
@@ -1482,7 +1484,7 @@ namespace Nana.Semantics
 
         public void AnalyzeFunAll()
         {
-            foreach (FunAnalyzer a in CollectTypeOf<FunAnalyzer>())
+            foreach (FunAnalyzer a in AllFuzs)
             { a.AnalyzeFun(); }
         }
 
@@ -1508,7 +1510,7 @@ namespace Nana.Semantics
 
         public void EnsureBaseInstanceConstructorCallAll()
         {
-            foreach (FunAnalyzer faz in CollectTypeOf<FunAnalyzer>())
+            foreach (FunAnalyzer faz in AllFuzs)
             {
                 Fun fun = faz.Fu;
                 if (false == Nana.IMRs.IMRGenerator.IsInstCons(fun.Name)) { continue; }
