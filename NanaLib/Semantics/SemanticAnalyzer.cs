@@ -1059,7 +1059,9 @@ namespace Nana.Semantics
             Token c = Seed.Custom;
             while (c != null)
             {
-                Subs.AddLast(new CustomAnalyzer(c, this));
+                CustomAnalyzer cuz = new CustomAnalyzer(c, this);
+                Subs.AddLast(cuz);
+                Apz.AllCuzs.AddLast(cuz);
                 c = c.Custom;
             }
 
@@ -1416,6 +1418,7 @@ namespace Nana.Semantics
         public LinkedList<SrcAnalyzer> Srzs = new LinkedList<SrcAnalyzer>();
         public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
         public List<FunAnalyzer> AllFuzs = new List<FunAnalyzer>();
+        public LinkedList<CustomAnalyzer> AllCuzs = new LinkedList<CustomAnalyzer>();
 
         public AppAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
@@ -1537,7 +1540,7 @@ namespace Nana.Semantics
 
         public void AnalyzeCustomAll()
         {
-            foreach (CustomAnalyzer a in CollectTypeOf<CustomAnalyzer>())
+            foreach (CustomAnalyzer a in AllCuzs)
             { a.AnalyzeCustom(); }
         }
 
