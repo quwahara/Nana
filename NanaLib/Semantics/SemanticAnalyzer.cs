@@ -35,39 +35,10 @@ namespace Nana.Semantics
             { s.ConstructSubs(); }
         }
 
-        //public LinkedList<T> CollectTypeIs<T>() where T : class
-        //{
-        //    LinkedList<T> ls = new LinkedList<T>();
-        //    foreach (SemanticAnalyzer sub in Subs)
-        //    {
-        //        if (sub is T) { ls.AddLast(sub as T); }
-        //        foreach (T it in sub.CollectTypeIs<T>())
-        //        { ls.AddLast(it); }
-        //    }
-        //    return ls;
-        //}
-
-        public LinkedList<T> CollectTypeOf<T>() where T : SemanticAnalyzer
-        {
-            LinkedList<T> ls = new LinkedList<T>();
-            foreach (SemanticAnalyzer sub in Subs)
-            {
-                if (sub.GetType() == typeof(T)) { ls.AddLast(sub as T); }
-                foreach (T it in sub.CollectTypeOf<T>())
-                { ls.AddLast(it); }
-            }
-            return ls;
-        }
-
         public T FindUpTypeIs<T>() where T : class
         {
             return Above == null ? null : Above is T ? Above as T : Above.FindUpTypeIs<T>();
         }
-
-        //public T FindUpTypeOf<T>() where T : SemanticAnalyzer
-        //{
-        //    return Above == null ? null : Above.GetType() == typeof(T) ? Above as T : Above.FindUpTypeOf<T>();
-        //}
 
         public void ErNameDuplication(Token dupname, Blk n)
         { throw new SemanticError(string.Format("The {0} is already defined in {1}", dupname.Value, n.Name), dupname); }
@@ -1121,6 +1092,8 @@ namespace Nana.Semantics
 
     public class FunAnalyzer : BlockAnalyzer
     {
+        public LinkedList<BlockAnalyzer> Blzs = new LinkedList<BlockAnalyzer>();
+
         public FunAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
         {
@@ -1132,8 +1105,16 @@ namespace Nana.Semantics
         {
             Token block = Seed.Find("@Block");
             if (block == null) { return; }
-            Subs.AddLast(new BlockAnalyzer(block, this));
+            BlockAnalyzer blz = NewBlz(block);
+            Subs.AddLast(blz);
             ConstructSubsAll();
+        }
+
+        public BlockAnalyzer NewBlz(Token t)
+        {
+            BlockAnalyzer blz = new BlockAnalyzer(t, this);
+            Blzs.AddLast(blz);
+            return blz;
         }
 
         public List<Variable> prmls = new List<Variable>();
@@ -1317,7 +1298,7 @@ namespace Nana.Semantics
         {
             FunAnalyzer fuz = new FunAnalyzer(seed, above);
             Fuzs.AddLast(fuz);
-            Apz.AllFuzs.Add(fuz);
+            Apz.AllFuzs.Add(fuz); 
             return fuz;
         }
 
@@ -1540,11 +1521,21 @@ namespace Nana.Semantics
         {
             foreach (SrcAnalyzer a in Srzs)
             { a.AnalyzeBlock(); }
-            foreach (BlockAnalyzer a in CollectTypeOf<BlockAnalyzer>())
+
+            //  AllFuzs may be added element while calling AnalyzeBlock method in foreach loop.
+            //  So copy AllFuzs to allfuzs temporary.
+            //  After foreach loop, add temporary to AllFuzs again.
+            List<FunAnalyzer> allfuzs = AllFuzs;
+            AllFuzs = new List<FunAnalyzer>();
+
+            foreach (FunAnalyzer fuz in allfuzs)
             {
-                if (a.IsClosure) { continue; }
-                a.AnalyzeBlock();
+                if (fuz.IsClosure) { continue; }
+                foreach (BlockAnalyzer blz in fuz.Blzs)
+                { blz.AnalyzeBlock(); }
             }
+
+            AllFuzs.AddRange(allfuzs);
         }
 
         public void AnalyzeCustomAll()
