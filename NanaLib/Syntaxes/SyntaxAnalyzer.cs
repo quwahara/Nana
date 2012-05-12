@@ -356,7 +356,7 @@ namespace Nana.Syntaxes
 
 
 
-            class.@0    Id.g@1 _( ->.?@2    Expr.s  _) 0bodydec.r   -- TypeDef  Name  BaseTypeDef
+            class.@0    Id.g@1 _( ->.?@2    Expr.s  _) 0bodydec.r   -- Typ  Name  BaseTypeDef
 
                 0iddotdec   _( Id.g _( ..* Id.g _) _)
 

@@ -145,7 +145,7 @@ namespace Nana.Semantics
                 case "Dot":         /**/ u = Dot(t); break;
                 case "If":          /**/ u = If(t); break;
                 case "While":       /**/ u = While(t); break;
-                case "Typ":         /**/ u = DefineVariable(t); break;
+                case "TypSpc":      /**/ u = DefineVariable(t); break;
                 case "Ret":         /**/ u = Ret(t); break;
                 case "Nop":         /**/ u = new DoNothing(); break;
                 case "_End_Cma_":   /**/ u = Cma(t); break;
@@ -262,7 +262,7 @@ namespace Nana.Semantics
                 }
 
                 string[] spl = nt.Split(new char[] { ':' });
-                cur = new Token(":", "Typ");
+                cur = new Token(":", "TypSpc");
                 cur.First = new Token(spl[0], "Id");
                 cur.Second = new Token(spl[1], "Id");
 
@@ -277,7 +277,7 @@ namespace Nana.Semantics
 
         public static Token CreateClassToken(string name, string basename)
         {
-            Token  root  = new Token("class", "TypeDef");
+            Token  root  = new Token("class", "Typ");
             root.FlwsAdd(name, "Name");
             if (null != basename)
             {
@@ -305,7 +305,7 @@ namespace Nana.Semantics
 
             if (string.IsNullOrEmpty(returnType) == false)
             {
-                f.FlwsAdd(":", "Typ");
+                f.FlwsAdd(":", "TypSpc");
                 f.FlwsTail.FlwsAdd(returnType, "Id");
             }
 
@@ -1312,7 +1312,7 @@ namespace Nana.Semantics
                 Token targ = t.Group != "Cstm" ? t : GetTargetWithCustom(t);
                 switch (targ.Group)
                 {
-                    case "TypeDef": NewTyz(targ); break;
+                    case "Typ": NewTyz(targ); break;
                     case "Fun": Apz.NewFuz(targ, this); break;
                     case "Using":
                         if (UsingSeeds == null) { UsingSeeds = new LinkedList<Token>(); }

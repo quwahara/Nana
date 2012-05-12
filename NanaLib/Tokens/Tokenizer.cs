@@ -316,7 +316,7 @@ namespace Nana.Tokens
 |(?<Bgn>(\.\.+|do|begin))
 |(?<End>(end))
 |(?<Fun>[snv]?fun)
-|(?<Typ>\:)
+|(?<TypSpc>\:)
 |(?<_End_Cma_>,+)
 |(?<Dot>\.)
 |(?<AsgnL>=)
