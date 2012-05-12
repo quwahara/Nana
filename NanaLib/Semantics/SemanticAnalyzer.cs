@@ -974,7 +974,8 @@ namespace Nana.Semantics
 
         public override string ToString()
         {
-            return (Seed.Find("@Name") ?? Token.Empty).Value + ":" + GetType().Name.Replace("Analyzer", "Az")
+            return ((Seed ?? Token.Empty).Find("@Name") ?? Token.Empty).Value
+                + ":" + GetType().Name.Replace("Analyzer", "Az")
                 + (null != AboveBlock ? ">" + AboveBlock.ToString() : "")
                 ;
         }
@@ -990,6 +991,8 @@ namespace Nana.Semantics
         public FunAnalyzer Fuz;
         public BlockAnalyzer Blz;
         public List<LineAnalyzer> Lizs;
+        
+        public LinkedList<FunAnalyzer> Fuzs = new LinkedList<FunAnalyzer>();
 
         public static readonly BlockAnalyzer EmptyBlz = new BlockAnalyzer();
         public BlockAnalyzer() : base(null, null) { }
@@ -1029,6 +1032,14 @@ namespace Nana.Semantics
             if (Seed.Follows == null) { return; }
             foreach (Token f in Seed.Follows)
             { LineAnalyzer liz = NewLiz(f); }
+        }
+
+        public FunAnalyzer NewFuz(Token seed)
+        {
+            FunAnalyzer fuz = new FunAnalyzer(seed, this);
+            Fuzs.AddLast(fuz);
+            Apz.AllFuzs.Add(fuz);
+            return fuz;
         }
 
         public LineAnalyzer NewLiz(Token t)
@@ -1214,7 +1225,7 @@ namespace Nana.Semantics
 
     public class TypAnalyzer : FunAnalyzer
     {
-        public LinkedList<FunAnalyzer> Fuzs = new LinkedList<FunAnalyzer>();
+        public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
 
         public TypAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
@@ -1226,7 +1237,7 @@ namespace Nana.Semantics
         public override void ConstructSub()
         {
             foreach (Token t in Seed.Select("@Block/@Fun"))
-            { FunAnalyzer fuz = NewFuz(t, this); }
+            { FunAnalyzer fuz = NewFuz(t); }
             foreach (FunAnalyzer z in Fuzs)
             { z.ConstructSub(); }
         }
@@ -1260,14 +1271,6 @@ namespace Nana.Semantics
                 ? RequireTyp(baseTypeDef.Follows[0])
                 : E.BTY.Object;
             Ty.SetBaseTyp(bsty);
-        }
-
-        public FunAnalyzer NewFuz(Token seed, BlockAnalyzer above)
-        {
-            FunAnalyzer fuz = new FunAnalyzer(seed, above);
-            Fuzs.AddLast(fuz);
-            Apz.AllFuzs.Add(fuz); 
-            return fuz;
         }
 
         public override object Find(string name)
@@ -1313,7 +1316,7 @@ namespace Nana.Semantics
                 switch (targ.Group)
                 {
                     case "Typ": NewTyz(targ); break;
-                    case "Fun": Apz.NewFuz(targ, this); break;
+                    case "Fun": NewFuz(targ); break;
                     case "Using":
                         if (UsingSeeds == null) { UsingSeeds = new LinkedList<Token>(); }
                         UsingSeeds.AddLast(targ);
@@ -1323,7 +1326,8 @@ namespace Nana.Semantics
             }
             foreach (TypAnalyzer z in Tyzs)
             { z.ConstructSub(); }
-            foreach (FunAnalyzer z in Apz.Fuzs)
+            foreach (FunAnalyzer z in Fuzs)
+                //foreach (FunAnalyzer z in Apz.Fuzs)
             { z.ConstructSub(); }
         }
 
@@ -1464,8 +1468,8 @@ namespace Nana.Semantics
                 { continue; }
 
                 Token t = CreateFunToken("cons", /* name */ null, /* returnType */ null);
-                FunAnalyzer aa = ta.NewFuz(t, ta);
-                aa.AnalyzeFun();
+                FunAnalyzer fuz = ta.NewFuz(t);
+                fuz.AnalyzeFun();
             }
         }
 
@@ -1521,7 +1525,7 @@ namespace Nana.Semantics
             //  So we create the module class constructor and write opecode in it,
             //  instead of writing opecode in global. 
             Token t = CreateFunToken("scons", /* name */ null, /* returnType */ null);
-            FunAnalyzer fuz = NewFuz(t, Apz);
+            FunAnalyzer fuz = NewFuz(t);
             fuz.AnalyzeFun();
             Fun cctor = fuz.Fu;
             cctor.Exes.AddRange(Ap.Exes);
@@ -1537,7 +1541,7 @@ namespace Nana.Semantics
             { return; }
 
             Token t = CreateFunToken("sfun", Fun.EntryPointNameImplicit, "void");
-            NewFuz(t, Apz).AnalyzeFun();
+            NewFuz(t).AnalyzeFun();
         }
 
         public void EnsureDelegateClassAll()
