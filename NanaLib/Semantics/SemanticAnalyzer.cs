@@ -163,7 +163,7 @@ namespace Nana.Semantics
         public object Closure(Token t)
         {
             AppAnalyzer apz = Above.Apz;
-            SrcAnalyzer srz = Above.Srz;
+            TypAnalyzer tyz = Above.Tyz;
 
             string tmpnm = E.GetTempName();
             Token prm = null;
@@ -189,21 +189,20 @@ namespace Nana.Semantics
 
                 funtkn.Find("@Block").Follows = t.Find("@Block").Follows;
 
-                TypAnalyzer taz = srz.NewTyz(classtkn);
+                TypAnalyzer taz = tyz.NewTyz(classtkn);
                 
                 taz.ConstructSub();
                 taz.AnalyzeTyp();
 
-                List<BlkAnalyzer> blks = new List<BlkAnalyzer>(2);
-                foreach (FunAnalyzer f in taz.Fuzs)
+                List<BlkAnalyzer> blzs = new List<BlkAnalyzer>(2);
+                foreach (FunAnalyzer fuz in taz.Fuzs)
                 {
-                    f.AnalyzeFun();
-                    blks.AddRange(f.Blzs);
+                    fuz.AnalyzeFun();
+                    blzs.AddRange(fuz.Blzs);
                 }
-                foreach (BlkAnalyzer blk in blks)
+                foreach (BlkAnalyzer blz in blzs)
                 {
-                    if (typeof(BlkAnalyzer) != blk.GetType()) { continue; }
-                    (blk as BlkAnalyzer).AnalyzeBlock();
+                    (blz as BlkAnalyzer).AnalyzeBlock();
                 }
 
             }
@@ -225,7 +224,7 @@ namespace Nana.Semantics
                 if (null != typspc)
                 { funtkn.Find("@TypSpc").Follows = typspc.Follows; }
 
-                TypAnalyzer taz = srz.NewTyz(classtkn);
+                TypAnalyzer taz = tyz.NewTyz(classtkn);
 
                 taz.ConstructSub();
                 taz.AnalyzeTyp();
