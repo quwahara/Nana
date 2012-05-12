@@ -363,16 +363,16 @@ namespace Nana.Syntaxes
                 0iddotdec2  _( Id.g _( ..? 0iddotdec2.r _) _)
 
 
-            scons.@0    0conscall.r 0attrdec.r  0bodydec.r      -- Fun PrmDef
+            scons.@0    0conscall.r 0attrdec.r  0bodydec.r      -- Fun Prm
 
                 0conscall   _(  base.?@0    _(  (.@1    Expr.s* _)  )   _)  -- ConsCall Expr
 
 
-            cons.@0     _(  (.@1    Expr.s? _)  )   0conscall.r 0attrdec.r  0bodydec.r      -- Fun  PrmDef
+            cons.@0     _(  (.@1    Expr.s? _)  )   0conscall.r 0attrdec.r  0bodydec.r      -- Fun  Prm
 
             Fun.g   Id.g 0funcdec.r
 
-                0funcdec    _(  (.@0    Expr.s? _)  ) 0typedec.r 0attrdec.r 0bodydec.r          -- PrmDef
+                0funcdec    _(  (.@0    Expr.s? _)  ) 0typedec.r 0attrdec.r 0bodydec.r          -- Prm
                 0typedec    _(  :.?@0   Expr.s  _)                                                  --  Typ
 
             `(  Expr.s? )   0typedec.r  0bodydec.r

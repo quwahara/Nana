@@ -87,7 +87,7 @@ namespace UnitTest.Syntaxes
         public void T108_FuncDecDef()
         {
             Inp = GetDef(@"0funcdec");
-            Epc = @"0funcdec:ValueClause:1:(\(:ValueClause:1:PrmDef:(Expr:Expr:?:())), \):Value:1, 0typedec:Refer:1, 0attrdec:Refer:1, 0bodydec:Refer:1)";
+            Epc = @"0funcdec:ValueClause:1:(\(:ValueClause:1:Prm:(Expr:Expr:?:())), \):Value:1, 0typedec:Refer:1, 0attrdec:Refer:1, 0bodydec:Refer:1)";
             Test();
         }
 

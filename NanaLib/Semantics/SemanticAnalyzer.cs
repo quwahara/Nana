@@ -166,9 +166,9 @@ namespace Nana.Semantics
             SrcAnalyzer srz = AboveBlock.Srz;
 
             string tmpnm = E.GetTempName();
-            Token prmdef = null;
+            Token prm = null;
             if (")" != t.Follows[0].Value)
-            { prmdef = t.Follows[0]; }
+            { prm = t.Follows[0]; }
 
             Token typspc = t.Find("@Typ");
 
@@ -182,8 +182,8 @@ namespace Nana.Semantics
                 classblk.FlwsAdd(contkn);
                 classblk.FlwsAdd(funtkn);
 
-                if (null != prmdef)
-                { funtkn.Find("@PrmDef").FlwsAdd(prmdef); }
+                if (null != prm)
+                { funtkn.Find("@Prm").FlwsAdd(prm); }
                 if (null != typspc)
                 { funtkn.Find("@Typ").Follows = typspc.Follows; }
 
@@ -214,14 +214,14 @@ namespace Nana.Semantics
                 Token classblk = classtkn.Find("@Block");
 
                 Token contkn = CreateFunToken("cons", /* name */ null, /* returnType */ null);
-                contkn.Find("@PrmDef").FlwsAdd(CreateParamToken(new string[] { "obj:object", "mth:System.IntPtr" }));
+                contkn.Find("@Prm").FlwsAdd(CreateParamToken(new string[] { "obj:object", "mth:System.IntPtr" }));
                 Token funtkn = CreateFunToken("nfun", "Invoke", "void");
 
                 classblk.FlwsAdd(contkn);
                 classblk.FlwsAdd(funtkn);
 
-                if (null != prmdef)
-                { funtkn.Find("@PrmDef").FlwsAdd(prmdef); }
+                if (null != prm)
+                { funtkn.Find("@Prm").FlwsAdd(prm); }
                 if (null != typspc)
                 { funtkn.Find("@Typ").Follows = typspc.Follows; }
 
@@ -301,7 +301,7 @@ namespace Nana.Semantics
             if (string.IsNullOrEmpty(name) == false)
             { f.FlwsAdd(name); }
 
-            f.FlwsAdd("(", "PrmDef").FlwsAdd(")");
+            f.FlwsAdd("(", "Prm").FlwsAdd(")");
 
             if (string.IsNullOrEmpty(returnType) == false)
             {
@@ -1105,7 +1105,7 @@ namespace Nana.Semantics
             bool isCtor = nameasm == Nana.IMRs.IMRGenerator.InstCons;
 
             List<Token> prms = new List<Token>();
-            Token prmpre = s.Find("@PrmDef");
+            Token prmpre = s.Find("@Prm");
             if (prmpre.Follows != null && prmpre.Follows.Length > 0)
             { Gate(prmpre.Follows[0]); }
 
