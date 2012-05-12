@@ -35,11 +35,6 @@ namespace Nana.Semantics
             { s.ConstructSubs(); }
         }
 
-        public T FindUpTypeIs<T>() where T : class
-        {
-            return Above == null ? null : Above is T ? Above as T : Above.FindUpTypeIs<T>();
-        }
-
         public void ErNameDuplication(Token dupname, Blk n)
         { throw new SemanticError(string.Format("The {0} is already defined in {1}", dupname.Value, n.Name), dupname); }
 
@@ -103,17 +98,18 @@ namespace Nana.Semantics
             return Fu.NewVar(name, typ);
         }
 
-        public void FindUpNsps()
+        public void PrepareAboveBlock()
         {
-            Ap = AboveBlock.Ap;
-            Ty = FindUpTypeIs<TypAnalyzer>().Ty;
-            Fu = FindUpTypeIs<FunAnalyzer>().Fu;
-            Bl = FindUpTypeIs<BlockAnalyzer>().Bl;
+            BlockAnalyzer ab = AboveBlock;
+            Ap = ab.Ap;
+            Ty = ab.Ty;
+            Fu = ab.Fu;
+            Bl = ab.Bl;
         }
 
         public void AnalyzeLine()
         {
-            FindUpNsps();
+            PrepareAboveBlock();
             
             IsInFun = Fu.Att.CanGet;
             TmpVarGen = new TmpVarGenerator(E.GetTempName, NewVar);
@@ -1071,6 +1067,7 @@ namespace Nana.Semantics
 
         public void AnalyzeBlock()
         {
+            Ty = Tyz.Ty;
             Bl = Fu = Fuz.Fu;
             if (null == Lizs) { return; }
             foreach (LineAnalyzer z in Lizs)
@@ -1224,7 +1221,7 @@ namespace Nana.Semantics
 
         public void AnalyzeCustom()
         {
-            FindUpNsps();
+            PrepareAboveBlock();
 
             Token t = Seed;
             object o = Gate(t);
