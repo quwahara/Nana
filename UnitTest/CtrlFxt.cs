@@ -1265,6 +1265,17 @@ fun Main()
         {
             Inp =
 @"
+class C
+...
+    F:int
+    sfun Main()
+    ..
+        `() ..  cf = F ,,
+        
+    ,,
+,,,
+
+
 ";
             EpcSyn = @"";
 

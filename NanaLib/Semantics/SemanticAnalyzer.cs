@@ -991,7 +991,8 @@ namespace Nana.Semantics
         public FunAnalyzer Fuz;
         public BlockAnalyzer Blz;
         public List<LineAnalyzer> Lizs;
-        
+
+        public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
         public LinkedList<FunAnalyzer> Fuzs = new LinkedList<FunAnalyzer>();
 
         public static readonly BlockAnalyzer EmptyBlz = new BlockAnalyzer();
@@ -1032,6 +1033,14 @@ namespace Nana.Semantics
             if (Seed.Follows == null) { return; }
             foreach (Token f in Seed.Follows)
             { LineAnalyzer liz = NewLiz(f); }
+        }
+
+        public TypAnalyzer NewTyz(Token seed)
+        {
+            TypAnalyzer tyz = new TypAnalyzer(seed, this);
+            Tyzs.AddLast(tyz);
+            Apz.AllTyzs.AddLast(tyz);
+            return tyz;
         }
 
         public FunAnalyzer NewFuz(Token seed)
@@ -1225,7 +1234,7 @@ namespace Nana.Semantics
 
     public class TypAnalyzer : FunAnalyzer
     {
-        public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
+        //public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
 
         public TypAnalyzer(Token seed, BlockAnalyzer above)
             : base(seed, above)
@@ -1297,7 +1306,6 @@ namespace Nana.Semantics
     public class SrcAnalyzer : BlockAnalyzer
     {
         public LinkedList<Token> UsingSeeds;
-        public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
         public LinkedList<Blk> UsingNsp = new LinkedList<Blk>();
 
         public SrcAnalyzer(Token seed, BlockAnalyzer above)
@@ -1327,16 +1335,7 @@ namespace Nana.Semantics
             foreach (TypAnalyzer z in Tyzs)
             { z.ConstructSub(); }
             foreach (FunAnalyzer z in Fuzs)
-                //foreach (FunAnalyzer z in Apz.Fuzs)
             { z.ConstructSub(); }
-        }
-
-        public TypAnalyzer NewTyz(Token seed)
-        {
-            TypAnalyzer tyz = new TypAnalyzer(seed, this);
-            Tyzs.AddLast(tyz);
-            Apz.AllTyzs.AddLast(tyz);
-            return tyz;
         }
 
         public void AnalyzeSrc()
