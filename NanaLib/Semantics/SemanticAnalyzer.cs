@@ -20,7 +20,6 @@ namespace Nana.Semantics
     {
         //  structures
         public SemanticAnalyzer Above;
-        public LinkedList<SemanticAnalyzer> Subs = new LinkedList<SemanticAnalyzer>();
 
         //  data
         public Token Seed;
@@ -207,19 +206,18 @@ namespace Nana.Semantics
                 taz.ConstructSubs();
                 taz.AnalyzeTyp();
 
-                List<SemanticAnalyzer> blks = new List<SemanticAnalyzer>(2);
+                List<BlockAnalyzer> blks = new List<BlockAnalyzer>(2);
                 foreach (FunAnalyzer f in taz.Fuzs)
                 {
                     f.AnalyzeFun();
-                    blks.AddRange(f.Subs);
+                    blks.AddRange(f.Blzs);
                 }
-                foreach (SemanticAnalyzer blk in blks)
+                foreach (BlockAnalyzer blk in blks)
                 {
                     if (typeof(BlockAnalyzer) != blk.GetType()) { continue; }
                     (blk as BlockAnalyzer).AnalyzeBlock();
                 }
 
-                apz.Subs.AddLast(taz);
             }
 
             string dlgname = "'0dlgt" + tmpnm + "'";
@@ -247,7 +245,6 @@ namespace Nana.Semantics
                 foreach (FunAnalyzer f in taz.Fuzs)
                 { f.AnalyzeFun(); }
 
-                apz.Subs.AddLast(taz);
             }
 
             Typ clstyp = AboveBlock.FindUp(clsname) as Typ;
@@ -1022,7 +1019,6 @@ namespace Nana.Semantics
             while (c != null)
             {
                 CustomAnalyzer cuz = new CustomAnalyzer(c, this);
-                Subs.AddLast(cuz);
                 Apz.AllCuzs.AddLast(cuz);
                 c = c.Custom;
             }
@@ -1044,10 +1040,7 @@ namespace Nana.Semantics
         {
             if (Seed.Follows == null) { return; }
             foreach (Token f in Seed.Follows)
-            {
-                LineAnalyzer liz = NewLiz(f);
-                Subs.AddLast(liz);
-            }
+            { LineAnalyzer liz = NewLiz(f); }
         }
 
         public LineAnalyzer NewLiz(Token t)
@@ -1097,7 +1090,6 @@ namespace Nana.Semantics
             if (block == null) { return; }
             BlockAnalyzer blz = NewBlz(block);
             blz.ConstructSubs();
-            Subs.AddLast(blz);
         }
 
         public BlockAnalyzer NewBlz(Token t)
@@ -1246,10 +1238,7 @@ namespace Nana.Semantics
         public override void ConstructSubs()
         {
             foreach (Token t in Seed.Select("@Block/@Fnc"))
-            {
-                FunAnalyzer fuz = NewFuz(t, this);
-                Subs.AddLast(fuz);
-            }
+            { FunAnalyzer fuz = NewFuz(t, this); }
             foreach (FunAnalyzer z in Fuzs)
             { z.ConstructSubs(); }
         }
@@ -1345,8 +1334,6 @@ namespace Nana.Semantics
                         break;
                     default: a = NewLiz(targ); break;
                 }
-                if (a != null)
-                { Subs.AddLast(a); }
             }
             foreach (TypAnalyzer z in Tyzs)
             { z.ConstructSubs(); }
@@ -1418,7 +1405,6 @@ namespace Nana.Semantics
             foreach (Token t in Seed.Select("@Source"))
             {
                 SrcAnalyzer srz = new SrcAnalyzer(t, this);
-                Subs.AddLast(srz);
                 Srzs.AddLast(srz);
             }
             foreach (SrcAnalyzer z in Srzs)
@@ -1493,7 +1479,6 @@ namespace Nana.Semantics
 
                 Token t = CreateFncToken("cons", /* name */ null, /* returnType */ null);
                 FunAnalyzer aa = ta.NewFuz(t, ta);
-                ta.Subs.AddLast(aa);
                 aa.AnalyzeFun();
             }
         }
