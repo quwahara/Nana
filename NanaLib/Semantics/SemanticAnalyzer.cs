@@ -22,7 +22,7 @@ namespace Nana.Semantics
         { throw new SemanticError(string.Format("The {0} is already defined in {1}", dupname.Value, n.Name), dupname); }
 
         public Token Seed;
-        public BlockAnalyzer AboveBlock;
+        public BlkAnalyzer Above;
         
         public Stack<Literal> Breaks;
         public Stack<Literal> Continues;
@@ -34,16 +34,16 @@ namespace Nana.Semantics
         public TmpVarGenerator TmpVarGen;
         public bool IsInFun;
 
-        public LineAnalyzer(Token seed, BlockAnalyzer above)
+        public LineAnalyzer(Token seed, BlkAnalyzer above)
         {
             Seed = seed;
-            AboveBlock = above;
+            Above = above;
 
             Breaks = new Stack<Literal>();
             Continues = new Stack<Literal>();
 
             if (null != above && null != above.Ez)
-            { E = AboveBlock.Ez.E; }
+            { E = Above.Ez.E; }
         }
 
         public Token GetTargetWithCustom(Token t)
@@ -81,7 +81,7 @@ namespace Nana.Semantics
 
         public void PrepareAboveBlock()
         {
-            BlockAnalyzer ab = AboveBlock;
+            BlkAnalyzer ab = Above;
             Ap = ab.Ap;
             Ty = ab.Ty;
             Fu = ab.Fu;
@@ -94,14 +94,14 @@ namespace Nana.Semantics
             
             IsInFun = Fu.Att.CanGet;
             TmpVarGen = new TmpVarGenerator(E.GetTempName, NewVar);
-            if (AboveBlock.RequiredReturnValue.Count == 0)
+            if (Above.RequiredReturnValue.Count == 0)
             {
                 Sema exe = RequireExec(Seed);
                 Fu.Exes.Add(exe);
             }
             else
             {
-                ReturnValue rv = AboveBlock.RequiredReturnValue.Pop();
+                ReturnValue rv = Above.RequiredReturnValue.Pop();
                 rv.GiveVal = Require<Sema>(Seed);
             }
 
@@ -162,8 +162,8 @@ namespace Nana.Semantics
 
         public object Closure(Token t)
         {
-            AppAnalyzer apz = AboveBlock.Apz;
-            SrcAnalyzer srz = AboveBlock.Srz;
+            AppAnalyzer apz = Above.Apz;
+            SrcAnalyzer srz = Above.Srz;
 
             string tmpnm = E.GetTempName();
             Token prm = null;
@@ -194,16 +194,16 @@ namespace Nana.Semantics
                 taz.ConstructSub();
                 taz.AnalyzeTyp();
 
-                List<BlockAnalyzer> blks = new List<BlockAnalyzer>(2);
+                List<BlkAnalyzer> blks = new List<BlkAnalyzer>(2);
                 foreach (FunAnalyzer f in taz.Fuzs)
                 {
                     f.AnalyzeFun();
                     blks.AddRange(f.Blzs);
                 }
-                foreach (BlockAnalyzer blk in blks)
+                foreach (BlkAnalyzer blk in blks)
                 {
-                    if (typeof(BlockAnalyzer) != blk.GetType()) { continue; }
-                    (blk as BlockAnalyzer).AnalyzeBlock();
+                    if (typeof(BlkAnalyzer) != blk.GetType()) { continue; }
+                    (blk as BlkAnalyzer).AnalyzeBlock();
                 }
 
             }
@@ -235,12 +235,12 @@ namespace Nana.Semantics
 
             }
 
-            Typ clstyp = AboveBlock.FindUp(clsname) as Typ;
+            Typ clstyp = Above.FindUp(clsname) as Typ;
             Fun clscon = clstyp.FindOvld(".ctor").Funs[0];
             Sema inst = new CallFun(clstyp, clscon, /*instance*/ null, new Sema[0], /*isNewObj*/ true);
             Fun clsfun = clstyp.FindOvld("'0impl'").Funs[0];
 
-            Typ dlgtyp = AboveBlock.FindUp(dlgname) as Typ;
+            Typ dlgtyp = Above.FindUp(dlgname) as Typ;
             Fun dlgcon = dlgtyp.FindOvld(".ctor").Funs[0];
 
             Sema[] args = new Sema[] { inst, new LoadFun(clstyp, clsfun) };
@@ -337,7 +337,7 @@ namespace Nana.Semantics
             if (IsInFun)
             {
                 ReturnValue rv = new ReturnValue();
-                AboveBlock.RequiredReturnValue.Push(rv);
+                Above.RequiredReturnValue.Push(rv);
                 return rv;
             }
             else
@@ -393,7 +393,7 @@ namespace Nana.Semantics
                 return new BranchInfo(Continues.Peek());
             }
 
-            return AboveBlock.FindUp(t.Value) as object ?? new Nmd(t.Value);
+            return Above.FindUp(t.Value) as object ?? new Nmd(t.Value);
         }
 
         public object Asgn(Token assign, Token give, Token take)
@@ -976,32 +976,32 @@ namespace Nana.Semantics
         {
             return ((Seed ?? Token.Empty).Find("@Name") ?? Token.Empty).Value
                 + ":" + GetType().Name.Replace("Analyzer", "Az")
-                + (null != AboveBlock ? ">" + AboveBlock.ToString() : "")
+                + (null != Above ? ">" + Above.ToString() : "")
                 ;
         }
 
     }
 
-    public class BlockAnalyzer : LineAnalyzer
+    public class BlkAnalyzer : LineAnalyzer
     {
         public EnvAnalyzer Ez;
         public AppAnalyzer Apz;
         public SrcAnalyzer Srz;
         public TypAnalyzer Tyz;
         public FunAnalyzer Fuz;
-        public BlockAnalyzer Blz;
+        public BlkAnalyzer Blz;
         public List<LineAnalyzer> Lizs;
 
         public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
         public LinkedList<FunAnalyzer> Fuzs = new LinkedList<FunAnalyzer>();
 
-        public static readonly BlockAnalyzer EmptyBlz = new BlockAnalyzer();
-        public BlockAnalyzer() : base(null, null) { }
+        public static readonly BlkAnalyzer EmptyBlz = new BlkAnalyzer();
+        public BlkAnalyzer() : base(null, null) { }
 
         public Stack<ReturnValue> RequiredReturnValue = new Stack<ReturnValue>();
         public bool IsClosure = false;
 
-        public BlockAnalyzer(Token seed, BlockAnalyzer above)
+        public BlkAnalyzer(Token seed, BlkAnalyzer above)
             : base(seed, above)
         {
             CopyAboveAnalyzers(above);
@@ -1019,7 +1019,7 @@ namespace Nana.Semantics
             { IsClosure = (Tyz.Seed.Find("@Name") ?? Token.Empty).Value.StartsWith(ClosurePrefix); }
         }
 
-        public void CopyAboveAnalyzers(BlockAnalyzer above)
+        public void CopyAboveAnalyzers(BlkAnalyzer above)
         {
             Fuz = above.Fuz;
             Tyz = above.Tyz;
@@ -1076,16 +1076,16 @@ namespace Nana.Semantics
 
         virtual public object FindUp(string name)
         {
-            return Find(name) ?? (AboveBlock != null ? AboveBlock.FindUp(name) : null);
+            return Find(name) ?? (Above != null ? Above.FindUp(name) : null);
         }
 
     }
 
-    public class FunAnalyzer : BlockAnalyzer
+    public class FunAnalyzer : BlkAnalyzer
     {
-        public LinkedList<BlockAnalyzer> Blzs = new LinkedList<BlockAnalyzer>();
+        public LinkedList<BlkAnalyzer> Blzs = new LinkedList<BlkAnalyzer>();
 
-        public FunAnalyzer(Token seed, BlockAnalyzer above)
+        public FunAnalyzer(Token seed, BlkAnalyzer above)
             : base(seed, above)
         {
             CopyAboveAnalyzers(above);
@@ -1096,13 +1096,13 @@ namespace Nana.Semantics
         {
             Token block = Seed.Find("@Block");
             if (block == null) { return; }
-            BlockAnalyzer blz = NewBlz(block);
+            BlkAnalyzer blz = NewBlz(block);
             blz.ConstructSub();
         }
 
-        public BlockAnalyzer NewBlz(Token t)
+        public BlkAnalyzer NewBlz(Token t)
         {
-            BlockAnalyzer blz = new BlockAnalyzer(t, this);
+            BlkAnalyzer blz = new BlkAnalyzer(t, this);
             Blzs.AddLast(blz);
             return blz;
         }
@@ -1207,7 +1207,7 @@ namespace Nana.Semantics
 
     public class CustomAnalyzer : LineAnalyzer
     {
-        public CustomAnalyzer(Token seed, BlockAnalyzer above)
+        public CustomAnalyzer(Token seed, BlkAnalyzer above)
             : base(seed, above)
         {
         }
@@ -1224,7 +1224,7 @@ namespace Nana.Semantics
                 Ovld ovl = calleetyp.FindOvld(Nana.IMRs.IMRGenerator.InstCons);
                 Fun f = ovl.GetFunOf(calleetyp, new Typ[] { }, Ty);
                 if (f == null) { throw new SyntaxError("It is not a member", t.First); }
-                Blk n = AboveBlock.Bl;
+                Blk n = Above.Bl;
                 if (n.Customs == null)
                 { n.Customs = new LinkedList<Custom>(); }
                 n.Customs.AddLast(new Custom(calleetyp, f, new Typ[] { }, new Custom.FieldOrProp[] { }));
@@ -1236,7 +1236,7 @@ namespace Nana.Semantics
     {
         //public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
 
-        public TypAnalyzer(Token seed, BlockAnalyzer above)
+        public TypAnalyzer(Token seed, BlkAnalyzer above)
             : base(seed, above)
         {
             CopyAboveAnalyzers(above);
@@ -1303,12 +1303,12 @@ namespace Nana.Semantics
 
     }
 
-    public class SrcAnalyzer : BlockAnalyzer
+    public class SrcAnalyzer : BlkAnalyzer
     {
         public LinkedList<Token> UsingSeeds;
         public LinkedList<Blk> UsingNsp = new LinkedList<Blk>();
 
-        public SrcAnalyzer(Token seed, BlockAnalyzer above)
+        public SrcAnalyzer(Token seed, BlkAnalyzer above)
             : base(seed, above)
         {
             CopyAboveAnalyzers(above);
@@ -1358,15 +1358,15 @@ namespace Nana.Semantics
 
         public override object FindUp(string name)
         {
-            if (AboveBlock == null)
+            if (Above == null)
             { return null; }
 
-            object o = AboveBlock.FindUp(name);
+            object o = Above.FindUp(name);
             if (o != null) { return o; }
 
             foreach (Blk n in UsingNsp)
             {
-                o = AboveBlock.FindUp(n.Name + "." + name);
+                o = Above.FindUp(n.Name + "." + name);
                 if (o != null) { return o; }
             }
 
@@ -1382,7 +1382,7 @@ namespace Nana.Semantics
         public List<FunAnalyzer> AllFuzs = new List<FunAnalyzer>();
         public LinkedList<CustomAnalyzer> AllCuzs = new LinkedList<CustomAnalyzer>();
 
-        public AppAnalyzer(Token seed, BlockAnalyzer above)
+        public AppAnalyzer(Token seed, BlkAnalyzer above)
             : base(seed, above)
         {
             CopyAboveAnalyzers(above);
@@ -1502,7 +1502,7 @@ namespace Nana.Semantics
             foreach (FunAnalyzer fuz in allfuzs)
             {
                 if (fuz.IsClosure) { continue; }
-                foreach (BlockAnalyzer blz in fuz.Blzs)
+                foreach (BlkAnalyzer blz in fuz.Blzs)
                 { blz.AnalyzeBlock(); }
             }
 
@@ -1584,7 +1584,7 @@ namespace Nana.Semantics
 
         override public object FindUp(string name)
         {
-            return Find(name) ?? (AboveBlock != null ? AboveBlock.FindUp(name) : null);
+            return Find(name) ?? (Above != null ? Above.FindUp(name) : null);
         }
 
     }
@@ -1592,7 +1592,7 @@ namespace Nana.Semantics
     public class EnvAnalyzer : AppAnalyzer
     {
         public EnvAnalyzer(Token seed)
-            : base(seed, /*above*/ BlockAnalyzer.EmptyBlz)
+            : base(seed, /*above*/ BlkAnalyzer.EmptyBlz)
         {
             Ez = this;
         }
