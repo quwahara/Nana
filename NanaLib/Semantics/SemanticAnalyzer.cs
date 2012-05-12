@@ -170,7 +170,7 @@ namespace Nana.Semantics
             if (")" != t.Follows[0].Value)
             { prmdef = t.Follows[0]; }
 
-            Token typspc = t.Find("@TypeSpec");
+            Token typspc = t.Find("@Typ");
 
             string clsname = ClosurePrefix + tmpnm + "'";
             {
@@ -185,7 +185,7 @@ namespace Nana.Semantics
                 if (null != prmdef)
                 { funtkn.Find("@PrmDef").FlwsAdd(prmdef); }
                 if (null != typspc)
-                { funtkn.Find("@TypeSpec").Follows = typspc.Follows; }
+                { funtkn.Find("@Typ").Follows = typspc.Follows; }
 
                 funtkn.Find("@Block").Follows = t.Find("@Block").Follows;
 
@@ -223,7 +223,7 @@ namespace Nana.Semantics
                 if (null != prmdef)
                 { funtkn.Find("@PrmDef").FlwsAdd(prmdef); }
                 if (null != typspc)
-                { funtkn.Find("@TypeSpec").Follows = typspc.Follows; }
+                { funtkn.Find("@Typ").Follows = typspc.Follows; }
 
                 TypAnalyzer taz = srz.NewTyz(classtkn);
 
@@ -305,7 +305,7 @@ namespace Nana.Semantics
 
             if (string.IsNullOrEmpty(returnType) == false)
             {
-                f.FlwsAdd(":", "TypeSpec");
+                f.FlwsAdd(":", "Typ");
                 f.FlwsTail.FlwsAdd(returnType, "Id");
             }
 
@@ -1115,7 +1115,7 @@ namespace Nana.Semantics
             {
                 returnType = Tyz.Ty;
             }
-            else if (null != (ty = s.Find("@TypeSpec")))
+            else if (null != (ty = s.Find("@Typ")))
             {
                 returnType = RequireTyp(ty.Follows[0]);
             }
