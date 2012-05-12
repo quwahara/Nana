@@ -177,8 +177,8 @@ namespace Nana.Semantics
                 Token classtkn = CreateClassToken(clsname, /*basename*/ null);
                 Token classblk = classtkn.Find("@Block");
 
-                Token contkn = CreateFncToken("cons", /* name */ null, /* returnType */ null);
-                Token funtkn = CreateFncToken("nfun", "'0impl'", "void");
+                Token contkn = CreateFunToken("cons", /* name */ null, /* returnType */ null);
+                Token funtkn = CreateFunToken("nfun", "'0impl'", "void");
                 classblk.FlwsAdd(contkn);
                 classblk.FlwsAdd(funtkn);
 
@@ -213,9 +213,9 @@ namespace Nana.Semantics
                 Token classtkn = CreateClassToken(dlgname, "System.MulticastDelegate");
                 Token classblk = classtkn.Find("@Block");
 
-                Token contkn = CreateFncToken("cons", /* name */ null, /* returnType */ null);
+                Token contkn = CreateFunToken("cons", /* name */ null, /* returnType */ null);
                 contkn.Find("@PrmDef").FlwsAdd(CreateParamToken(new string[] { "obj:object", "mth:System.IntPtr" }));
-                Token funtkn = CreateFncToken("nfun", "Invoke", "void");
+                Token funtkn = CreateFunToken("nfun", "Invoke", "void");
 
                 classblk.FlwsAdd(contkn);
                 classblk.FlwsAdd(funtkn);
@@ -290,13 +290,13 @@ namespace Nana.Semantics
             return root;
         }
 
-        static public Token CreateFncToken(string func, string name, string returnType)
+        static public Token CreateFunToken(string func, string name, string returnType)
         {
             Debug.Assert(false == string.IsNullOrEmpty(func));
 
             Token f;
 
-            f = new Token(func, "Fnc");
+            f = new Token(func, "Fun");
 
             if (string.IsNullOrEmpty(name) == false)
             { f.FlwsAdd(name); }
@@ -1225,7 +1225,7 @@ namespace Nana.Semantics
 
         public override void ConstructSub()
         {
-            foreach (Token t in Seed.Select("@Block/@Fnc"))
+            foreach (Token t in Seed.Select("@Block/@Fun"))
             { FunAnalyzer fuz = NewFuz(t, this); }
             foreach (FunAnalyzer z in Fuzs)
             { z.ConstructSub(); }
@@ -1246,7 +1246,7 @@ namespace Nana.Semantics
 
             foreach (Token t in Seed.Find("@Block").Follows)
             {
-                if (t.Group == "Fnc")
+                if (t.Group == "Fun")
                 { continue; }
 
                 Gate(t);
@@ -1313,7 +1313,7 @@ namespace Nana.Semantics
                 switch (targ.Group)
                 {
                     case "TypeDef": NewTyz(targ); break;
-                    case "Fnc": Apz.NewFuz(targ, this); break;
+                    case "Fun": Apz.NewFuz(targ, this); break;
                     case "Using":
                         if (UsingSeeds == null) { UsingSeeds = new LinkedList<Token>(); }
                         UsingSeeds.AddLast(targ);
@@ -1463,7 +1463,7 @@ namespace Nana.Semantics
                     }))
                 { continue; }
 
-                Token t = CreateFncToken("cons", /* name */ null, /* returnType */ null);
+                Token t = CreateFunToken("cons", /* name */ null, /* returnType */ null);
                 FunAnalyzer aa = ta.NewFuz(t, ta);
                 aa.AnalyzeFun();
             }
@@ -1520,7 +1520,7 @@ namespace Nana.Semantics
             //  Thanks of IL spec, we cannot write opecode in global.
             //  So we create the module class constructor and write opecode in it,
             //  instead of writing opecode in global. 
-            Token t = CreateFncToken("scons", /* name */ null, /* returnType */ null);
+            Token t = CreateFunToken("scons", /* name */ null, /* returnType */ null);
             FunAnalyzer fuz = NewFuz(t, Apz);
             fuz.AnalyzeFun();
             Fun cctor = fuz.Fu;
@@ -1536,7 +1536,7 @@ namespace Nana.Semantics
             if (founds.Count == 1)
             { return; }
 
-            Token t = CreateFncToken("sfun", Fun.EntryPointNameImplicit, "void");
+            Token t = CreateFunToken("sfun", Fun.EntryPointNameImplicit, "void");
             NewFuz(t, Apz).AnalyzeFun();
         }
 

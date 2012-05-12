@@ -685,7 +685,7 @@ end         End
         public void T119_sfunc()
         {
             Inp = @"
-sfunc   Fnc
+sfunc   Fun
 name    Id
 (
 )
@@ -773,7 +773,7 @@ end         End
         public void T132_sfunc()
         {
             Inp = @"
-sfunc   Fnc
+sfunc   Fun
 name    Id
 (
 a       Id
@@ -1143,7 +1143,7 @@ xxx
         public void X102()
         {
             Inp = @"
-sfunc   Fnc
+sfunc   Fun
 f       Id
 xxx     Id
 ";
