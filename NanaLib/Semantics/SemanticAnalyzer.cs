@@ -29,12 +29,6 @@ namespace Nana.Semantics
 
         public virtual void ConstructSubs() { }
 
-        public void ConstructSubsAll()
-        {
-            foreach (SemanticAnalyzer s in Subs)
-            { s.ConstructSubs(); }
-        }
-
         public void ErNameDuplication(Token dupname, Blk n)
         { throw new SemanticError(string.Format("The {0} is already defined in {1}", dupname.Value, n.Name), dupname); }
 
@@ -1054,7 +1048,6 @@ namespace Nana.Semantics
                 LineAnalyzer liz = NewLiz(f);
                 Subs.AddLast(liz);
             }
-            ConstructSubsAll();
         }
 
         public LineAnalyzer NewLiz(Token t)
@@ -1103,8 +1096,8 @@ namespace Nana.Semantics
             Token block = Seed.Find("@Block");
             if (block == null) { return; }
             BlockAnalyzer blz = NewBlz(block);
+            blz.ConstructSubs();
             Subs.AddLast(blz);
-            ConstructSubsAll();
         }
 
         public BlockAnalyzer NewBlz(Token t)
@@ -1257,7 +1250,8 @@ namespace Nana.Semantics
                 FunAnalyzer fuz = NewFuz(t, this);
                 Subs.AddLast(fuz);
             }
-            ConstructSubsAll();
+            foreach (FunAnalyzer z in Fuzs)
+            { z.ConstructSubs(); }
         }
 
         public void AnalyzeTyp()
@@ -1323,6 +1317,7 @@ namespace Nana.Semantics
     public class SrcAnalyzer : BlockAnalyzer
     {
         public LinkedList<Token> UsingSeeds;
+        public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
         public LinkedList<Blk> UsingNsp = new LinkedList<Blk>();
 
         public SrcAnalyzer(Token seed, BlockAnalyzer above)
@@ -1353,13 +1348,17 @@ namespace Nana.Semantics
                 if (a != null)
                 { Subs.AddLast(a); }
             }
-            ConstructSubsAll();
+            foreach (TypAnalyzer z in Tyzs)
+            { z.ConstructSubs(); }
+            foreach (FunAnalyzer z in Apz.Fuzs)
+            { z.ConstructSubs(); }
         }
 
         public TypAnalyzer NewTyz(Token seed)
         {
             TypAnalyzer tyz = new TypAnalyzer(seed, this);
-            Apz.Tyzs.AddLast(tyz);
+            Tyzs.AddLast(tyz);
+            Apz.AllTyzs.AddLast(tyz);
             return tyz;
         }
 
@@ -1403,7 +1402,7 @@ namespace Nana.Semantics
     public class AppAnalyzer : TypAnalyzer
     {
         public LinkedList<SrcAnalyzer> Srzs = new LinkedList<SrcAnalyzer>();
-        public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
+        public LinkedList<TypAnalyzer> AllTyzs = new LinkedList<TypAnalyzer>();
         public List<FunAnalyzer> AllFuzs = new List<FunAnalyzer>();
         public LinkedList<CustomAnalyzer> AllCuzs = new LinkedList<CustomAnalyzer>();
 
@@ -1422,7 +1421,8 @@ namespace Nana.Semantics
                 Subs.AddLast(srz);
                 Srzs.AddLast(srz);
             }
-            ConstructSubsAll();
+            foreach (SrcAnalyzer z in Srzs)
+            { z.ConstructSubs(); }
         }
 
         public void AnalyzeAppAll()
@@ -1456,7 +1456,7 @@ namespace Nana.Semantics
 
         public void AnalyzeTypAll()
         {
-            foreach (TypAnalyzer a in Tyzs)
+            foreach (TypAnalyzer a in AllTyzs)
             { a.AnalyzeTyp(); }
         }
 
@@ -1468,7 +1468,7 @@ namespace Nana.Semantics
 
         public void AnalyzeBaseTypAll()
         {
-            foreach (TypAnalyzer a in Tyzs)
+            foreach (TypAnalyzer a in AllTyzs)
             { a.AnalyzeBaseTyp(); }
         }
 
@@ -1480,7 +1480,7 @@ namespace Nana.Semantics
 
         public void EnsureTypAll()
         {
-            foreach (TypAnalyzer ta in Tyzs)
+            foreach (TypAnalyzer ta in AllTyzs)
             {
                 Typ y = ta.Ty;
                 if (y.Ovlds
@@ -1572,7 +1572,7 @@ namespace Nana.Semantics
         public void EnsureDelegateClassAll()
         {
             List<Typ> tys = new List<Typ>();
-            foreach (TypAnalyzer tyz in Tyzs)
+            foreach (TypAnalyzer tyz in AllTyzs)
             {
                 Typ ty = tyz.Ty;
                 if (false == ty.IsDelegate) { continue; }
@@ -1664,8 +1664,7 @@ namespace Nana.Semantics
         public override void ConstructSubs()
         {
             Apz = new AppAnalyzer(Seed.Find("@Syntax"), this);
-            Subs.AddLast(Apz);
-            ConstructSubsAll();
+            Apz.ConstructSubs();
         }
 
         public override object Find(string name)
