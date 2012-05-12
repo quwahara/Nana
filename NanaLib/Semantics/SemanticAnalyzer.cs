@@ -16,27 +16,14 @@ using Nana.Tokens;
 
 namespace Nana.Semantics
 {
-    public class SemanticAnalyzer
+    public class LineAnalyzer
     {
-        //  structures
-        public SemanticAnalyzer Above;
-
-        //  data
-        public Token Seed;
-
-        public SemanticAnalyzer(Token seed, SemanticAnalyzer above) { Seed = seed; Above = above; }
-
-        public virtual void ConstructSubs() { }
-
         public void ErNameDuplication(Token dupname, Blk n)
         { throw new SemanticError(string.Format("The {0} is already defined in {1}", dupname.Value, n.Name), dupname); }
 
-    }
-
-    public class LineAnalyzer : SemanticAnalyzer
-    {
+        public Token Seed;
         public BlockAnalyzer AboveBlock;
-
+        
         public Stack<Literal> Breaks;
         public Stack<Literal> Continues;
         public Env E;
@@ -48,11 +35,12 @@ namespace Nana.Semantics
         public bool IsInFun;
 
         public LineAnalyzer(Token seed, BlockAnalyzer above)
-            : base(seed, above)
         {
+            Seed = seed;
+            AboveBlock = above;
+
             Breaks = new Stack<Literal>();
             Continues = new Stack<Literal>();
-            AboveBlock = above;
 
             if (null != above && null != above.Ez)
             { E = AboveBlock.Ez.E; }
@@ -203,7 +191,7 @@ namespace Nana.Semantics
 
                 TypAnalyzer taz = srz.NewTyz(classtkn);
                 
-                taz.ConstructSubs();
+                taz.ConstructSub();
                 taz.AnalyzeTyp();
 
                 List<BlockAnalyzer> blks = new List<BlockAnalyzer>(2);
@@ -239,7 +227,7 @@ namespace Nana.Semantics
 
                 TypAnalyzer taz = srz.NewTyz(classtkn);
 
-                taz.ConstructSubs();
+                taz.ConstructSub();
                 taz.AnalyzeTyp();
                 taz.AnalyzeBaseTyp();
                 foreach (FunAnalyzer f in taz.Fuzs)
@@ -1036,7 +1024,7 @@ namespace Nana.Semantics
             Ez = above.Ez;
         }
 
-        public override void ConstructSubs()
+        public virtual void ConstructSub()
         {
             if (Seed.Follows == null) { return; }
             foreach (Token f in Seed.Follows)
@@ -1084,12 +1072,12 @@ namespace Nana.Semantics
             Blz = Fuz = this;
         }
 
-        public override void ConstructSubs()
+        public override void ConstructSub()
         {
             Token block = Seed.Find("@Block");
             if (block == null) { return; }
             BlockAnalyzer blz = NewBlz(block);
-            blz.ConstructSubs();
+            blz.ConstructSub();
         }
 
         public BlockAnalyzer NewBlz(Token t)
@@ -1235,12 +1223,12 @@ namespace Nana.Semantics
             Blz = Fuz = Tyz = this;
         }
 
-        public override void ConstructSubs()
+        public override void ConstructSub()
         {
             foreach (Token t in Seed.Select("@Block/@Fnc"))
             { FunAnalyzer fuz = NewFuz(t, this); }
             foreach (FunAnalyzer z in Fuzs)
-            { z.ConstructSubs(); }
+            { z.ConstructSub(); }
         }
 
         public void AnalyzeTyp()
@@ -1316,29 +1304,27 @@ namespace Nana.Semantics
             Blz = Srz = this;
         }
 
-        public override void ConstructSubs()
+        public override void ConstructSub()
         {
             if (Seed.Follows == null) { return; }
-            SemanticAnalyzer a;
             foreach (Token t in Seed.Follows)
             {
-                a = null;
                 Token targ = t.Group != "Cstm" ? t : GetTargetWithCustom(t);
                 switch (targ.Group)
                 {
-                    case "TypeDef": a = NewTyz(targ); break;
-                    case "Fnc": a = Apz.NewFuz(targ, this); break;
+                    case "TypeDef": NewTyz(targ); break;
+                    case "Fnc": Apz.NewFuz(targ, this); break;
                     case "Using":
                         if (UsingSeeds == null) { UsingSeeds = new LinkedList<Token>(); }
                         UsingSeeds.AddLast(targ);
                         break;
-                    default: a = NewLiz(targ); break;
+                    default: NewLiz(targ); break;
                 }
             }
             foreach (TypAnalyzer z in Tyzs)
-            { z.ConstructSubs(); }
+            { z.ConstructSub(); }
             foreach (FunAnalyzer z in Apz.Fuzs)
-            { z.ConstructSubs(); }
+            { z.ConstructSub(); }
         }
 
         public TypAnalyzer NewTyz(Token seed)
@@ -1400,7 +1386,7 @@ namespace Nana.Semantics
             Blz = Fuz = Tyz = Apz = this;
         }
 
-        public override void ConstructSubs()
+        public override void ConstructSub()
         {
             foreach (Token t in Seed.Select("@Source"))
             {
@@ -1408,7 +1394,7 @@ namespace Nana.Semantics
                 Srzs.AddLast(srz);
             }
             foreach (SrcAnalyzer z in Srzs)
-            { z.ConstructSubs(); }
+            { z.ConstructSub(); }
         }
 
         public void AnalyzeAppAll()
@@ -1619,7 +1605,7 @@ namespace Nana.Semantics
         {
             PrepareEnv();
             AnalyzeCompileOptions();
-            ConstructSubs();
+            ConstructSub();
             Apz.AnalyzeAppAll();
             RemoveReferencingType(E);
         }
@@ -1646,10 +1632,10 @@ namespace Nana.Semantics
             }
         }
 
-        public override void ConstructSubs()
+        public override void ConstructSub()
         {
             Apz = new AppAnalyzer(Seed.Find("@Syntax"), this);
-            Apz.ConstructSubs();
+            Apz.ConstructSub();
         }
 
         public override object Find(string name)
