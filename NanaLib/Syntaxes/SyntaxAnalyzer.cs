@@ -373,7 +373,7 @@ namespace Nana.Syntaxes
             Fun.g   Id.g 0funcdec.r
 
                 0funcdec    _(  (.@0    Expr.s? _)  ) 0typedec.r 0attrdec.r 0bodydec.r          -- Prm
-                0typedec    _(  :.?@0   Expr.s  _)                                                  --  Typ
+                0typedec    _(  :.?@0   Expr.s  _)                                                  --  TypSpc
 
             `(  Expr.s? )   0typedec.r  0bodydec.r
 
