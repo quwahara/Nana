@@ -1203,6 +1203,13 @@ namespace Nana.Semantics
             }
         }
 
+        public override object Find(string name)
+        {
+            if (null == Fu) { return null; }
+            Variable v = Fu.Find(name) as Variable;
+            if (null == v) { return null; }
+            return new LocalAccessInfo(Fu, v);
+        }
     }
 
     public class CustomAnalyzer : LineAnalyzer

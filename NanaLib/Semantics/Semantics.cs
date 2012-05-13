@@ -1922,6 +1922,39 @@ namespace Nana.Semantics
         }
     }
 
+    public class LocalAccessInfo : Sema
+    {
+        public Fun HoldingFun;
+        public Variable Var;
+
+        public LocalAccessInfo(Fun vriableHoldingFun, Variable var)
+        {
+            HoldingFun = vriableHoldingFun;
+            Var = var;
+            Att.TypGet = Att.TypSet = var.Att.TypGet;
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            Var.Give(gen);
+        }
+
+        public override void Take(IMRGenerator gen)
+        {
+            Var.Take(gen);
+        }
+
+        public override void Addr(IMRGenerator gen)
+        {
+            Var.Addr(gen);
+        }
+
+        public override void Exec(IMRGenerator gen)
+        {
+            Var.Exec(gen);
+        }
+    }
+
     public class Custom : Sema
     {
         public Typ CalleeTy;
