@@ -1886,26 +1886,28 @@ namespace Nana.Semantics
 
     public class FieldAccessInfo : Sema
     {
-        public Variable Fld;
+        public Typ HoldingTyp;
         public Sema Instance;
+        public Variable Field;
 
-        public FieldAccessInfo(Variable fld, Sema instance)
+        public FieldAccessInfo(Typ fieldHoldingTyp, Sema instance, Variable field)
         {
-            Fld = fld;
+            HoldingTyp = fieldHoldingTyp;
+            Field = field;
             Instance = instance;
-
-            Att.TypGet = Att.TypSet = fld.Att.TypGet;
+            Att.TypGet = Att.TypSet = field.Att.TypGet;
         }
 
         public override void Give(IMRGenerator gen)
         {
-            Instance.Give(gen);
-            gen.LoadField(Instance.Att.TypGet, Fld);
+            if (false == Field.Att.IsStatic)
+            { Instance.Give(gen); }
+            gen.LoadField(HoldingTyp, Field);
         }
 
         public override void Take(IMRGenerator gen)
         {
-            gen.StoreField(Instance.Att.TypGet, Fld);
+            gen.StoreField(HoldingTyp, Field);
         }
 
         public override void Addr(IMRGenerator gen)

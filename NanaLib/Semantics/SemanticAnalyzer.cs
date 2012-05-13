@@ -21,7 +21,7 @@ namespace Nana.Semantics
         public void ErNameDuplication(Token dupname, Blk n)
         { throw new SemanticError(string.Format("The {0} is already defined in {1}", dupname.Value, n.Name), dupname); }
 
-        public Token Seed;
+        public Token Seed = Token.Empty;
         public BlkAnalyzer Above;
         
         public Stack<Literal> Breaks;
@@ -202,9 +202,8 @@ namespace Nana.Semantics
                 }
                 foreach (BlkAnalyzer blz in blzs)
                 {
-                    (blz as BlkAnalyzer).AnalyzeBlock();
+                    blz.AnalyzeBlock();
                 }
-
             }
 
             string dlgname = "'0dlgt" + tmpnm + "'";
@@ -298,7 +297,7 @@ namespace Nana.Semantics
             f = new Token(func, "Fun");
 
             if (string.IsNullOrEmpty(name) == false)
-            { f.FlwsAdd(name); }
+            { f.FlwsAdd(name, "Name"); }
 
             f.FlwsAdd("(", "Prm").FlwsAdd(")");
 
@@ -397,38 +396,38 @@ namespace Nana.Semantics
 
         public object Asgn(Token assign, Token give, Token take)
         {
-            Sema gv2 = Require<Sema>(give);
-            object tu = Gate(take);
+            Sema giv = Require<Sema>(give);
+            object tak = Gate(take);
 
-            if ((tu.GetType() == typeof(Nmd)) == false
-                && (tu is ArrayAccessInfo) == false
-                && (tu is FieldAccessInfo) == false
-                && ((tu is Sema) && (tu as Sema).Att.CanSet) == false
+            if ((tak.GetType() == typeof(Nmd)) == false
+                && (tak is ArrayAccessInfo) == false
+                && (tak is FieldAccessInfo) == false
+                && ((tak is Sema) && (tak as Sema).Att.CanSet) == false
                 )
             {
                 throw new SyntaxError("Can not assign to: " + take.Value, take);
             }
 
             Sema prepare = null;
-            if (tu is Assign)
-            { prepare = (tu as Assign).Prepare; }
-            else if (tu is FieldAccessInfo)
-            { prepare = (tu as FieldAccessInfo).Instance; }
+            if (tak is Assign)
+            { prepare = (tak as Assign).Prepare; }
+            else if (tak is FieldAccessInfo)
+            { prepare = (tak as FieldAccessInfo).Instance; }
 
-            if (tu is ArrayAccessInfo)
+            if (tak is ArrayAccessInfo)
             {
-                return new ArraySetInfo(tu as ArrayAccessInfo, gv2);
+                return new ArraySetInfo(tak as ArrayAccessInfo, giv);
             }
-            if (tu.GetType() == typeof(CallPropInfo))
+            if (tak.GetType() == typeof(CallPropInfo))
             {
-                return new PropSet(tu as CallPropInfo, gv2);
+                return new PropSet(tak as CallPropInfo, giv);
             }
-            if (tu.GetType() == typeof(Nmd))
+            if (tak.GetType() == typeof(Nmd))
             {
-                tu = NewVar((tu as Nmd).Name, gv2.Att.TypGet);
+                tak = NewVar((tak as Nmd).Name, giv.Att.TypGet);
             }
 
-            return new Assign(gv2, tu as Sema, prepare);
+            return new Assign(giv, tak as Sema, prepare);
         }
 
         public object DefineVariable(Token t)
@@ -816,7 +815,7 @@ namespace Nana.Semantics
             if (mbr is Enu) { return mbr; }
             if (mbr is Prop) { return new CallPropInfo(y, mbr as Prop, v); };
             if (mbr is Variable && (mbr as Variable).VarKind == Variable.VariableKind.Field)
-            { return new FieldAccessInfo(mbr as Variable, v); }
+            { return new FieldAccessInfo(y, v, mbr as Variable); }
 
             return new Member(y, mbr, v);
         }
@@ -973,10 +972,17 @@ namespace Nana.Semantics
 
         public override string ToString()
         {
-            return ((Seed ?? Token.Empty).Find("@Name") ?? Token.Empty).Value
+            Token t = Seed ?? Token.Empty;
+            Token k = t.Find("@Name") ?? t;
+            return k.Value
                 + ":" + GetType().Name.Replace("Analyzer", "Az")
                 + (null != Above ? ">" + Above.ToString() : "")
                 ;
+
+            //return (Seed.Find("@Name") ?? Seed).Value
+            //    + ":" + GetType().Name.Replace("Analyzer", "Az")
+            //    + (null != Above ? ">" + Above.ToString() : "")
+            //    ;
         }
 
     }
@@ -1233,8 +1239,6 @@ namespace Nana.Semantics
 
     public class TypAnalyzer : FunAnalyzer
     {
-        //public LinkedList<TypAnalyzer> Tyzs = new LinkedList<TypAnalyzer>();
-
         public TypAnalyzer(Token seed, BlkAnalyzer above)
             : base(seed, above)
         {
@@ -1286,9 +1290,20 @@ namespace Nana.Semantics
             Nmd n = Ty.Find(name);
             if (n == null)
             { return null; }
+            
             Type nt = n.GetType();
+            
             if (nt == typeof(Ovld))
             { return new Member(Ty, n, null); }
+
+            if (nt == typeof(Variable))
+            {
+                Typ ty = typeof(App) != Ty.GetType() ? Ty : null;
+                Variable fld = n as Variable;
+                Variable dis = fld.Att.IsStatic ? null : new Variable("this", Ty, Variable.VariableKind.This);
+                return new FieldAccessInfo(ty, dis, fld);
+            }
+            
             return n;
         }
 
