@@ -23,10 +23,16 @@ namespace UnitTest
 
     public class Class0
     {
+        public string Sss() { return "ssss"; }
+        public int FFF;
+
         private string Prv0()
         {
+            FFF = 999;
+            int jjj = FFF;
+
             string vvv = "www";
-            Func<string, string> f = delegate(string ppp) { return ppp + vvv + "xxx"; };
+            Func<string, string> f = delegate(string ppp) { return Sss() + ppp + vvv + "xxx"; };
             string yyy = f("qqq");
 
             List<List<string>> lls = new List<List<string>>();
@@ -1260,22 +1266,69 @@ fun Main()
             Test();
         }
 
-        //[Test]
-        public void ZZZ()
+        [Test]
+        public void TC0513_InstanceFieldAccess()
         {
             Inp =
 @"
 class C
 ...
     F:int
-    sfun Main()
+    fun Sub()
     ..
-        `() ..  cf = F ,,
-        
+        F   = 777
+        v   = F
     ,,
 ,,,
+";
+            EpcSyn = @"";
 
+            EpcIL =
+@".class public C {
+    .field int32 F
+    .method public virtual void Sub() {
+        .locals (
+            int32 v
+        )
+        ldarg.0
+        ldc.i4 777
+        stfld int32 [NanaFxt]C::F
+        ldarg.0
+        ldfld int32 [NanaFxt]C::F
+        stloc v
+        ret
+    }
+    .method public void .ctor() {
+        ldarg.0
+        call instance void object::.ctor()
+        ret
+    }
+}
+.method public static void '0'() {
+    .entrypoint
+    ret
+}
+";
+            Test();
+        }
 
+        //[Test]
+        public void ZZZ()
+        {
+//            Inp =
+//@"
+//class C
+//...
+//    F:int
+//    sfun Main()
+//    ..
+//        `() ..  cf = F ,,
+//        
+//    ,,
+//,,,
+//";
+            Inp =
+@"
 ";
             EpcSyn = @"";
 

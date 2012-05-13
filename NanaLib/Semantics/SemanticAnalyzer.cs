@@ -978,11 +978,6 @@ namespace Nana.Semantics
                 + ":" + GetType().Name.Replace("Analyzer", "Az")
                 + (null != Above ? ">" + Above.ToString() : "")
                 ;
-
-            //return (Seed.Find("@Name") ?? Seed).Value
-            //    + ":" + GetType().Name.Replace("Analyzer", "Az")
-            //    + (null != Above ? ">" + Above.ToString() : "")
-            //    ;
         }
 
     }
