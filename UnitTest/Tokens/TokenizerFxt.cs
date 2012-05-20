@@ -444,4 +444,52 @@ end
             return b.ToString();
         }
     }
+
+    [TestFixture]
+    public class PrependAndAppendFxt
+    {
+        public string Inp;
+        public string Epc;
+
+        public ITokenEnumerator Tokens;
+
+        [SetUp]
+        public void SetUp()
+        {
+            Inp = "";
+            Epc = "";
+        }
+
+        [Test]
+        public void TC0520_SrcIsEmpty()
+        {
+            Inp = "";
+            Epc = new Token(Token.ZSourceValue).ToString();
+            Test();
+        }
+
+        public void Test()
+        {
+            Func<TestCase, string> f = delegate(TestCase c)
+            {
+                TokenizerBase tkz = new ScriptTokenizer();
+                LineBufferedReader r = LineBufferedReader.GetInstanceWithText(c.Input, /*path*/ "");
+                tkz.Init(r);
+
+                ITokenEnumerator tokens = tkz;
+
+                Token src;
+                src = new Token();
+                src.Value = Token.ZSourceValue;
+                Tokens = new Prepend(tokens, src);
+                Tokens = new Append(Tokens, Token.ZEnd);
+                string cur = Tokens.Cur.ToString();
+                return cur;
+            };
+
+            new TestCase("", Inp, Epc, f).Run();
+        }
+
+    }
+     
 }

@@ -63,7 +63,7 @@ namespace Nana.Tokens
             Value = value;
         }
 
-        public bool EOF { get { return Enm.EOF; } }
+        public bool EOF { get { return false == IsFirst && Enm.EOF; } }
         public Token Cur { get { return IsFirst ? Value : Enm.Cur; } }
 
         public void Next()

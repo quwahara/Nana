@@ -1955,6 +1955,33 @@ namespace Nana.Semantics
         }
     }
 
+    public class ClosureConstruction : Sema
+    {
+        public CallFun CtorCall;
+        public TmpVarGenerator TmpVarGen;
+        public Tuple2<Sema, Sema>[] SrcAndDsts;
+
+        public ClosureConstruction(CallFun ctorcall, TmpVarGenerator tmpVarGen, Tuple2<Sema, Sema>[] srcanddsts)
+        {
+            CtorCall = ctorcall;
+            TmpVarGen = tmpVarGen;
+            SrcAndDsts = srcanddsts;
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            Variable tmpvar = TmpVarGen.Generate(CtorCall.CalleeTy, gen);
+            Assign tmpasgn = new Assign(CtorCall, tmpvar, /*prepare*/ null);
+            tmpasgn.Exec(gen);
+            foreach (Tuple2<Sema, Sema> sandd in SrcAndDsts)
+            {
+                Assign fldasgn = new Assign(sandd.F1, sandd.F2, tmpvar);
+                fldasgn.Exec(gen);
+            }
+            tmpvar.Give(gen);
+        }
+    }
+
     public class Custom : Sema
     {
         public Typ CalleeTy;

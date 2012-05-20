@@ -26,6 +26,8 @@ namespace Nana.Semantics
         
         public Stack<Literal> Breaks;
         public Stack<Literal> Continues;
+        public Stack<LinkedList<Sema>> VariableCapture;
+
         public Env E;
         public App Ap;
         public Typ Ty;
@@ -200,6 +202,12 @@ namespace Nana.Semantics
                     fuz.AnalyzeFun();
                     blzs.AddRange(fuz.Blzs);
                 }
+
+                //  prepare for capturing variables that is used in closure
+                if (null == VariableCapture)
+                { VariableCapture = new Stack<LinkedList<Sema>>(); }
+                VariableCapture.Push(new LinkedList<Sema>());
+
                 foreach (BlkAnalyzer blz in blzs)
                 {
                     blz.AnalyzeBlock();
@@ -391,7 +399,22 @@ namespace Nana.Semantics
                 return new BranchInfo(Continues.Peek());
             }
 
-            return Above.FindUp(t.Value) as object ?? new Nmd(t.Value);
+            object found = Above.FindUp(t.Value) as object ?? new Nmd(t.Value);
+
+            //  capture variable access infomation for closure
+            if (null != found && null != VariableCapture && 0 != VariableCapture.Count)
+            {
+                Type ft = found.GetType();
+                bool doCap = false;
+                doCap |= typeof(FieldAccessInfo) == ft;
+                doCap |= typeof(LocalAccessInfo) == ft;
+                if (doCap)
+                { VariableCapture.Peek().AddLast(found as Sema); }
+            }
+
+            return found;
+            //>>
+            //return Above.FindUp(t.Value) as object ?? new Nmd(t.Value);
         }
 
         public object Asgn(Token assign, Token give, Token take)

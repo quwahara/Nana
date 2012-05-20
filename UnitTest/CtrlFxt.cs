@@ -1312,25 +1312,44 @@ class C
             Test();
         }
 
-        //[Test]
-        public void ZZZ()
+        [Test]
+        public void TC0520_SrcIsEmpty()
         {
-//            Inp =
-//@"
-//class C
-//...
-//    F:int
-//    sfun Main()
-//    ..
-//        `() ..  cf = F ,,
-//        
-//    ,,
-//,,,
-//";
             Inp =
 @"
 ";
-            EpcSyn = @"";
+            EpcSyn =
+@"0Source
+";
+            EpcIL =
+@".method public static void '0'() {
+    .entrypoint
+    ret
+}
+";
+            Test();
+        }
+
+        //[Test]
+        public void ZZZ()
+        {
+            Inp =
+@"
+class C
+...
+    F:int
+    sfun Main()
+    ..
+        `() ..  cf = F ,,
+        
+    ,,
+,,,
+";
+            Inp =
+@"
+";
+            EpcSyn = @"
+";
 
             EpcIL =
 @"
@@ -1368,7 +1387,10 @@ class C
                     }
                     ctrl.Compile(root);
                     if (EpcIL != "")
-                    { trace(root.Find("@Code").Value); }
+                    {
+                        Token code = root.Find("@Code");
+                        trace(code.Value);
+                    }
                 }
                 catch (Nana.Infr.Error e)
                 {
