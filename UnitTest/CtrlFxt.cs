@@ -737,7 +737,7 @@ class A
 a:int
 a:int
 ";
-            EpcIL = @"(ERROR)The variable is already defined. Variable name:a";
+            EpcIL = @"(ERROR)The a is already defined in NanaFxt.exe";
             Test();
         }
 
@@ -1207,9 +1207,15 @@ fun Main()
 
             EpcIL = 
 @".field static string gv
+.field static class [NanaFxt]'0clsr$000001' $000004
 .method public static void Main() {
     .entrypoint
+    .locals (
+        class [NanaFxt]'0clsr$000002' $000003
+    )
     newobj instance void [NanaFxt]'0clsr$000002'::.ctor()
+    stloc $000003
+    ldloc $000003
     ldftn instance void [NanaFxt]'0clsr$000002'::'0impl'()
     newobj instance void [NanaFxt]'0dlgt$000002'::.ctor(object, native int)
     pop
@@ -1257,6 +1263,8 @@ fun Main()
     ldstr ""global variable""
     stsfld string gv
     newobj instance void [NanaFxt]'0clsr$000001'::.ctor()
+    stsfld class [NanaFxt]'0clsr$000001' $000004
+    ldsfld class [NanaFxt]'0clsr$000001' $000004
     ldftn instance void [NanaFxt]'0clsr$000001'::'0impl'()
     newobj instance void [NanaFxt]'0dlgt$000001'::.ctor(object, native int)
     pop
@@ -1330,32 +1338,78 @@ class C
             Test();
         }
 
+        [Test]
+        public void TC0523_ClosureWithLocalVariableCapture()
+        {
+            Inp =
+@"
+fun Main()
+..
+    0   -> lv
+    `() ..  cv = lv ,,
+,,
+";
+            EpcSyn = @"";
+
+            EpcIL =
+@".method public static void Main() {
+    .entrypoint
+    .locals (
+        int32 lv
+        , class [NanaFxt]'0clsr$000001' $000002
+    )
+    ldc.i4 0
+    stloc lv
+    newobj instance void [NanaFxt]'0clsr$000001'::.ctor()
+    stloc $000002
+    ldloc $000002
+    ldloc lv
+    stfld int32 [NanaFxt]'0clsr$000001'::lv
+    ldloc $000002
+    ldftn instance void [NanaFxt]'0clsr$000001'::'0impl'()
+    newobj instance void [NanaFxt]'0dlgt$000001'::.ctor(object, native int)
+    pop
+    ret
+}
+.class public '0clsr$000001' {
+    .field int32 lv
+    .method public void .ctor() {
+        ret
+    }
+    .method public void '0impl'() {
+        .locals (
+            int32 cv
+        )
+        ldarg.0
+        ldfld int32 [NanaFxt]'0clsr$000001'::lv
+        stloc cv
+        ret
+    }
+}
+.class public sealed '0dlgt$000001' extends [mscorlib]System.MulticastDelegate {
+    .method public hidebysig newslot void .ctor(object obj, native int mth) runtime {
+    }
+    .method public hidebysig newslot void Invoke() runtime {
+    }
+}
+";
+            Test();
+        }
+
         //[Test]
         public void ZZZ()
         {
             Inp =
 @"
-class C
-...
-    F:int
-    sfun Main()
-    ..
-        `() ..  cf = F ,,
-        
-    ,,
-,,,
 ";
-            Inp =
-@"
-";
-            EpcSyn = @"
-";
+            EpcSyn = @"";
 
             EpcIL =
 @"
 ";
             Test();
         }
+
         public void Test()
         {
             Func<TestCase, string> f = delegate(TestCase c)

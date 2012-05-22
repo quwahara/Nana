@@ -18,15 +18,14 @@ namespace Nana.Semantics
 {
     public class LineAnalyzer
     {
-        public void ErNameDuplication(Token dupname, Blk n)
-        { throw new SemanticError(string.Format("The {0} is already defined in {1}", dupname.Value, n.Name), dupname); }
+        public void ErNameDuplication(Token dupname, string inname)
+        { throw new SemanticError(string.Format("The {0} is already defined in {1}", dupname.Value,  inname), dupname); }
 
         public Token Seed = Token.Empty;
         public BlkAnalyzer Above;
         
         public Stack<Literal> Breaks;
         public Stack<Literal> Continues;
-        public Stack<LinkedList<Sema>> VariableCapture;
 
         public Env E;
         public App Ap;
@@ -78,6 +77,9 @@ namespace Nana.Semantics
 
         virtual public Variable NewVar(string name, Typ typ)
         {
+            if (Fu.HasMember(name))
+            { ErNameDuplication(new Token(name), Fu.Name); }
+
             return Fu.NewVar(name, typ);
         }
 
@@ -162,10 +164,22 @@ namespace Nana.Semantics
 
         public static readonly string ClosurePrefix = "'0clsr";
 
+        public class ClosureContext
+        {
+            public Fun CapturedFun;
+            public Typ ClosureTyp;
+            /// <summary>
+            /// T1: CapturedFun's local variable, The source variable.
+            /// T2: ClosureTyp's field variable, The destination variable.
+            /// </summary>
+            public List<Tuple2<Sema, Variable>> CapturePairs = null;
+        }
+
         public object Closure(Token t)
         {
             AppAnalyzer apz = Above.Apz;
             TypAnalyzer tyz = Above.Tyz;
+            FunAnalyzer fuz = Above.Fuz;
 
             string tmpnm = E.GetTempName();
             Token prm = null;
@@ -175,6 +189,9 @@ namespace Nana.Semantics
             Token typspc = t.Find("@TypSpc");
 
             string clsname = ClosurePrefix + tmpnm + "'";
+
+            ClosureContext ccx = new ClosureContext();
+            Typ clstyp = null;
             {
                 Token classtkn = CreateClassToken(clsname, /*basename*/ null);
                 Token classblk = classtkn.Find("@Block");
@@ -191,27 +208,31 @@ namespace Nana.Semantics
 
                 funtkn.Find("@Block").Follows = t.Find("@Block").Follows;
 
-                TypAnalyzer taz = tyz.NewTyz(classtkn);
-                
+                TypAnalyzer taz = fuz.NewTyz(classtkn);
+
                 taz.ConstructSub();
                 taz.AnalyzeTyp();
+                clstyp = taz.Ty;
 
-                List<BlkAnalyzer> blzs = new List<BlkAnalyzer>(2);
-                foreach (FunAnalyzer fuz in taz.Fuzs)
-                {
-                    fuz.AnalyzeFun();
-                    blzs.AddRange(fuz.Blzs);
-                }
+                if (2 != taz.Fuzs.Count)
+                { throw new InternalError("Two FunAnalyzers were not created"); }
 
-                //  prepare for capturing variables that is used in closure
-                if (null == VariableCapture)
-                { VariableCapture = new Stack<LinkedList<Sema>>(); }
-                VariableCapture.Push(new LinkedList<Sema>());
+                FunAnalyzer ctrz = taz.Fuzs.First.Value;
+                FunAnalyzer impz = taz.Fuzs.Last.Value;
 
-                foreach (BlkAnalyzer blz in blzs)
-                {
-                    blz.AnalyzeBlock();
-                }
+                ctrz.AnalyzeFun();
+                ctrz.Blzs.First.Value.AnalyzeBlock();
+
+                impz.AnalyzeFun();
+                BlkAnalyzer impblz = impz.Blzs.First.Value;
+                if (null == impblz.ClosureContexts)
+                { impblz.ClosureContexts = new Stack<ClosureContext>(); }
+                Stack<ClosureContext> ccxs = impblz.ClosureContexts;
+                ccx.CapturedFun = Fu;
+                ccx.ClosureTyp = clstyp;
+                ccxs.Push(ccx);
+                impblz.AnalyzeBlock();
+                ccxs.Pop();
             }
 
             string dlgname = "'0dlgt" + tmpnm + "'";
@@ -238,18 +259,18 @@ namespace Nana.Semantics
                 taz.AnalyzeBaseTyp();
                 foreach (FunAnalyzer f in taz.Fuzs)
                 { f.AnalyzeFun(); }
-
             }
 
-            Typ clstyp = Above.FindUp(clsname) as Typ;
             Fun clscon = clstyp.FindOvld(".ctor").Funs[0];
-            Sema inst = new CallFun(clstyp, clscon, /*instance*/ null, new Sema[0], /*isNewObj*/ true);
-            Fun clsfun = clstyp.FindOvld("'0impl'").Funs[0];
+            CallFun inst = new CallFun(clstyp, clscon, /*instance*/ null, new Sema[0], /*isNewObj*/ true);
 
+            Tuple2<Sema, Variable>[] snds = null != ccx.CapturePairs ? ccx.CapturePairs.ToArray() : new Tuple2<Sema, Variable>[0];
+            ClosureConstruction clsctr = new ClosureConstruction(inst, TmpVarGen, snds);
+
+            Fun clsfun = clstyp.FindOvld("'0impl'").Funs[0];
             Typ dlgtyp = Above.FindUp(dlgname) as Typ;
             Fun dlgcon = dlgtyp.FindOvld(".ctor").Funs[0];
-
-            Sema[] args = new Sema[] { inst, new LoadFun(clstyp, clsfun) };
+            Sema[] args = new Sema[] { clsctr, new LoadFun(clstyp, clsfun) };
 
             return new CallFun(dlgtyp, dlgcon, /*instance*/ null, args, /*isNewObj*/ true);
         }
@@ -319,6 +340,14 @@ namespace Nana.Semantics
             f.FlwsTail.Follows = new Token[0];
 
             return f;
+        }
+
+        static public Token CreateVarToken(Variable v)
+        {
+            Token t = new Token(":", "TypSpc");
+            t.First = new Token(v.Name, "Id");
+            t.Second = new Token(v.Att.TypGet.Name, "Id");
+            return t;
         }
 
         public object Cma(Token t)
@@ -402,25 +431,37 @@ namespace Nana.Semantics
             object found = Above.FindUp(t.Value) as object ?? new Nmd(t.Value);
 
             //  capture variable access infomation for closure
-            if (null != found && null != VariableCapture && 0 != VariableCapture.Count)
+            Stack<ClosureContext> ccxs = Above.ClosureContexts;
+            if (null != found && null != ccxs && 0 != ccxs.Count)
             {
-                Type ft = found.GetType();
-                bool doCap = false;
-                doCap |= typeof(FieldAccessInfo) == ft;
-                doCap |= typeof(LocalAccessInfo) == ft;
-                if (doCap)
-                { VariableCapture.Peek().AddLast(found as Sema); }
+                ClosureContext ccx = ccxs.Peek();
+                LocalAccessInfo lai = found as LocalAccessInfo;
+                if (null != lai && lai.HoldingFun == ccx.CapturedFun)
+                {
+                    Typ ty = ccx.ClosureTyp;
+                    Variable laivar = lai.Var;
+                    Variable fldvar = ty.FindVar(laivar.Name) ?? ty.NewVar(laivar.Name, laivar.Att.TypGet);
+                    if (null == ccx.CapturePairs)
+                    { ccx.CapturePairs = new List<Tuple2<Sema, Variable>>(); }
+                    ccx.CapturePairs.Add(new Tuple2<Sema, Variable>(laivar, fldvar));
+                    Variable thisvar = Fu.FindVar("this");
+                    if (null == thisvar)
+                    { throw new InternalError("Could not retrieve 'this' variable"); }
+                    FieldAccessInfo fai = new FieldAccessInfo(ty, thisvar, fldvar);
+                    return fai;
+                }
             }
 
             return found;
-            //>>
-            //return Above.FindUp(t.Value) as object ?? new Nmd(t.Value);
         }
 
         public object Asgn(Token assign, Token give, Token take)
         {
             Sema giv = Require<Sema>(give);
             object tak = Gate(take);
+
+            if (false == giv.Att.CanGet)
+            { throw new SemanticError("The source side cannot assign to destination", give); }
 
             if ((tak.GetType() == typeof(Nmd)) == false
                 && (tak is ArrayAccessInfo) == false
@@ -455,16 +496,12 @@ namespace Nana.Semantics
 
         public object DefineVariable(Token t)
         {
-            Debug.Assert(t.First != null);
-            Debug.Assert(t.First.Group == "Id");
+            if (null == t.First
+                || t.First.Group != "Id")
+            { throw new InternalError("First token was not Id"); }
 
-            object obj = Gate(t.First);
-            if (obj.GetType() != typeof(Nmd))
-            { throw new SemanticError("The variable is already defined. Variable name:" + t.First.Value, t.First); }
-            Nmd id = obj as Nmd;
             Typ ty = RequireTyp(t.Second);
-
-            return NewVar(id.Name, ty);
+            return NewVar(t.First.Value, ty);
         }
 
         public object Ope(Token t)
@@ -1023,6 +1060,7 @@ namespace Nana.Semantics
 
         public Stack<ReturnValue> RequiredReturnValue = new Stack<ReturnValue>();
         public bool IsClosure = false;
+        public Stack<ClosureContext> ClosureContexts;
 
         public BlkAnalyzer(Token seed, BlkAnalyzer above)
             : base(seed, above)
@@ -1093,8 +1131,10 @@ namespace Nana.Semantics
 
         virtual public object Find(string name)
         {
-            if (Bl == null) { return null; }
-            return Bl.Find(name);
+            return null;
+            //>>
+            //if (Bl == null) { return null; }
+            //return Bl.Find(name);
         }
 
         virtual public object FindUp(string name)
@@ -1192,6 +1232,12 @@ namespace Nana.Semantics
 
         public override Variable NewVar(string name, Typ typ)
         {
+            foreach (Variable p in prmls)
+            {
+                if (p.Name == name)
+                { ErNameDuplication(new Token(name), ""); }
+            }
+
             Variable v = new Variable(name, typ, Variable.VariableKind.Param);
             prmls.Add(v);
             return v;
@@ -1335,7 +1381,7 @@ namespace Nana.Semantics
         public override Variable NewVar(string name, Typ typ)
         {
             if (Ty.HasMember(name))
-            { ErNameDuplication(new Token(name), Ty); }
+            { ErNameDuplication(new Token(name), Ty.Name); }
 
             return Ty.NewVar(name, typ);
         }

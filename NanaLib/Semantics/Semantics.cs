@@ -1959,9 +1959,9 @@ namespace Nana.Semantics
     {
         public CallFun CtorCall;
         public TmpVarGenerator TmpVarGen;
-        public Tuple2<Sema, Sema>[] SrcAndDsts;
+        public Tuple2<Sema, Variable>[] SrcAndDsts;
 
-        public ClosureConstruction(CallFun ctorcall, TmpVarGenerator tmpVarGen, Tuple2<Sema, Sema>[] srcanddsts)
+        public ClosureConstruction(CallFun ctorcall, TmpVarGenerator tmpVarGen, Tuple2<Sema, Variable>[] srcanddsts)
         {
             CtorCall = ctorcall;
             TmpVarGen = tmpVarGen;
@@ -1970,12 +1970,14 @@ namespace Nana.Semantics
 
         public override void Give(IMRGenerator gen)
         {
-            Variable tmpvar = TmpVarGen.Generate(CtorCall.CalleeTy, gen);
+            Typ ty = CtorCall.CalleeTy;
+            Variable tmpvar = TmpVarGen.Generate(ty, gen);
             Assign tmpasgn = new Assign(CtorCall, tmpvar, /*prepare*/ null);
             tmpasgn.Exec(gen);
-            foreach (Tuple2<Sema, Sema> sandd in SrcAndDsts)
+            foreach (Tuple2<Sema, Variable> sandd in SrcAndDsts)
             {
-                Assign fldasgn = new Assign(sandd.F1, sandd.F2, tmpvar);
+                FieldAccessInfo fai = new FieldAccessInfo(ty, tmpvar, sandd.F2);
+                Assign fldasgn = new Assign(sandd.F1, fai, tmpvar);
                 fldasgn.Exec(gen);
             }
             tmpvar.Give(gen);
