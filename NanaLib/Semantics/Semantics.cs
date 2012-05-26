@@ -102,7 +102,7 @@ namespace Nana.Semantics
         public bool IsReferencing = false;
 
         public List<Nmd> Members_ = new List<Nmd>();
-        public List<Action<Blk>> EnsureMembersList = new List<Action<Blk>>();
+        public LinkedList<Action> EnsureMembersList = new LinkedList<Action>();
         public LinkedList<Custom> Customs;
         public List<Variable> Vars = new List<Variable>();
 
@@ -112,19 +112,19 @@ namespace Nana.Semantics
             E = env;
         }
 
-        public void EnsureMembers()
+        public void DoEnsureMembers()
         {
             if (EnsureMembersList.Count == 0) { return; }
-            List<Action<Blk>> tmp = EnsureMembersList;
-            EnsureMembersList = new List<Action<Blk>>();
-            tmp.ForEach(delegate(Action<Blk> a) { a(this); });
+            LinkedList<Action> tmp = EnsureMembersList;
+            EnsureMembersList = new LinkedList<Action>();
+            foreach (Action a in tmp) { a(); }
         }
 
         public List<Nmd> Members
         {
             get
             {
-                EnsureMembers();
+                DoEnsureMembers();
                 return Members_;
             }
         }
@@ -194,7 +194,7 @@ namespace Nana.Semantics
             Typ t = new Typ(refType, this);
             RefTyps.Add(t);
             BeAMember(t);
-            t.EnsureMembersList.Add(Typ.EnsureMembers);
+            t.EnsureMembersList.AddLast(t.EnsureMembers);
             if (refType.BaseType != null)
             {
                 Typ bt = FindOrNewRefType(refType.BaseType);
@@ -205,7 +205,7 @@ namespace Nana.Semantics
 
         public Typ FindRefTyp(Type refType)
         {
-            EnsureMembers();
+            DoEnsureMembers();
             return RefTyps.Find(GetNamePredicate<Typ>(refType.FullName ?? refType.Name));
         }
 
@@ -229,7 +229,7 @@ namespace Nana.Semantics
 
         public Typ FindArrayTyp(Typ typ, int dimension)
         {
-            EnsureMembers();
+            DoEnsureMembers();
             return ArrayTyps.Find(delegate(Typ t) { return t.ArrayType == typ && t.Dimension == dimension; });
         }
 
@@ -247,7 +247,7 @@ namespace Nana.Semantics
 
         public Typ FindGenericTypInstance(Typ typ, Typ[] genericTypeParams)
         {
-            EnsureMembers();
+            DoEnsureMembers();
             return GenericTypInstances.Find(delegate(Typ t)
                 {
                     bool b = t.GenericType == typ
@@ -265,7 +265,7 @@ namespace Nana.Semantics
 
         public override Blk NewNsp(string ns)
         {
-            EnsureMembers();
+            DoEnsureMembers();
             Blk nsp = new Blk(ns, this);
             nsp.IsReferencing = true;
             return BeAMember(nsp);
@@ -273,7 +273,7 @@ namespace Nana.Semantics
 
         public Blk FindNsp(string ns)
         {
-            EnsureMembers();
+            DoEnsureMembers();
             return Members_.Find(GetNamePredicate<Nmd>(ns)) as Blk;
         }
 
@@ -526,6 +526,19 @@ namespace Nana.Semantics
 
     }
 
+    public class OvldAccessInfo
+    {
+        public Typ Holder;
+        public Sema Instance;
+        public Ovld Value;
+        public OvldAccessInfo(Typ holder, Sema instance, Ovld value)
+        {
+            Holder = holder;
+            Instance = instance;
+            Value = value;
+        }
+    }
+
     public class Fun : Blk
     {
         static public readonly string EntryPointNameDefault = "Main";
@@ -636,7 +649,7 @@ namespace Nana.Semantics
 
         public Variable FindVar(string name)
         {
-            EnsureMembers();
+            DoEnsureMembers();
             return Vars.Find(GetNamePredicate<Variable>(name));
         }
 
@@ -705,6 +718,7 @@ namespace Nana.Semantics
 
         public List<Ovld> Ovlds = new List<Ovld>();
         public List<Prop> Props = new List<Prop>();
+        public List<Evnt> Evnts = new List<Evnt>();
 
         public List<Nmd> DebuggerDisplayMembers { get { return Members_; } }
 
@@ -749,7 +763,7 @@ namespace Nana.Semantics
 
         public Ovld FindOvld(string name)
         {
-            EnsureMembers();
+            DoEnsureMembers();
             return Ovlds.Find(GetNamePredicate<Ovld>(name));
         }
 
@@ -847,12 +861,12 @@ namespace Nana.Semantics
                 GenericDic[gargs[i].Name] = genericTypeParams[i];
             }
 
-            EnsureMembersList.Add(EnsureGenericMembersN);
+            EnsureMembersList.AddLast(EnsureGenericMembers);
         }
 
         public Prop FindProp(string name)
         {
-            EnsureMembers();
+            DoEnsureMembers();
             return Props.Find(GetNamePredicate<Prop>(name));
         }
 
@@ -861,6 +875,14 @@ namespace Nana.Semantics
             Prop prp = new Prop(p, E);
             Props.Add(prp);
             BeAMember<Prop>(new Prop(p, E));
+            return prp;
+        }
+
+        public Evnt NewEvnt(EventInfo ei)
+        {
+            Evnt prp = new Evnt(ei, E);
+            Evnts.Add(prp);
+            BeAMember<Evnt>(new Evnt(ei, E));
             return prp;
         }
 
@@ -876,16 +898,10 @@ namespace Nana.Semantics
             return false;
         }
 
-        static public void EnsureMembers(Blk self)
+        public void EnsureMembers()
         {
-            if (false == self is Typ) { return; }
-            EnsureMembers(self as Typ);
-        }
-
-        static public void EnsureMembers(Typ self)
-        {
-            if (self.RefType == null) { return; }
-            Type refType = self.RefType;
+            if (RefType == null) { return; }
+            Type ty = RefType;
             BindingFlags flags_ = BindingFlags.Instance
                                 | BindingFlags.Static
                                 | BindingFlags.Public
@@ -893,29 +909,26 @@ namespace Nana.Semantics
                                 | BindingFlags.FlattenHierarchy
                                 ;
             List<MethodBase> ms = new List<MethodBase>();
-            
-            ms.AddRange(refType.GetConstructors(flags_));
-            ms.AddRange(refType.GetMethods(flags_));
+
+            ms.AddRange(ty.GetConstructors(flags_));
+            ms.AddRange(ty.GetMethods(flags_));
             foreach (MethodBase m in ms)
-            { self.FindOrNewOvld(m.Name).NewFun(m); }
+            { FindOrNewOvld(m.Name).NewFun(m); }
 
-            new List<PropertyInfo>(refType.GetProperties(flags_))
-                .ConvertAll<Ovld>(self.NewProp);
+            new List<PropertyInfo>(ty.GetProperties(flags_))
+                .ConvertAll<Ovld>(NewProp);
+
+            foreach (EventInfo ei in ty.GetEvents(flags_))
+            { NewEvnt(ei); }
         }
 
-        static public void EnsureGenericMembersN(Blk self)
+        public void EnsureGenericMembers()
         {
-            if (false == self is Typ) { return; }
-            EnsureGenericMembers(self as Typ);
-        }
+            Debug.Assert(this != null && IsGeneric && IsGenericInstance && GenericType != null);
 
-        static public void EnsureGenericMembers(Typ self)
-        {
-            Debug.Assert(self != null && self.IsGeneric && self.IsGenericInstance && self.GenericType != null);
+            Typ gt = GenericType;
+            gt.DoEnsureMembers();
 
-            Typ gt = self.GenericType;
-            gt.EnsureMembers();
-            
             List<Variable> nvs = new List<Variable>();
             Action<Ovld, Fun> newfun = delegate(Ovld newovld_, Fun gfun_)
             {
@@ -925,10 +938,10 @@ namespace Nana.Semantics
                 {
                     if (gv.VarKind != Variable.VariableKind.Param)
                     { continue; }
-                    nvty = TransGenericType(self, gv.Att.TypGet);
+                    nvty = TransGenericType(this, gv.Att.TypGet);
                     nv = new Variable(gv.Name, nvty, Variable.VariableKind.Param);
-                    genericIndex = self.GenericDic.ContainsKey(gv.Att.TypGet.Name)
-                        ? Array.IndexOf(self.GenericTypeParams, self.GenericDic[gv.Att.TypGet.Name])
+                    genericIndex = GenericDic.ContainsKey(gv.Att.TypGet.Name)
+                        ? Array.IndexOf(GenericTypeParams, GenericDic[gv.Att.TypGet.Name])
                         : -1;
                     nv.GenericIndex = genericIndex;
                     if (genericIndex >= 0)
@@ -938,8 +951,8 @@ namespace Nana.Semantics
 
                 {
                     Typ rettyp = gfun_.Att.CanGet
-                        ? TransGenericType(self, gfun_.Att.TypGet)
-                        : self.E.BTY.Void
+                        ? TransGenericType(this, gfun_.Att.TypGet)
+                        : E.BTY.Void
                         ;
                     Fun f = newovld_.NewFun(gfun_.Name, nvs, rettyp);
                     f.MthdAttrs = gfun_.MthdAttrs;
@@ -948,49 +961,14 @@ namespace Nana.Semantics
 
             foreach (Ovld govld in gt.Ovlds)
             {
-                Ovld newovld = self.FindOrNewOvld(govld.Name);
+                Ovld newovld = FindOrNewOvld(govld.Name);
                 foreach (Fun gfun in govld.Funs)
                 { newfun(newovld, gfun); }
-
-                //Ovld sao = self.FindOrNewOvld(gao.Name);
-                //List<Variable> svs = new List<Variable>();
-                //foreach (Fun ga in gao.Funs)
-                //{
-                //    Variable sv; Typ st; int genericIndex;
-                //    svs.Clear();
-                //    foreach (Variable gv in ga.Params)
-                //    {
-                //        if (gv.VarKind != Variable.VariableKind.Param)
-                //        {
-                //            continue;
-                //        }
-                //        st = TransGenericType(self, gv.Att.TypGet);
-                //        sv = new Variable(gv.Name, st, Variable.VariableKind.Param);
-                //        genericIndex = self.GenericDic.ContainsKey(gv.Att.TypGet.Name)
-                //            ? Array.IndexOf(self.GenericTypeParams, self.GenericDic[gv.Att.TypGet.Name])
-                //            : -1;
-                //        sv.GenericIndex = genericIndex;
-                //        if (genericIndex >= 0)
-                //        {
-                //            sv.VarKind = Variable.VariableKind.ParamGeneric;
-                //        }
-                //        svs.Add(sv);
-                //    }
-
-
-                //    {
-                //        Typ rettyp = ga.Att.CanGet
-                //            ? TransGenericType(self, ga.Att.TypGet)
-                //            : self.E.BTY.Void
-                //            ;
-                //        sao.NewFun(new Token(ga.Name), svs, rettyp);
-                //    }
-                //}
             }
 
             foreach (Prop p in gt.Props)
             {
-                self.BeAMember<Prop>(p);
+                BeAMember<Prop>(p);
             }
 
         }
@@ -1117,7 +1095,60 @@ namespace Nana.Semantics
                 Att.TypSet = Setter.Signature[0];
             }
         }
+    }
 
+    public class Evnt : Ovld
+    {
+        public EventInfo Evn;
+        public Fun Add;
+
+        public Evnt(EventInfo evn, Env env)
+            : base(evn.Name, env)
+        {
+            Evn = evn;
+            MethodInfo mi = evn.GetAddMethod(/*nonPublic*/ true);
+            Fun f = new Fun(mi, env);
+            BeAMember<Fun>(f);
+            Add = f;
+        }
+    }
+
+    public class EvntAccessInfo : Sema
+    {
+        public Typ HoldingTyp;
+        public Sema Instance;
+        public Evnt Evn;
+
+        public EvntAccessInfo(Typ fieldHoldingTyp, Sema instance, Evnt evn)
+        {
+            HoldingTyp = fieldHoldingTyp;
+            Evn = evn;
+            Instance = instance;
+            Att.TypGet = Att.TypSet = evn.Att.TypGet;
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            //if (false == Field.Att.IsStatic)
+            //{ Instance.Give(gen); }
+            //gen.LoadField(HoldingTyp, Field);
+        }
+
+        public override void Take(IMRGenerator gen)
+        {
+            //gen.StoreField(HoldingTyp, Field);
+        }
+
+        public override void Addr(IMRGenerator gen)
+        {
+            //Give(gen);
+        }
+
+        public override void Exec(IMRGenerator gen)
+        {
+            //Give(gen);
+            //gen.Pop();
+        }
     }
 
     //  Return Determinacy State (It's doubtful to make sense in English.)

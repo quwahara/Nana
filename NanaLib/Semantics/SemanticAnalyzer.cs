@@ -67,10 +67,7 @@ namespace Nana.Semantics
             if (obj == null
                 || obj.GetType() != typeof(Typ)
                 )
-            {
-                throw new NotImplementedException(
-                    TokenEx.ToTree(t, delegate(Token t_) { return t_.Value + "@" + t_.Group; }));
-            }
+            { throw new SemanticError("It is not a type", t); }
 
             return obj as Typ;
         }
@@ -177,10 +174,6 @@ namespace Nana.Semantics
 
         public object Closure(Token t)
         {
-            AppAnalyzer apz = Above.Apz;
-            TypAnalyzer tyz = Above.Tyz;
-            FunAnalyzer fuz = Above.Fuz;
-
             string tmpnm = E.GetTempName();
             Token prm = null;
             if (")" != t.Follows[0].Value)
@@ -208,7 +201,7 @@ namespace Nana.Semantics
 
                 funtkn.Find("@Block").Follows = t.Find("@Block").Follows;
 
-                TypAnalyzer taz = fuz.NewTyz(classtkn);
+                TypAnalyzer taz = Above.NewTyz(classtkn);
 
                 taz.ConstructSub();
                 taz.AnalyzeTyp();
@@ -252,7 +245,8 @@ namespace Nana.Semantics
                 if (null != typspc)
                 { funtkn.Find("@TypSpc").Follows = typspc.Follows; }
 
-                TypAnalyzer taz = tyz.NewTyz(classtkn);
+                TypAnalyzer taz = Above.NewTyz(classtkn);
+
 
                 taz.ConstructSub();
                 taz.AnalyzeTyp();
@@ -874,6 +868,7 @@ namespace Nana.Semantics
             if (mbr == null) { throw new SemanticError(string.Format("{0} is not a member of {1}", t.Second.Value, y._FullName), t.Second); }
             if (mbr is Enu) { return mbr; }
             if (mbr is Prop) { return new CallPropInfo(y, mbr as Prop, v); };
+            if (mbr is Evnt) { return new EvntAccessInfo(y, v, mbr as Evnt); }
             if (mbr is Variable && (mbr as Variable).VarKind == Variable.VariableKind.Field)
             { return new FieldAccessInfo(y, v, mbr as Variable); }
 
@@ -1132,9 +1127,6 @@ namespace Nana.Semantics
         virtual public object Find(string name)
         {
             return null;
-            //>>
-            //if (Bl == null) { return null; }
-            //return Bl.Find(name);
         }
 
         virtual public object FindUp(string name)
@@ -1364,6 +1356,9 @@ namespace Nana.Semantics
             
             Type nt = n.GetType();
             
+            //>>
+            //if (nt == typeof(Ovld))
+            //{ return new OvldAccessInfo(Ty, null, n as Ovld); }
             if (nt == typeof(Ovld))
             { return new Member(Ty, n, null); }
 
