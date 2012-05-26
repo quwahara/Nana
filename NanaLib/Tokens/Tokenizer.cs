@@ -308,6 +308,7 @@ namespace Nana.Tokens
 
         static public string InlineRxPattern = @"(?<Cmt>(//.*))
 |(?<Ope>(==|!=|\<=|\>=|\::))
+|(?<AsgnL>(\+=|\-=))
 |(?<AsgnL>\<\-)
 |(?<AsgnR>\-\>)
 |(?<Cls>`\()

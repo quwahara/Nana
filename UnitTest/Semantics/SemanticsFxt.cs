@@ -151,12 +151,12 @@ namespace UnitTest.Semantics.Try
 
             Assembly exeasmb = Assembly.GetExecutingAssembly();
             string name = GetType().Name;
-            root.Find("@CompileOptions")
+            root.Find("CompileOptions")
                 .FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
                 .FlwsAdd(Path.GetFileNameWithoutExtension(exeasmb.Location), "reference")
                 .FlwsAdd(name + ".exe", "out")
                 ;
-            root.Find("@Sources").FlwsAdd(Inp, "SourceText");
+            root.Find("Sources").FlwsAdd(Inp, "SourceText");
 
             Ctrl.Check(root);
             Ctrl ctrl = new Ctrl();
@@ -172,7 +172,7 @@ namespace UnitTest.Semantics.Try
             try
             {
                 ctrl.Compile(root);
-                trace(root.Find("@Code").Value);
+                trace(root.Find("Code").Value);
             }
             catch (Nana.Infr.Error e)
             {
@@ -2683,12 +2683,12 @@ namespace UnitTest.Semantics.Root
 
                 Assembly exeasmb = Assembly.GetExecutingAssembly();
                 string name = GetType().Name;
-                root.Find("@CompileOptions")
+                root.Find("CompileOptions")
                     .FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
                     .FlwsAdd(Path.GetFileNameWithoutExtension(exeasmb.Location), "reference")
                     .FlwsAdd(name + ".exe", "out")
                     ;
-                root.Find("@Sources").FlwsAdd(c.Input, "SourceText");
+                root.Find("Sources").FlwsAdd(c.Input, "SourceText");
 
                 Ctrl.Check(root);
                 Ctrl ctrl = new Ctrl();
@@ -2698,7 +2698,7 @@ namespace UnitTest.Semantics.Root
                 try
                 {
                     ctrl.Compile(root);
-                    trace(root.Find("@Code").Value);
+                    trace(root.Find("Code").Value);
                 }
                 catch (Nana.Infr.Error e)
                 {

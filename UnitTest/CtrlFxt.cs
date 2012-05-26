@@ -1399,8 +1399,16 @@ fun Main()
         //[Test]
         public void ZZZ()
         {
+            References.Add("system.windows.forms.dll");
+
             Inp =
 @"
+
+h = `(sender:object, a:EventArgs)   .. ,,
+
+f   = System.Windows.Forms.Form()
+f.Load  += h
+
 ";
             EpcSyn = @"";
 
@@ -1418,12 +1426,12 @@ fun Main()
 
                 Assembly exeasmb = Assembly.GetExecutingAssembly();
                 string name = GetType().Name;
-                Token opt = root.Find("@CompileOptions");
+                Token opt = root.Find("CompileOptions");
                 opt.FlwsAdd(Path.GetDirectoryName(exeasmb.Location), "include")
                     .FlwsAdd(name + ".exe", "out")
                     ;
                 References.ForEach(delegate(string s) { opt.FlwsAdd(s, "reference"); });
-                root.Find("@Sources").FlwsAdd(c.Input, "SourceText");
+                root.Find("Sources").FlwsAdd(c.Input, "SourceText");
 
                 Ctrl.Check(root);
                 Ctrl ctrl = new Ctrl();
@@ -1436,13 +1444,13 @@ fun Main()
                     {
                         ctrl.AfterSyntaxAnalyze = delegate(Token root_)
                         {
-                            trace(TokenEx.ToTree(root_.Find("@Syntax").Follows[0]));
+                            trace(TokenEx.ToTree(root_.Find("Syntax").Follows[0]));
                         };
                     }
                     ctrl.Compile(root);
                     if (EpcIL != "")
                     {
-                        Token code = root.Find("@Code");
+                        Token code = root.Find("Code");
                         trace(code.Value);
                     }
                 }

@@ -179,7 +179,7 @@ namespace Nana.Semantics
             if (")" != t.Follows[0].Value)
             { prm = t.Follows[0]; }
 
-            Token typspc = t.Find("@TypSpc");
+            Token typspc = t.Find("TypSpc");
 
             string clsname = ClosurePrefix + tmpnm + "'";
 
@@ -187,7 +187,7 @@ namespace Nana.Semantics
             Typ clstyp = null;
             {
                 Token classtkn = CreateClassToken(clsname, /*basename*/ null);
-                Token classblk = classtkn.Find("@Block");
+                Token classblk = classtkn.Find("Block");
 
                 Token contkn = CreateFunToken("cons", /* name */ null, /* returnType */ null);
                 Token funtkn = CreateFunToken("nfun", "'0impl'", "void");
@@ -195,11 +195,11 @@ namespace Nana.Semantics
                 classblk.FlwsAdd(funtkn);
 
                 if (null != prm)
-                { funtkn.Find("@Prm").FlwsAdd(prm); }
+                { funtkn.Find("Prm").FlwsAdd(prm); }
                 if (null != typspc)
-                { funtkn.Find("@TypSpc").Follows = typspc.Follows; }
+                { funtkn.Find("TypSpc").Follows = typspc.Follows; }
 
-                funtkn.Find("@Block").Follows = t.Find("@Block").Follows;
+                funtkn.Find("Block").Follows = t.Find("Block").Follows;
 
                 TypAnalyzer taz = Above.NewTyz(classtkn);
 
@@ -231,19 +231,19 @@ namespace Nana.Semantics
             string dlgname = "'0dlgt" + tmpnm + "'";
             {
                 Token classtkn = CreateClassToken(dlgname, "System.MulticastDelegate");
-                Token classblk = classtkn.Find("@Block");
+                Token classblk = classtkn.Find("Block");
 
                 Token contkn = CreateFunToken("cons", /* name */ null, /* returnType */ null);
-                contkn.Find("@Prm").FlwsAdd(CreateParamToken(new string[] { "obj:object", "mth:System.IntPtr" }));
+                contkn.Find("Prm").FlwsAdd(CreateParamToken(new string[] { "obj:object", "mth:System.IntPtr" }));
                 Token funtkn = CreateFunToken("nfun", "Invoke", "void");
 
                 classblk.FlwsAdd(contkn);
                 classblk.FlwsAdd(funtkn);
 
                 if (null != prm)
-                { funtkn.Find("@Prm").FlwsAdd(prm); }
+                { funtkn.Find("Prm").FlwsAdd(prm); }
                 if (null != typspc)
-                { funtkn.Find("@TypSpc").Follows = typspc.Follows; }
+                { funtkn.Find("TypSpc").Follows = typspc.Follows; }
 
                 TypAnalyzer taz = Above.NewTyz(classtkn);
 
@@ -804,9 +804,9 @@ namespace Nana.Semantics
                     //  to detect target method, retrieve signature of Invoke() method
                     Ovld invkovl = calleetyp.FindOvld("Invoke");
                     if (0 == invkovl.Funs.Count)
-                    { throw new SemanticError(string.Format("No Invoke method in delegate calss: {0}", invkovl.Name)); }
+                    { throw new SemanticError(string.Format("No Invoke method in delegate class: {0}", invkovl.Name)); }
                     if (2 <= invkovl.Funs.Count)
-                    { throw new SemanticError(string.Format("Two or more Invoke methods in delegate calss: {0}", invkovl.Name)); }
+                    { throw new SemanticError(string.Format("Two or more Invoke methods in delegate class: {0}", invkovl.Name)); }
                     Typ[] invksig = invkovl.Funs[0].Signature;
                     
                     //  retrieve target method
@@ -1028,7 +1028,7 @@ namespace Nana.Semantics
         public override string ToString()
         {
             Token t = Seed ?? Token.Empty;
-            Token k = t.Find("@Name") ?? t;
+            Token k = t.Find("Name") ?? t;
             return k.Value
                 + ":" + GetType().Name.Replace("Analyzer", "Az")
                 + (null != Above ? ">" + Above.ToString() : "")
@@ -1072,7 +1072,7 @@ namespace Nana.Semantics
             }
 
             if (null != Tyz && null != Tyz.Seed)
-            { IsClosure = (Tyz.Seed.Find("@Name") ?? Token.Empty).Value.StartsWith(ClosurePrefix); }
+            { IsClosure = (Tyz.Seed.Find("Name") ?? Token.Empty).Value.StartsWith(ClosurePrefix); }
         }
 
         public void CopyAboveAnalyzers(BlkAnalyzer above)
@@ -1149,7 +1149,7 @@ namespace Nana.Semantics
 
         public override void ConstructSub()
         {
-            Token block = Seed.Find("@Block");
+            Token block = Seed.Find("Block");
             if (block == null) { return; }
             BlkAnalyzer blz = NewBlz(block);
             blz.ConstructSub();
@@ -1180,7 +1180,7 @@ namespace Nana.Semantics
             bool isCtor = nameasm == Nana.IMRs.IMRGenerator.InstCons;
 
             List<Token> prms = new List<Token>();
-            Token prmpre = s.Find("@Prm");
+            Token prmpre = s.Find("Prm");
             if (prmpre.Follows != null && prmpre.Follows.Length > 0)
             { Gate(prmpre.Follows[0]); }
 
@@ -1190,7 +1190,7 @@ namespace Nana.Semantics
             {
                 returnType = Tyz.Ty;
             }
-            else if (null != (ty = s.Find("@TypSpc")))
+            else if (null != (ty = s.Find("TypSpc")))
             {
                 returnType = RequireTyp(ty.Follows[0]);
             }
@@ -1311,7 +1311,7 @@ namespace Nana.Semantics
 
         public override void ConstructSub()
         {
-            foreach (Token t in Seed.Select("@Block/@Fun"))
+            foreach (Token t in Seed.Select("Block/Fun"))
             { FunAnalyzer fuz = NewFuz(t); }
             foreach (FunAnalyzer z in Fuzs)
             { z.ConstructSub(); }
@@ -1320,7 +1320,7 @@ namespace Nana.Semantics
         public void AnalyzeTyp()
         {
             Token s = Seed;
-            Token name = s.Find("@Name");
+            Token name = s.Find("Name");
             if (name == null || string.IsNullOrEmpty(name.Value))
             { throw new InternalError("Specify name to the type", s); }
 
@@ -1330,7 +1330,7 @@ namespace Nana.Semantics
             
             Bl = Fu = Ty = ap.NewTyp(name.Value);
 
-            foreach (Token t in Seed.Find("@Block").Follows)
+            foreach (Token t in Seed.Find("Block").Follows)
             {
                 if (t.Group == "Fun")
                 { continue; }
@@ -1341,7 +1341,7 @@ namespace Nana.Semantics
 
         public void AnalyzeBaseTyp()
         {
-            Token baseTypeDef = Seed.Find("@BaseTypeDef");
+            Token baseTypeDef = Seed.Find("BaseTypeDef");
             Typ bsty = baseTypeDef != null
                 ? RequireTyp(baseTypeDef.Follows[0])
                 : E.BTY.Object;
@@ -1471,7 +1471,7 @@ namespace Nana.Semantics
 
         public override void ConstructSub()
         {
-            foreach (Token t in Seed.Select("@Source"))
+            foreach (Token t in Seed.Select("Source"))
             {
                 SrcAnalyzer srz = new SrcAnalyzer(t, this);
                 Srzs.AddLast(srz);
@@ -1700,7 +1700,7 @@ namespace Nana.Semantics
 
         public void AnalyzeCompileOptions()
         {
-            foreach (Token opt in Seed.Find("@CompileOptions").Follows)
+            foreach (Token opt in Seed.Find("CompileOptions").Follows)
             {
                 switch (opt.Group.ToLower())
                 {
@@ -1717,7 +1717,7 @@ namespace Nana.Semantics
 
         public override void ConstructSub()
         {
-            Apz = new AppAnalyzer(Seed.Find("@Syntax"), this);
+            Apz = new AppAnalyzer(Seed.Find("Syntax"), this);
             Apz.ConstructSub();
         }
 

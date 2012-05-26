@@ -143,14 +143,16 @@ namespace Nana.Tokens
             if (pathspl.Length < 1) { return ts.ToArray(); }
 
             string p = pathspl[0];
-            bool matchWithGroup = p.StartsWith("@");
-            if (matchWithGroup)
+            bool matchWithValue = p.StartsWith("@");
+            if (matchWithValue)
             { p = p.Substring(1); }
 
             foreach (Token t in Follows)
             {
-                if ((matchWithGroup && p == t.Group)
-                    || (false == matchWithGroup && p == t.Value))
+                bool match = matchWithValue ?
+                    p == t.Value :
+                    p == t.Group;
+                if (match)
                 {
                     if (pathspl.Length == 1)
                     { ts.Add(t); }

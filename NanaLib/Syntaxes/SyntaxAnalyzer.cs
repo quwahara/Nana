@@ -86,7 +86,7 @@ namespace Nana.Syntaxes
             ";
 
         static public readonly string InfixRBpsTxt = @"
-            110 =   <-
+            110 =   <-  +=  -=
             ";
 
         static public readonly string CircumfixDefsTxt = @"
