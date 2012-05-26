@@ -486,7 +486,7 @@ namespace Nana.Generations
             string ind1 = GetCurrentIndent(1);
             string ind2 = GetCurrentIndent(2);
 
-            Typ returnType = f.IsConstructor == false && f.Att.CanGet ? f.Att.TypGet : null;
+            Typ returnType = f.IsConstructor ? null : f.ReturnTyp;
             b.Append(ind0);
             b.Append(".method ");
             b.Append(FromMethodAttributes(f.MthdAttrs).ToLower());
@@ -776,7 +776,7 @@ namespace Nana.Generations
         public static string Body(Typ t, Fun f)
         {
             StringBuilder b = new StringBuilder();
-            Typ retti = false == f.IsConstructor && f.Att.CanGet ? f.Att.TypGet : null;
+            Typ retti = false == f.IsConstructor ? f.ReturnTyp : null;
             b.Append(TypeNameInSig(retti));
 
             if (t != null && t.GetType() == typeof(Typ))

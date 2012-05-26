@@ -343,7 +343,7 @@ namespace Nana.Semantics
         {
             Ovld o = FindOrNewOvld(ope);
             Fun actual = calleetyp.FindOvld(funname).GetFunOf(calleetyp, argtyps, E.BTY.Void);
-            Fun newfun = o.NewFun(actual.Name, actual.Params, actual.Att.TypGet);
+            Fun newfun = o.NewFun(actual.Name, actual.Params, actual.ReturnTyp);
             newfun.MthdAttrs = actual.MthdAttrs;
             newfun.IsOperatorLikeFun = true;
             newfun.CalleeTypOfOperatorLikeFun = calleetyp;
@@ -548,6 +548,7 @@ namespace Nana.Semantics
         public MethodAttributes MthdAttrs;
         public MethodImplAttributes ImplAttrs = MethodImplAttributes.IL | MethodImplAttributes.Managed;
         public List<Variable> Params = new List<Variable>();
+        public Typ ReturnTyp;
 
         public Typ[] Signature
         {
@@ -568,6 +569,7 @@ namespace Nana.Semantics
         public bool IsOperator = false;
         public bool IsOperatorLikeFun = false;
         public Typ CalleeTypOfOperatorLikeFun;
+        public bool IsReturnValue { get { return E.BTY.Void != ReturnTyp; } }
 
         public bool IsAssignableSignature(Typ[] callertyps)
         {
@@ -595,7 +597,7 @@ namespace Nana.Semantics
 
         public void SetReturnTyp(Typ returnTyp)
         {
-            Att.TypGet = returnTyp;
+            ReturnTyp = returnTyp;
         }
 
         public void SetParams(List<Variable> params_)
@@ -629,7 +631,7 @@ namespace Nana.Semantics
                 if (mb.IsStatic)        /**/ { tt = typeof(void); }
                 else                    /**/ { tt = (mb as ConstructorInfo).DeclaringType; }
             }
-            Att.TypGet = env.FindOrNewRefType(tt);
+            ReturnTyp = env.FindOrNewRefType(tt);
         }
 
         public Variable NewThis(Typ typ)
@@ -950,10 +952,7 @@ namespace Nana.Semantics
                 }
 
                 {
-                    Typ rettyp = gfun_.Att.CanGet
-                        ? TransGenericType(this, gfun_.Att.TypGet)
-                        : E.BTY.Void
-                        ;
+                    Typ rettyp = TransGenericType(this, gfun_.ReturnTyp);
                     Fun f = newovld_.NewFun(gfun_.Name, nvs, rettyp);
                     f.MthdAttrs = gfun_.MthdAttrs;
                 }
@@ -1406,7 +1405,7 @@ namespace Nana.Semantics
             if ((isNewObj && callee.IsInstanceConstructor)
                 || false == callee.IsConstructor)
             {
-                Att.TypGet = callee.Att.TypGet;
+                Att.TypGet = callee.ReturnTyp;
             }
         }
 
@@ -1991,27 +1990,32 @@ namespace Nana.Semantics
         public CallFun CtorCall;
         public TmpVarGenerator TmpVarGen;
         public Tuple2<Sema, Variable>[] SrcAndDsts;
+        public Variable TmpVar;
 
         public ClosureConstruction(CallFun ctorcall, TmpVarGenerator tmpVarGen, Tuple2<Sema, Variable>[] srcanddsts)
         {
             CtorCall = ctorcall;
             TmpVarGen = tmpVarGen;
             SrcAndDsts = srcanddsts;
+            Att.TypGet = ctorcall.Att.TypGet;
         }
 
         public override void Give(IMRGenerator gen)
         {
-            Typ ty = CtorCall.CalleeTy;
-            Variable tmpvar = TmpVarGen.Generate(ty, gen);
-            Assign tmpasgn = new Assign(CtorCall, tmpvar, /*prepare*/ null);
-            tmpasgn.Exec(gen);
-            foreach (Tuple2<Sema, Variable> sandd in SrcAndDsts)
+            if (null == TmpVar)
             {
-                FieldAccessInfo fai = new FieldAccessInfo(ty, tmpvar, sandd.F2);
-                Assign fldasgn = new Assign(sandd.F1, fai, tmpvar);
-                fldasgn.Exec(gen);
+                Typ ty = CtorCall.CalleeTy;
+                TmpVar = TmpVarGen.Generate(ty, gen);
+                Assign tmpasgn = new Assign(CtorCall, TmpVar, /*prepare*/ null);
+                tmpasgn.Exec(gen);
+                foreach (Tuple2<Sema, Variable> sandd in SrcAndDsts)
+                {
+                    FieldAccessInfo fai = new FieldAccessInfo(ty, TmpVar, sandd.F2);
+                    Assign fldasgn = new Assign(sandd.F1, fai, TmpVar);
+                    fldasgn.Exec(gen);
+                }
             }
-            tmpvar.Give(gen);
+            TmpVar.Give(gen);
         }
     }
 

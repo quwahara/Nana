@@ -33,7 +33,6 @@ namespace Nana.Semantics
         public Fun Fu;
         public Blk Bl;
         public TmpVarGenerator TmpVarGen;
-        public bool IsInFun;
 
         public LineAnalyzer(Token seed, BlkAnalyzer above)
         {
@@ -93,7 +92,6 @@ namespace Nana.Semantics
         {
             PrepareAboveBlock();
             
-            IsInFun = Fu.Att.CanGet;
             TmpVarGen = new TmpVarGenerator(E.GetTempName, NewVar);
             if (Above.RequiredReturnValue.Count == 0)
             {
@@ -363,7 +361,7 @@ namespace Nana.Semantics
 
         public object Ret(Token t)
         {
-            if (IsInFun)
+            if (Fu.IsReturnValue)
             {
                 ReturnValue rv = new ReturnValue();
                 Above.RequiredReturnValue.Push(rv);
@@ -1244,15 +1242,15 @@ namespace Nana.Semantics
             return nameasm;
         }
 
-        static public void EnusureReturn(Fun a)
+        static public void EnusureReturn(Fun f)
         {
             bool rds = false;
-            foreach (Sema x in a.Exes)
+            foreach (Sema x in f.Exes)
             {
                 if (x is IReturnDeterminacyState)
                 { rds |= (x as IReturnDeterminacyState).RDS; }
             }
-            if (a.IsConstructor == false && a.Att.CanGet)
+            if (false == f.IsConstructor && f.IsReturnValue)
             {
                 if (false == rds)
                 { throw new SyntaxError("Function doesn't return value"); }
@@ -1260,7 +1258,7 @@ namespace Nana.Semantics
             else
             {
                 if (false == rds)
-                { a.Exes.Add(new Ret()); }
+                { f.Exes.Add(new Ret()); }
             }
         }
 
