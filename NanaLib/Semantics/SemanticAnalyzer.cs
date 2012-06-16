@@ -463,7 +463,7 @@ namespace Nana.Semantics
             }
 
             if ((tak.GetType() == typeof(Nmd)) == false
-                && (tak is ArrayAccessInfo) == false
+                && (tak is AccArr) == false
                 && (tak is FieldAccessInfo) == false
                 && ((tak is Sema) && (tak as Sema).Att.CanSet) == false
                 )
@@ -477,9 +477,9 @@ namespace Nana.Semantics
             else if (tak is FieldAccessInfo)
             { prepare = (tak as FieldAccessInfo).Instance; }
 
-            if (tak is ArrayAccessInfo)
+            if (tak is AccArr)
             {
-                CallFun cf = new CallFun(Semas.S1(giv), tak as ArrayAccessInfo);
+                CallFun cf = new CallFun(Semas.S1(giv), tak as AccArr);
                 return cf;
             }
             if (tak.GetType() == typeof(AccProp))
@@ -1020,7 +1020,7 @@ namespace Nana.Semantics
                     .ToArray();
                 ;
 
-                ArrayAccessInfo acc = new ArrayAccessInfo(val, indexes);
+                AccArr acc = new AccArr(val, indexes);
                 return acc;
             }
 

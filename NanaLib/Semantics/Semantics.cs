@@ -1891,12 +1891,12 @@ namespace Nana.Semantics
         }
     }
 
-    public class ArrayAccessInfo : Sema
+    public class AccArr : Sema
     {
         public Sema Val;
         public Sema[] Indices;
 
-        public ArrayAccessInfo(Sema val, Sema[] indices)
+        public AccArr(Sema val, Sema[] indices)
         {
             Val = val;
             Indices = indices;
