@@ -1339,49 +1339,6 @@ namespace Nana.Semantics
         }
     }
 
-    public class Assign : Sema
-    {
-        public Sema Prepare;
-        public Sema GiveVal;
-        public Sema TakeVar;
-
-        public Assign(Sema give, Sema take, Sema prepare)
-        {
-            GiveVal = give;
-            TakeVar = take;
-            Att.TypGet = take.Att.TypGet;
-            Att.TypSet = take.Att.TypSet;
-            Prepare = prepare;
-        }
-
-        public override void Take(IMRGenerator gen)
-        {
-            Exec(gen);
-            TakeVar.Take(gen);
-        }
-
-        public override void Give(IMRGenerator gen)
-        {
-            Exec(gen);
-            TakeVar.Give(gen);
-        }
-
-        public override void Addr(IMRGenerator gen)
-        {
-            Give(gen);
-        }
-
-        public override void Exec(IMRGenerator gen)
-        {
-            if (Prepare != null)
-            { Prepare.Give(gen); }
-
-            GiveVal.Give(gen);
-            TakeVar.Take(gen);
-        }
-
-    }
-
     public class ReturnValue : Sema, IReturnDeterminacyState
     {
         public Sema GiveVal = null;
@@ -2046,13 +2003,13 @@ namespace Nana.Semantics
             {
                 Typ ty = CtorCall.Att.TypGet; 
                 TmpVar = TmpVarGen.Generate(ty, gen);
-                Assign tmpasgn = new Assign(CtorCall, TmpVar, /*prepare*/ null);
-                tmpasgn.Exec(gen);
+                CallFun tmpcf = new CallFun(Semas.S1(CtorCall), TmpVar);
+                tmpcf.Exec(gen);
                 foreach (Tuple2<Sema, Variable> sandd in SrcAndDsts)
                 {
                     AccFld af = new AccFld(ty, TmpVar, sandd.F2);
-                    Assign fldasgn = new Assign(sandd.F1, af, TmpVar);
-                    fldasgn.Exec(gen);
+                    CallFun cf = new CallFun(Semas.S1(sandd.F1), af);
+                    cf.Exec(gen);
                 }
             }
             TmpVar.Give(gen);

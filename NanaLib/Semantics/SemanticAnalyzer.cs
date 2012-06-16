@@ -472,10 +472,6 @@ namespace Nana.Semantics
                 throw new SyntaxError("Can not assign to: " + take.Value, take);
             }
 
-            Sema prepare = null;
-            if (tak is Assign)
-            { prepare = (tak as Assign).Prepare; }
-
             if (tak is CallFun)
             {
                 CallFun cf = new CallFun(Semas.S1(giv), tak as CallFun);
@@ -503,7 +499,10 @@ namespace Nana.Semantics
                 tak = NewVar((tak as Nmd).Name, giv.Att.TypGet);
             }
 
-            return new Assign(giv, tak as Sema, prepare);
+            {
+                CallFun cf = new CallFun(Semas.S1(giv), tak as Sema);
+                return cf;
+            }
         }
 
         public object DefineVariable(Token t)
