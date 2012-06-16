@@ -10,6 +10,7 @@ using System.Text;
 using NUnit.Framework;
 using Nana.Delegates;
 using Nana.Infr;
+using System.IO;
 
 namespace UnitTest.Util
 {
@@ -33,9 +34,45 @@ namespace UnitTest.Util
         public void Run()
         {
             Actual = Test(this);
-            if (Actual == Expected) Result = "OK";
-            Debug.WriteLine(ToString());
-            Assert.That(Actual, Is.EqualTo(Expected), Label);
+            List<string> inp = PutNo(Sty.ToStringList(Input));
+            List<string> epc = PutNo(Sty.ToStringList(Expected));
+            List<string> act = PutNo(Sty.ToStringList(Actual));
+            string epcln = "", actln = "";
+            Result = "OK";
+            for (int i = 0; i < Math.Max(epc.Count, act.Count); ++i)
+            {
+                epcln = i < epc.Count ? epc[i] : "(--- End ---)";
+                actln = i < act.Count ? act[i] : "(--- End ---)";
+                if (epcln != actln)
+                {
+                    Result = "NG";
+                    break;
+                }
+            }
+            string rep = ToReport(Label, Result, inp, epc, act);
+            Debug.WriteLine(rep);
+            Assert.That(actln, Is.EqualTo(epcln), Label);
+        }
+
+        public static string ToReport(string Label, string Result, List<string> inp, List<string> epc, List<string> act)
+        {
+            StringBuilder b = new StringBuilder();
+            if (Sty.NotNullOrEmpty(Label)) b.AppendLine("--- " + Label + " ---");
+            b.AppendLine("R: " + Result);
+            b.AppendLine("I:");
+            b.Append(Cty.ToText(inp));
+            b.AppendLine("E:");
+            b.Append(Cty.ToText(epc));
+            b.AppendLine("A:");
+            b.Append(Cty.ToText(act));
+            return b.ToString();
+        }
+
+        public static List<string> PutNo(List<string> ls)
+        {
+            int no = 0;
+            return ls.ConvertAll<string>(delegate(string ln)
+            { ++no; return no.ToString("0000") + ": " + ln; });
         }
 
         public override string ToString()
