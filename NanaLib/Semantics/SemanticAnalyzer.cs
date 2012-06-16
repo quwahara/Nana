@@ -483,7 +483,8 @@ namespace Nana.Semantics
             }
             if (tak.GetType() == typeof(CallPropInfo))
             {
-                return new PropSet(tak as CallPropInfo, giv);
+                CallFun cf = new CallFun(Semas.S1(giv), tak as CallPropInfo);
+                return cf;
             }
             if (tak.GetType() == typeof(Nmd))
             {

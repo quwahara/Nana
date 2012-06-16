@@ -32,6 +32,17 @@ namespace Nana.Semantics
         }
         public Typ TypGet = null;
         public Typ TypSet = null;
+        public Typ TakeReturnTyp = null;
+        public bool TakeReturns
+        {
+            get
+            {
+                Typ t = TakeReturnTyp;
+                if (null == t) { return false; }
+                if (t.IsReferencing && t.RefType == typeof(void)) { return false; }
+                return true;
+            }
+        }
     }
 
     public class Sema
@@ -1461,7 +1472,10 @@ namespace Nana.Semantics
             Instance = instance;
             Att.CanExec_ = true;
             if (false == callee.IsConstructor)
-            { Att.TypGet = callee.ReturnTyp; }
+            {
+                Att.TypGet = callee.ReturnTyp;
+                Att.TakeReturnTyp = callee.ReturnTyp;
+            }
         }
 
         public override void Prepare(IMRGenerator gen)
@@ -1511,6 +1525,7 @@ namespace Nana.Semantics
             Callee = callee;
             Att.CanExec_ = true;
             Att.TypGet = callee.ReturnTyp;
+            Att.TakeReturnTyp = callee.ReturnTyp;
         }
 
         public override void Take(IMRGenerator gen)
@@ -1534,11 +1549,10 @@ namespace Nana.Semantics
             { s.Give(gen); }
         }
 
+        public static readonly Semas Empty = new Semas(new Sema[0]);
         public static Semas S0()                    /**/ { return Empty; }
         public static Semas S1(Sema s1)             /**/ { return new Semas(new Sema[] { s1 }); }
         public static Semas S2(Sema s1, Sema s2)    /**/ { return new Semas(new Sema[] { s1, s2 }); }
-
-        public static readonly Semas Empty = new Semas(new Sema[0]);
     }
 
     public class CallFun : Sema
@@ -1574,8 +1588,8 @@ namespace Nana.Semantics
         public override void Exec(IMRGenerator gen)
         {
             Core(gen);
-            if (false == Att.CanGet) { return; }
-            gen.Pop();
+            if (Taker.Att.TakeReturns)
+            { gen.Pop(); }
         }
 
         private void Core(IMRGenerator gen)
@@ -1602,6 +1616,23 @@ namespace Nana.Semantics
             Att.TypSet = prop.Att.TypSet;
         }
 
+        public override void Prepare(IMRGenerator gen)
+        {
+            LoadInstance(gen);
+        }
+
+        public void LoadInstance(IMRGenerator gen)
+        {
+            if (Instance == null) { return; }
+
+            Instance.Addr(gen);
+            if (Instance is Literal && Instance.Att.TypGet.IsValueType)
+            {
+                Variable v = (Instance as Literal).TmpVarGen.Substitute(Instance.Att.TypGet, gen);
+                v.Addr(gen);
+            }
+        }
+
         public override void Give(IMRGenerator gen)
         {
             if (Prop.Getter == null)
@@ -1609,6 +1640,14 @@ namespace Nana.Semantics
             FunAcc fa = new FunAcc(CalleeTy, Prop.Getter, Instance);
             CallFun cf = new CallFun(Semas.S0(), fa);
             cf.Give(gen);
+        }
+
+        public override void Take(IMRGenerator gen)
+        {
+            Fun setter = Prop.Setter;
+            if (setter == null)
+            { throw new SyntaxError("Cannot set value to the property"); }
+            gen.CallFunction(CalleeTy, setter);
         }
 
         public override void Addr(IMRGenerator gen)
@@ -1620,42 +1659,6 @@ namespace Nana.Semantics
         {
             Give(gen);
             gen.Pop();
-        }
-    }
-
-    public class PropSet : Sema
-    {
-        public CallPropInfo CP;
-        public Sema Value;
-
-        public PropSet(CallPropInfo cp, Sema value)
-        {
-            CP = cp;
-            Value = value;
-
-            Att = cp.Prop.Att;
-        }
-
-        public override void Give(IMRGenerator gen)
-        {
-            if (CP.Prop.Getter == null)
-            { throw new SyntaxError("Cannot get value from the property"); }
-            Exec(gen);
-            CP.Give(gen);
-        }
-
-        public override void Addr(IMRGenerator gen)
-        {
-            Give(gen);
-        }
-
-        public override void Exec(IMRGenerator gen)
-        {
-            Fun setter = CP.Prop.Setter;
-            if (setter == null)
-            { throw new SyntaxError("Cannot set value to the property"); }
-            CallFun cf = new CallFun(Semas.S1(Value), new FunAcc(CP.CalleeTy, setter, CP.Instance));
-            cf.Exec(gen);
         }
     }
 
