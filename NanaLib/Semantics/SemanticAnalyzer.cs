@@ -254,8 +254,8 @@ namespace Nana.Semantics
             }
 
             Fun clscon = clstyp.FindOvld(".ctor").Funs[0];
-            NewAcc na = new NewAcc(clstyp, clscon);
-            CallFun inst = new CallFun(Semas.Empty, na);
+            AccNew an = new AccNew(clstyp, clscon);
+            CallFun inst = new CallFun(Semas.Empty, an);
 
             Tuple2<Sema, Variable>[] snds = null != ccx.CapturePairs ? ccx.CapturePairs.ToArray() : new Tuple2<Sema, Variable>[0];
             ClosureConstruction clsctr = new ClosureConstruction(inst, TmpVarGen, snds);
@@ -263,7 +263,7 @@ namespace Nana.Semantics
             Fun clsfun = clstyp.FindOvld("'0impl'").Funs[0];
             Typ dlgtyp = Above.FindUp(dlgname) as Typ;
             Fun dlgcon = dlgtyp.FindOvld(".ctor").Funs[0];
-            CallFun cf = new CallFun(Semas.S2(clsctr, new LoadFun(clstyp, clsfun)), new NewAcc(dlgtyp, dlgcon));
+            CallFun cf = new CallFun(Semas.S2(clsctr, new LoadFun(clstyp, clsfun)), new AccNew(dlgtyp, dlgcon));
             return cf;
         }
 
@@ -458,7 +458,7 @@ namespace Nana.Semantics
             if ("+=" == assign.Value && tak.GetType() == typeof(EvntAccessInfo))
             {
                 EvntAccessInfo eai = tak as EvntAccessInfo;
-                CallFun cf = new CallFun(Semas.S1(giv), new FunAcc(eai.HoldingTyp, eai.Evn.Add, eai.Instance));
+                CallFun cf = new CallFun(Semas.S1(giv), new AccFun(eai.HoldingTyp, eai.Evn.Add, eai.Instance));
                 return cf;
             }
 
@@ -481,9 +481,9 @@ namespace Nana.Semantics
             {
                 return new ArraySetInfo(tak as ArrayAccessInfo, giv);
             }
-            if (tak.GetType() == typeof(CallPropInfo))
+            if (tak.GetType() == typeof(AccProp))
             {
-                CallFun cf = new CallFun(Semas.S1(giv), tak as CallPropInfo);
+                CallFun cf = new CallFun(Semas.S1(giv), tak as AccProp);
                 return cf;
             }
             if (tak.GetType() == typeof(Nmd))
@@ -853,12 +853,12 @@ namespace Nana.Semantics
                 { throw new SemanticError(string.Format("No method matches for the calling: {0}", ovl.Name), t); }
 
 
-                Sema fa = null;
+                Sema ac = null;
                 if (isNewObj)
-                { fa = new NewAcc(calleetyp, calleefun); }
+                { ac = new AccNew(calleetyp, calleefun); }
                 else
-                { fa = new FunAcc(calleetyp, calleefun, instance); }
-                CallFun cf = new CallFun(ss, fa);
+                { ac = new AccFun(calleetyp, calleefun, instance); }
+                CallFun cf = new CallFun(ss, ac);
                 return cf;
             }
         }
@@ -901,7 +901,7 @@ namespace Nana.Semantics
             //if (mbr == null) { throw new SyntaxError("It is not a member", t.Second); }
             if (mbr == null) { throw new SemanticError(string.Format("{0} is not a member of {1}", t.Second.Value, y._FullName), t.Second); }
             if (mbr is Enu) { return mbr; }
-            if (mbr is Prop) { return new CallPropInfo(y, mbr as Prop, v); };
+            if (mbr is Prop) { return new AccProp(y, mbr as Prop, v); };
             if (mbr is Evnt) { return new EvntAccessInfo(y, v, mbr as Evnt); }
             if (mbr is Variable && (mbr as Variable).VarKind == Variable.VariableKind.Field)
             { return new FieldAccessInfo(y, v, mbr as Variable); }
@@ -1594,8 +1594,8 @@ namespace Nana.Semantics
                 Typ bsty = myty.BaseTyp;
                 Fun callee = bsty.FindOvld(".ctor").GetFunOf(bsty, new Typ[] { }, myty);
                 Sema instance = fun.FindVar("this");
-                FunAcc fa = new FunAcc(bsty, callee, instance);
-                fun.Exes.Add(new CallFun(Semas.Empty, fa));
+                AccFun af = new AccFun(bsty, callee, instance);
+                fun.Exes.Add(new CallFun(Semas.Empty, af));
             }
         }
 

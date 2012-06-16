@@ -1400,72 +1400,13 @@ namespace Nana.Semantics
         public bool RDS { get { return true; } }
     }
 
-    //public class FunAcc : Sema
-    //{
-    //    public Typ CalleeTy;
-    //    public Fun Callee;
-    //    public Sema Instance;
-    //    public bool IsNewObj;
-
-    //    public FunAcc(Typ calleety, Fun callee, Sema instance, bool isNew)
-    //    {
-    //        CalleeTy = calleety;
-    //        Callee = callee;
-    //        Instance = instance;
-    //        IsNewObj = isNew;
-    //        Att.CanExec_ = true;
-
-    //        if ((isNew && callee.IsInstanceConstructor)
-    //            || false == callee.IsConstructor)
-    //        {
-    //            Att.TypGet = callee.ReturnTyp;
-    //        }
-    //    }
-
-    //    public override void Prepare(IMRGenerator gen)
-    //    {
-    //        LoadInstance(gen);
-    //    }
-
-    //    public void LoadInstance(IMRGenerator gen)
-    //    {
-    //        if (Instance == null) { return; }
-
-    //        Instance.Addr(gen);
-    //        if (Instance is Literal && Instance.Att.TypGet.IsValueType)
-    //        {
-    //            Variable v = (Instance as Literal).TmpVarGen.Substitute(Instance.Att.TypGet, gen);
-    //            v.Addr(gen);
-    //        }
-    //    }
-
-    //    public override void Take(IMRGenerator gen)
-    //    {
-    //        if (Callee.IsOperator)
-    //        {
-    //            gen.Ope(Callee.Name, Callee.Att.TypGet);
-    //        }
-    //        else
-    //        {
-    //            Typ calleeTy = Callee.IsOperatorLikeFun
-    //                ? Callee.CalleeTypOfOperatorLikeFun
-    //                : CalleeTy;
-
-    //            if (IsNewObj)
-    //            { gen.NewObject(calleeTy, Callee); }
-    //            else
-    //            { gen.CallFunction(calleeTy, Callee); }
-    //        }
-    //    }
-    //}
-
-    public class FunAcc : Sema
+    public class AccFun : Sema
     {
         public Typ CalleeTy;
         public Fun Callee;
         public Sema Instance;
 
-        public FunAcc(Typ calleety, Fun callee, Sema instance)
+        public AccFun(Typ calleety, Fun callee, Sema instance)
         {
             CalleeTy = calleety;
             Callee = callee;
@@ -1514,12 +1455,12 @@ namespace Nana.Semantics
     /// <summary>
     /// Constructor access information
     /// </summary>
-    public class NewAcc : Sema
+    public class AccNew : Sema
     {
         public Typ CalleeTy;
         public Fun Callee;
 
-        public NewAcc(Typ calleety, Fun callee)
+        public AccNew(Typ calleety, Fun callee)
         {
             CalleeTy = calleety;
             Callee = callee;
@@ -1600,13 +1541,13 @@ namespace Nana.Semantics
         }
     }
 
-    public class CallPropInfo : Sema
+    public class AccProp : Sema
     {
         public Typ CalleeTy;
         public Prop Prop;
         public Sema Instance;
 
-        public CallPropInfo(Typ calleety, Prop prop, Sema instance)
+        public AccProp(Typ calleety, Prop prop, Sema instance)
         {
             CalleeTy = calleety;
             Prop = prop;
@@ -1637,8 +1578,8 @@ namespace Nana.Semantics
         {
             if (Prop.Getter == null)
             { throw new SyntaxError("Cannot get value from the property"); }
-            FunAcc fa = new FunAcc(CalleeTy, Prop.Getter, Instance);
-            CallFun cf = new CallFun(Semas.S0(), fa);
+            AccFun af = new AccFun(CalleeTy, Prop.Getter, Instance);
+            CallFun cf = new CallFun(Semas.S0(), af);
             cf.Give(gen);
         }
 
