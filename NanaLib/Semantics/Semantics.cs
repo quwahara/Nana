@@ -1525,6 +1525,7 @@ namespace Nana.Semantics
 
         public override void Take(IMRGenerator gen)
         {
+            Exec(gen);
             Taker.Take(gen);
         }
 
@@ -1962,10 +1963,15 @@ namespace Nana.Semantics
             Att.TypGet = Att.TypSet = field.Att.TypGet;
         }
 
-        public override void Give(IMRGenerator gen)
+        public override void Prepare(IMRGenerator gen)
         {
             if (false == Field.Att.IsStatic)
             { Instance.Give(gen); }
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            Prepare(gen);
             gen.LoadField(HoldingTyp, Field);
         }
 

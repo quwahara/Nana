@@ -466,6 +466,7 @@ namespace Nana.Semantics
                 && (tak is AccArr) == false
                 && (tak is FieldAccessInfo) == false
                 && ((tak is Sema) && (tak as Sema).Att.CanSet) == false
+                && (tak is CallFun) == false
                 )
             {
                 throw new SyntaxError("Can not assign to: " + take.Value, take);
@@ -474,8 +475,18 @@ namespace Nana.Semantics
             Sema prepare = null;
             if (tak is Assign)
             { prepare = (tak as Assign).Prepare; }
-            else if (tak is FieldAccessInfo)
-            { prepare = (tak as FieldAccessInfo).Instance; }
+
+            if (tak is CallFun)
+            {
+                CallFun cf = new CallFun(Semas.S1(giv), tak as CallFun);
+                return cf;
+            }
+
+            if (tak is FieldAccessInfo)
+            {
+                CallFun cf = new CallFun(Semas.S1(giv), tak as FieldAccessInfo);
+                return cf;
+            }
 
             if (tak is AccArr)
             {
