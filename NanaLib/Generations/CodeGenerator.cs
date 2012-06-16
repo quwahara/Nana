@@ -498,7 +498,7 @@ namespace Nana.Generations
                 string.Join(", "
                 , f.Params
                 .ConvertAll<string>(delegate(Variable v)
-                { return TypeFullName(v.Att.TypGet) + " " + Qk(v.Name); })
+                { return TypeNameInSig(v.Att.TypGet) + " " + Qk(v.Name); })
                 .ToArray()
                 )
                 );

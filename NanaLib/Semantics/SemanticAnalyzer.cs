@@ -254,7 +254,8 @@ namespace Nana.Semantics
             }
 
             Fun clscon = clstyp.FindOvld(".ctor").Funs[0];
-            CallFun inst = new CallFun(clstyp, clscon, /*instance*/ null, new Sema[0], /*isNewObj*/ true);
+            NewAcc na = new NewAcc(clstyp, clscon);
+            CallFun inst = new CallFun(Semas.Empty, na);
 
             Tuple2<Sema, Variable>[] snds = null != ccx.CapturePairs ? ccx.CapturePairs.ToArray() : new Tuple2<Sema, Variable>[0];
             ClosureConstruction clsctr = new ClosureConstruction(inst, TmpVarGen, snds);
@@ -262,9 +263,8 @@ namespace Nana.Semantics
             Fun clsfun = clstyp.FindOvld("'0impl'").Funs[0];
             Typ dlgtyp = Above.FindUp(dlgname) as Typ;
             Fun dlgcon = dlgtyp.FindOvld(".ctor").Funs[0];
-            Sema[] args = new Sema[] { clsctr, new LoadFun(clstyp, clsfun) };
-
-            return new CallFun(dlgtyp, dlgcon, /*instance*/ null, args, /*isNewObj*/ true);
+            CallFun cf = new CallFun(Semas.S2(clsctr, new LoadFun(clstyp, clsfun)), new NewAcc(dlgtyp, dlgcon));
+            return cf;
         }
 
         public static Token CreateParamToken(string[] nameAndTypes)
@@ -454,6 +454,13 @@ namespace Nana.Semantics
 
             if (false == giv.Att.CanGet)
             { throw new SemanticError("The source side cannot assign to destination", give); }
+
+            if ("+=" == assign.Value && tak.GetType() == typeof(EvntAccessInfo))
+            {
+                EvntAccessInfo eai = tak as EvntAccessInfo;
+                CallFun cf = new CallFun(Semas.S1(giv), new FunAcc(eai.HoldingTyp, eai.Evn.Add, eai.Instance));
+                return cf;
+            }
 
             if ((tak.GetType() == typeof(Nmd)) == false
                 && (tak is ArrayAccessInfo) == false
@@ -790,40 +797,68 @@ namespace Nana.Semantics
                 }
                 else
                 {
-                    //  create delegate
-                    if (2 != argschain.Count)
-                    { throw new SemanticError(string.Format("Argument count must be 2 to create delegate but actual count is: {0}", argschain.Count.ToString())); }
+                    //  create parameters to call delegate constructor
+                    if (1 == argschain.Count)
+                    {
+                        Sema arg = argschain.First.Value as Sema;
+                        Typ ty = arg.Att.TypGet;
+                        if (false == ty.IsDelegate)
+                        { throw new SemanticError("The parameter is not delegate"); }
+                        argvals.Add(arg);
+                        argtyps.Add(ty);
 
-                    //  put instance for invoking
-                    Sema trginst = argschain.First.Value as Sema;
-                    argvals.Add(trginst);
-                    argtyps.Add(trginst.Att.TypGet);
-                    
-                    //  to detect target method, retrieve signature of Invoke() method
-                    Ovld invkovl = calleetyp.FindOvld("Invoke");
-                    if (0 == invkovl.Funs.Count)
-                    { throw new SemanticError(string.Format("No Invoke method in delegate class: {0}", invkovl.Name)); }
-                    if (2 <= invkovl.Funs.Count)
-                    { throw new SemanticError(string.Format("Two or more Invoke methods in delegate class: {0}", invkovl.Name)); }
-                    Typ[] invksig = invkovl.Funs[0].Signature;
-                    
-                    //  retrieve target method
-                    Member funmbr = argschain.Last.Value as Member;
-                    Ovld mbrovld = funmbr.Value as Ovld;
-                    Fun targetfun = mbrovld.GetFunOf(funmbr.Ty, invksig, Ty);
-                    
-                    //  put function loading to arguments
-                    LoadFun ldfun = new LoadFun(funmbr.Ty, targetfun);
-                    argvals.Add(ldfun);
-                    argtyps.Add(ldfun.Att.TypGet);
+                        //  put function loading to arguments
+                        Fun targetfun = ty.FindOvld("Invoke").Funs[0];
+                        LoadFun ldfun = new LoadFun(ty, targetfun);
+                        argvals.Add(ldfun);
+                        argtyps.Add(ldfun.Att.TypGet);
+                    }
+                    else
+                    {
+                        if (2 != argschain.Count)
+                        { throw new SemanticError(string.Format("Argument count must be 2 to create delegate but actual count is: {0}", argschain.Count.ToString())); }
+
+                        //  put instance for invoking
+                        Sema trginst = argschain.First.Value as Sema;
+                        argvals.Add(trginst);
+                        argtyps.Add(trginst.Att.TypGet);
+
+                        //  to detect target method, retrieve signature of Invoke() method
+                        Ovld invkovl = calleetyp.FindOvld("Invoke");
+                        if (0 == invkovl.Funs.Count)
+                        { throw new SemanticError(string.Format("No Invoke method in delegate class: {0}", invkovl.Name)); }
+                        if (2 <= invkovl.Funs.Count)
+                        { throw new SemanticError(string.Format("Two or more Invoke methods in delegate class: {0}", invkovl.Name)); }
+                        Typ[] invksig = invkovl.Funs[0].Signature;
+
+                        //  retrieve target method
+                        Member funmbr = argschain.Last.Value as Member;
+                        Ovld mbrovld = funmbr.Value as Ovld;
+                        Fun targetfun = mbrovld.GetFunOf(funmbr.Ty, invksig, Ty);
+
+                        //  put function loading to arguments
+                        LoadFun ldfun = new LoadFun(funmbr.Ty, targetfun);
+                        argvals.Add(ldfun);
+                        argtyps.Add(ldfun.Att.TypGet);
+                    }
                 }
             }
 
             {
+                Semas ss = new Semas(argvals.ToArray());
+
                 Fun calleefun = ovl.GetFunOf(calleetyp, argtyps.ToArray(), Ty);
                 if (calleefun == null)
                 { throw new SemanticError(string.Format("No method matches for the calling: {0}", ovl.Name), t); }
-                return new CallFun(calleetyp, calleefun, instance, argvals.ToArray(), isNewObj);
+
+
+                Sema fa = null;
+                if (isNewObj)
+                { fa = new NewAcc(calleetyp, calleefun); }
+                else
+                { fa = new FunAcc(calleetyp, calleefun, instance); }
+                CallFun cf = new CallFun(ss, fa);
+                return cf;
             }
         }
 
@@ -1353,10 +1388,6 @@ namespace Nana.Semantics
             { return null; }
             
             Type nt = n.GetType();
-            
-            //>>
-            //if (nt == typeof(Ovld))
-            //{ return new OvldAccessInfo(Ty, null, n as Ovld); }
             if (nt == typeof(Ovld))
             { return new Member(Ty, n, null); }
 
@@ -1562,7 +1593,8 @@ namespace Nana.Semantics
                 Typ bsty = myty.BaseTyp;
                 Fun callee = bsty.FindOvld(".ctor").GetFunOf(bsty, new Typ[] { }, myty);
                 Sema instance = fun.FindVar("this");
-                fun.Exes.Add(new CallFun(bsty, callee, instance, new Sema[] { }, false /*:isNewObj*/));
+                FunAcc fa = new FunAcc(bsty, callee, instance);
+                fun.Exes.Add(new CallFun(Semas.Empty, fa));
             }
         }
 

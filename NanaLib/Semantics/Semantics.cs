@@ -37,6 +37,7 @@ namespace Nana.Semantics
     public class Sema
     {
         public Attr Att = new Attr();
+        public virtual void Prepare(IMRGenerator gen) { }
         public virtual void Exec(IMRGenerator gen) { }
         public virtual void Give(IMRGenerator gen) { }
         public virtual void Take(IMRGenerator gen) { }
@@ -339,7 +340,25 @@ namespace Nana.Semantics
             RegisterOvldAlias(E.FindOrNewRefType(typeof(Console)), "`p", "WriteLine");
         }
 
-        public void RegisterOperatorLikeFun(string ope,  Typ calleetyp, string funname, Typ[] argtyps)
+        public void RegisterOperator(string ope, Typ left, Typ right, Typ ret)
+        {
+            Ovld o = NewOperatorFun(ope, left, right, ret);
+            AddToMembers(E.BTY.Void, ope, o);
+        }
+
+        public Ovld NewOperatorFun(string ope, Typ left, Typ right, Typ ret)
+        {
+            List<Variable> vs = new List<Variable>();
+            vs.Add(new Variable("a", left, Variable.VariableKind.Param));
+            vs.Add(new Variable("b", right, Variable.VariableKind.Param));
+            Ovld o = FindOrNewOvld(ope);
+            Fun f = o.NewFun(ope, vs, ret);
+            f.IsOperator = true;
+            f.MthdAttrs = MethodAttributes.Public;
+            return o;
+        }
+
+        public void RegisterOperatorLikeFun(string ope, Typ calleetyp, string funname, Typ[] argtyps)
         {
             Ovld o = FindOrNewOvld(ope);
             Fun actual = calleetyp.FindOvld(funname).GetFunOf(calleetyp, argtyps, E.BTY.Void);
@@ -349,12 +368,6 @@ namespace Nana.Semantics
             newfun.CalleeTypOfOperatorLikeFun = calleetyp;
             o.Members.Add(newfun);
             o.Funs.Add(newfun);
-            AddToMembers(E.BTY.Void, ope, o);
-        }
-
-        public void RegisterOperator(string ope, Typ left, Typ right, Typ ret)
-        {
-            Ovld o = NewOperatorFun(ope, left, right, ret);
             AddToMembers(E.BTY.Void, ope, o);
         }
 
@@ -369,18 +382,6 @@ namespace Nana.Semantics
             if (Members.ContainsKey(name))
             { return; }
             Members.Add(name, new Member(calletyp, o, /*instance=*/ null));
-        }
-
-        public Ovld NewOperatorFun(string ope, Typ left, Typ right, Typ ret)
-        {
-            List<Variable> vs = new List<Variable>();
-            vs.Add(new Variable("a", left, Variable.VariableKind.Param));
-            vs.Add(new Variable("b", right, Variable.VariableKind.Param));
-            Ovld o = FindOrNewOvld(ope);
-            Fun f = o.NewFun(ope, vs, ret);
-            f.IsOperator = true;
-            f.MthdAttrs = MethodAttributes.Public;
-            return o;
         }
 
         public Ovld FindOrNewOvld(string ope)
@@ -568,6 +569,7 @@ namespace Nana.Semantics
         public bool Inherited = false;
         public bool IsOperator = false;
         public bool IsOperatorLikeFun = false;
+        public bool IsAssign = false;
         public Typ CalleeTypOfOperatorLikeFun;
         public bool IsReturnValue { get { return E.BTY.Void != ReturnTyp; } }
 
@@ -593,6 +595,7 @@ namespace Nana.Semantics
         public Fun(string name, Env env)
             : base(name, env)
         {
+            if (null != E && null != E.BTY) { Att.TypGet = E.BTY.IntPtr; }
         }
 
         public void SetReturnTyp(Typ returnTyp)
@@ -632,6 +635,7 @@ namespace Nana.Semantics
                 else                    /**/ { tt = (mb as ConstructorInfo).DeclaringType; }
             }
             ReturnTyp = env.FindOrNewRefType(tt);
+            Att.TypGet = E.BTY.IntPtr;
         }
 
         public Variable NewThis(Typ typ)
@@ -1385,28 +1389,84 @@ namespace Nana.Semantics
         public bool RDS { get { return true; } }
     }
 
-    public class CallFun : Sema
+    //public class FunAcc : Sema
+    //{
+    //    public Typ CalleeTy;
+    //    public Fun Callee;
+    //    public Sema Instance;
+    //    public bool IsNewObj;
+
+    //    public FunAcc(Typ calleety, Fun callee, Sema instance, bool isNew)
+    //    {
+    //        CalleeTy = calleety;
+    //        Callee = callee;
+    //        Instance = instance;
+    //        IsNewObj = isNew;
+    //        Att.CanExec_ = true;
+
+    //        if ((isNew && callee.IsInstanceConstructor)
+    //            || false == callee.IsConstructor)
+    //        {
+    //            Att.TypGet = callee.ReturnTyp;
+    //        }
+    //    }
+
+    //    public override void Prepare(IMRGenerator gen)
+    //    {
+    //        LoadInstance(gen);
+    //    }
+
+    //    public void LoadInstance(IMRGenerator gen)
+    //    {
+    //        if (Instance == null) { return; }
+
+    //        Instance.Addr(gen);
+    //        if (Instance is Literal && Instance.Att.TypGet.IsValueType)
+    //        {
+    //            Variable v = (Instance as Literal).TmpVarGen.Substitute(Instance.Att.TypGet, gen);
+    //            v.Addr(gen);
+    //        }
+    //    }
+
+    //    public override void Take(IMRGenerator gen)
+    //    {
+    //        if (Callee.IsOperator)
+    //        {
+    //            gen.Ope(Callee.Name, Callee.Att.TypGet);
+    //        }
+    //        else
+    //        {
+    //            Typ calleeTy = Callee.IsOperatorLikeFun
+    //                ? Callee.CalleeTypOfOperatorLikeFun
+    //                : CalleeTy;
+
+    //            if (IsNewObj)
+    //            { gen.NewObject(calleeTy, Callee); }
+    //            else
+    //            { gen.CallFunction(calleeTy, Callee); }
+    //        }
+    //    }
+    //}
+
+    public class FunAcc : Sema
     {
         public Typ CalleeTy;
         public Fun Callee;
         public Sema Instance;
-        public Sema[] Args;
-        public bool IsNewObj;
 
-        public CallFun(Typ calleety, Fun callee, Sema instance, Sema[] args, bool isNewObj)
+        public FunAcc(Typ calleety, Fun callee, Sema instance)
         {
             CalleeTy = calleety;
             Callee = callee;
             Instance = instance;
-            Args = args;
-            IsNewObj = isNewObj;
             Att.CanExec_ = true;
+            if (false == callee.IsConstructor)
+            { Att.TypGet = callee.ReturnTyp; }
+        }
 
-            if ((isNewObj && callee.IsInstanceConstructor)
-                || false == callee.IsConstructor)
-            {
-                Att.TypGet = callee.ReturnTyp;
-            }
+        public override void Prepare(IMRGenerator gen)
+        {
+            LoadInstance(gen);
         }
 
         public void LoadInstance(IMRGenerator gen)
@@ -1421,15 +1481,8 @@ namespace Nana.Semantics
             }
         }
 
-        public void LoadArgs(IMRGenerator gen)
+        public override void Take(IMRGenerator gen)
         {
-            foreach (Sema v in Args) { v.Give(gen); }
-        }
-
-        public override void Give(IMRGenerator gen)
-        {
-            LoadInstance(gen);
-            LoadArgs(gen);
             if (Callee.IsOperator)
             {
                 gen.Ope(Callee.Name, Callee.Att.TypGet);
@@ -1439,33 +1492,98 @@ namespace Nana.Semantics
                 Typ calleeTy = Callee.IsOperatorLikeFun
                     ? Callee.CalleeTypOfOperatorLikeFun
                     : CalleeTy;
-
-                if (IsNewObj)
-                { gen.NewObject(calleeTy, Callee); }
-                else
-                { gen.CallFunction(calleeTy, Callee); }
+                gen.CallFunction(calleeTy, Callee);
             }
         }
+    }
 
-        public override void Addr(IMRGenerator gen)
+    /// <summary>
+    /// Constructor access information
+    /// </summary>
+    public class NewAcc : Sema
+    {
+        public Typ CalleeTy;
+        public Fun Callee;
+
+        public NewAcc(Typ calleety, Fun callee)
         {
-            if (false == Att.CanGet) { return; }
-            Give(gen);
+            CalleeTy = calleety;
+            Callee = callee;
+            Att.CanExec_ = true;
+            Att.TypGet = callee.ReturnTyp;
+        }
+
+        public override void Take(IMRGenerator gen)
+        {
+            gen.NewObject(CalleeTy, Callee);
+        }
+    }
+
+    public class Semas : Sema
+    {
+        public Sema[] Ss;
+
+        public Semas(Sema[] ss)
+        {
+            Ss = ss;
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            foreach (Sema s in Ss)
+            { s.Give(gen); }
+        }
+
+        public static Semas S0()                    /**/ { return Empty; }
+        public static Semas S1(Sema s1)             /**/ { return new Semas(new Sema[] { s1 }); }
+        public static Semas S2(Sema s1, Sema s2)    /**/ { return new Semas(new Sema[] { s1, s2 }); }
+
+        public static readonly Semas Empty = new Semas(new Sema[0]);
+    }
+
+    public class CallFun : Sema
+    {
+        public Semas Giver;
+        public Sema Taker;
+
+        public CallFun(Semas giver, Sema taker)
+        {
+            Giver = giver;
+            Taker = taker;
+            Att.CanExec_ = true;
+            Att.TypGet = taker.Att.TypGet;
+        }
+
+        public override void Prepare(IMRGenerator gen)
+        {
+            Taker.Prepare(gen);
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            if (false == Att.CanGet)
+            { throw new SemanticError("Cannot give a value."); }
+            Core(gen);
+        }
+
+        public override void Take(IMRGenerator gen)
+        {
+            Taker.Take(gen);
         }
 
         public override void Exec(IMRGenerator gen)
         {
-            Give(gen);
+            Core(gen);
             if (false == Att.CanGet) { return; }
             gen.Pop();
         }
 
-        public override string ToString()
+        private void Core(IMRGenerator gen)
         {
-            Func<string, object, string> nv = Sty.Nv;
-            return Sty.Curly(Sty.Csv(nv("Instance", Instance), nv("Callee", Callee), nv("Args", Sty.Curly(Sty.Csv(Args))), nv("IsNewObj", IsNewObj))) + ":" + GetType().Name;
+            Taker.Prepare(gen);
+            Giver.Give(gen);
+            Taker.Take(gen);
         }
-
     }
 
     public class CallPropInfo : Sema
@@ -1488,7 +1606,8 @@ namespace Nana.Semantics
         {
             if (Prop.Getter == null)
             { throw new SyntaxError("Cannot get value from the property"); }
-            CallFun cf = new CallFun(CalleeTy, Prop.Getter, Instance, new Sema[0], /*isNewObj:*/ false);
+            FunAcc fa = new FunAcc(CalleeTy, Prop.Getter, Instance);
+            CallFun cf = new CallFun(Semas.S0(), fa);
             cf.Give(gen);
         }
 
@@ -1535,8 +1654,8 @@ namespace Nana.Semantics
             Fun setter = CP.Prop.Setter;
             if (setter == null)
             { throw new SyntaxError("Cannot set value to the property"); }
-            CallFun cf = new CallFun(CP.CalleeTy, setter, CP.Instance, new Sema[] { Value }, /*isNewObj:*/ false);
-            cf.Give(gen);
+            CallFun cf = new CallFun(Semas.S1(Value), new FunAcc(CP.CalleeTy, setter, CP.Instance));
+            cf.Exec(gen);
         }
     }
 
@@ -2004,7 +2123,7 @@ namespace Nana.Semantics
         {
             if (null == TmpVar)
             {
-                Typ ty = CtorCall.CalleeTy;
+                Typ ty = CtorCall.Att.TypGet; 
                 TmpVar = TmpVarGen.Generate(ty, gen);
                 Assign tmpasgn = new Assign(CtorCall, TmpVar, /*prepare*/ null);
                 tmpasgn.Exec(gen);
