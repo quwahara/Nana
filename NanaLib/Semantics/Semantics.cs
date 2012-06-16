@@ -1949,13 +1949,13 @@ namespace Nana.Semantics
         }
     }
 
-    public class FieldAccessInfo : Sema
+    public class AccFld : Sema
     {
         public Typ HoldingTyp;
         public Sema Instance;
         public Variable Field;
 
-        public FieldAccessInfo(Typ fieldHoldingTyp, Sema instance, Variable field)
+        public AccFld(Typ fieldHoldingTyp, Sema instance, Variable field)
         {
             HoldingTyp = fieldHoldingTyp;
             Field = field;
@@ -2050,8 +2050,8 @@ namespace Nana.Semantics
                 tmpasgn.Exec(gen);
                 foreach (Tuple2<Sema, Variable> sandd in SrcAndDsts)
                 {
-                    FieldAccessInfo fai = new FieldAccessInfo(ty, TmpVar, sandd.F2);
-                    Assign fldasgn = new Assign(sandd.F1, fai, TmpVar);
+                    AccFld af = new AccFld(ty, TmpVar, sandd.F2);
+                    Assign fldasgn = new Assign(sandd.F1, af, TmpVar);
                     fldasgn.Exec(gen);
                 }
             }

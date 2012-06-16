@@ -439,8 +439,8 @@ namespace Nana.Semantics
                     Variable thisvar = Fu.FindVar("this");
                     if (null == thisvar)
                     { throw new InternalError("Could not retrieve 'this' variable"); }
-                    FieldAccessInfo fai = new FieldAccessInfo(ty, thisvar, fldvar);
-                    return fai;
+                    AccFld af = new AccFld(ty, thisvar, fldvar);
+                    return af;
                 }
             }
 
@@ -464,7 +464,7 @@ namespace Nana.Semantics
 
             if ((tak.GetType() == typeof(Nmd)) == false
                 && (tak is AccArr) == false
-                && (tak is FieldAccessInfo) == false
+                && (tak is AccFld) == false
                 && ((tak is Sema) && (tak as Sema).Att.CanSet) == false
                 && (tak is CallFun) == false
                 )
@@ -482,9 +482,9 @@ namespace Nana.Semantics
                 return cf;
             }
 
-            if (tak is FieldAccessInfo)
+            if (tak is AccFld)
             {
-                CallFun cf = new CallFun(Semas.S1(giv), tak as FieldAccessInfo);
+                CallFun cf = new CallFun(Semas.S1(giv), tak as AccFld);
                 return cf;
             }
 
@@ -916,7 +916,7 @@ namespace Nana.Semantics
             if (mbr is Prop) { return new AccProp(y, mbr as Prop, v); };
             if (mbr is Evnt) { return new EvntAccessInfo(y, v, mbr as Evnt); }
             if (mbr is Variable && (mbr as Variable).VarKind == Variable.VariableKind.Field)
-            { return new FieldAccessInfo(y, v, mbr as Variable); }
+            { return new AccFld(y, v, mbr as Variable); }
 
             return new Member(y, mbr, v);
         }
@@ -1409,7 +1409,7 @@ namespace Nana.Semantics
                 Typ ty = typeof(App) != Ty.GetType() ? Ty : null;
                 Variable fld = n as Variable;
                 Variable dis = fld.Att.IsStatic ? null : new Variable("this", Ty, Variable.VariableKind.This);
-                return new FieldAccessInfo(ty, dis, fld);
+                return new AccFld(ty, dis, fld);
             }
             
             return n;
