@@ -479,7 +479,8 @@ namespace Nana.Semantics
 
             if (tak is ArrayAccessInfo)
             {
-                return new ArraySetInfo(tak as ArrayAccessInfo, giv);
+                CallFun cf = new CallFun(Semas.S1(giv), tak as ArrayAccessInfo);
+                return cf;
             }
             if (tak.GetType() == typeof(AccProp))
             {

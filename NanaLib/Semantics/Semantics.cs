@@ -1519,6 +1519,8 @@ namespace Nana.Semantics
             if (false == Att.CanGet)
             { throw new SemanticError("Cannot give a value."); }
             Core(gen);
+            if (false == Taker.Att.TakeReturns)
+            { Taker.Give(gen); }
         }
 
         public override void Take(IMRGenerator gen)
@@ -1902,6 +1904,13 @@ namespace Nana.Semantics
             Att.TypGet = val.Att.TypGet.ArrayType;
         }
 
+        public override void Prepare(IMRGenerator gen)
+        {
+            Val.Give(gen);
+            foreach (Sema idx in Indices)
+            { idx.Give(gen); }
+        }
+
         public override void Give(IMRGenerator gen)
         {
             Val.Give(gen);
@@ -1910,6 +1919,20 @@ namespace Nana.Semantics
 
             gen.LdArrayElement(Val.Att.TypGet);
         }
+
+        public override void Take(IMRGenerator gen)
+        {
+            Typ arty = Val.Att.TypGet;
+            Typ consistedty;
+            if (arty.IsVector)
+            { consistedty = Att.TypGet; }
+            else if (arty.IsArray)
+            { consistedty = Val.Att.TypGet; }
+            else
+            { throw new InternalError("The type is not vector nor array"); }
+            gen.StArrayElement(arty, consistedty);
+        }
+
         public override void Addr(IMRGenerator gen)
         {
             Give(gen);
@@ -1922,58 +1945,6 @@ namespace Nana.Semantics
         public override string ToString()
         {
             return Val.ToString() + ":" + GetType();
-        }
-    }
-
-    public class ArraySetInfo : Sema
-    {
-        public ArrayAccessInfo ArrayAccess;
-        public Sema GiveVal;
-
-        public ArraySetInfo(ArrayAccessInfo arrayAccess, Sema giveVal)
-        {
-            Debug.Assert(arrayAccess != null && arrayAccess.Val != null && arrayAccess.Val.Att.TypGet != null);
-
-            ArrayAccess = arrayAccess;
-            GiveVal = giveVal;
-
-            Att.TypGet = arrayAccess.Att.TypGet;
-        }
-
-        public override void Give(IMRGenerator gen)
-        {
-            Exec(gen);
-            ArrayAccess.Give(gen);
-        }
-
-        public override void Addr(IMRGenerator gen)
-        {
-            Give(gen);
-        }
-
-        public override void Exec(IMRGenerator gen)
-        {
-            ArrayAccess.Val.Give(gen);
-            Array.ForEach<Sema>(ArrayAccess.Indices,
-                delegate(Sema v_) { v_.Give(gen); });
-            GiveVal.Give(gen);
-
-            Typ t = ArrayAccess.Val.Att.TypGet;
-            Typ t2;
-         
-            if (t.IsVector)
-            {
-                t2 = Att.TypGet;
-            }
-            else if (t.IsArray)
-            {
-                t2 = ArrayAccess.Val.Att.TypGet;
-            }
-            else
-            {
-                throw new NotSupportedException();
-            }
-            gen.StArrayElement(t, t2);
         }
     }
 
