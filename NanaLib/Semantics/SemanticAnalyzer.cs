@@ -427,7 +427,7 @@ namespace Nana.Semantics
             if (null != found && null != ccxs && 0 != ccxs.Count)
             {
                 ClosureContext ccx = ccxs.Peek();
-                LocalAccessInfo lai = found as LocalAccessInfo;
+                AccLoc lai = found as AccLoc;
                 if (null != lai && lai.HoldingFun == ccx.CapturedFun)
                 {
                     Typ ty = ccx.ClosureTyp;
@@ -449,17 +449,22 @@ namespace Nana.Semantics
 
         public object Asgn(Token assign, Token give, Token take)
         {
+            if ("+=" == assign.Value)
+            {
+                Token callfun = new Token("(", "Expr");
+                Token callee = new Token(".", "Dot");
+                callee.First = take;
+                callee.Second =  new Token(assign.Value, "Id");
+                callfun.First = callee;
+                callfun.Second = give;
+                return Gate(callfun);
+            }
+
             Sema giv = Require<Sema>(give);
             object tak = Gate(take);
 
             if (false == giv.Att.CanGet)
             { throw new SemanticError("The source side cannot assign to destination", give); }
-
-            if ("+=" == assign.Value && tak.GetType() == typeof(AccEvnt))
-            {
-                CallFun cf = new CallFun(Semas.S1(giv), tak as AccEvnt);
-                return cf;
-            }
 
             if ((tak.GetType() == typeof(Nmd)) == false
                 && (tak is AccArr) == false
@@ -734,14 +739,16 @@ namespace Nana.Semantics
             bool notDottedMethodCall = firstty == typeof(Ovld);
             bool constructorCall = firstty == typeof(Typ);
             bool delegateCall = false;
+            bool accFun = firstty == typeof(AccFun);
+
             if (first is Sema)
             {
                 Typ typget = (first as Sema).Att.TypGet;
                 if (null != typget) { delegateCall = typget.IsDelegate; }
             }
 
-            if (false == (dottedMethodCall | notDottedMethodCall | constructorCall | delegateCall))
-            { throw new SemanticError("Cannot call it. It is not a function constructor", t); }
+            if (false == (dottedMethodCall | notDottedMethodCall | constructorCall | delegateCall | accFun))
+            { throw new SemanticError("Cannot call it. It is not a function nor a constructor", t); }
 
             Ovld ovl = null;
             Sema instance = null;
@@ -857,17 +864,23 @@ namespace Nana.Semantics
 
             {
                 Semas ss = new Semas(argvals.ToArray());
-
-                Fun calleefun = ovl.GetFunOf(calleetyp, argtyps.ToArray(), Ty);
-                if (calleefun == null)
-                { throw new SemanticError(string.Format("No method matches for the calling: {0}", ovl.Name), t); }
-
-
                 Sema ac = null;
-                if (isNewObj)
-                { ac = new AccNew(calleetyp, calleefun); }
+
+                if (false == accFun)
+                {
+                    Fun calleefun = ovl.GetFunOf(calleetyp, argtyps.ToArray(), Ty);
+                    if (calleefun == null)
+                    { throw new SemanticError(string.Format("No method matches for the calling: {0}", ovl.Name), t); }
+
+                    if (isNewObj)
+                    { ac = new AccNew(calleetyp, calleefun); }
+                    else
+                    { ac = new AccFun(calleetyp, calleefun, instance); }
+                }
                 else
-                { ac = new AccFun(calleetyp, calleefun, instance); }
+                {
+                    ac = first as AccFun;
+                }
                 CallFun cf = new CallFun(ss, ac);
                 return cf;
             }
@@ -892,6 +905,7 @@ namespace Nana.Semantics
 
             Typ y = null;
             Sema v = null;
+            Nmd mbr = null;
             if (holder is Sema)
             {
                 v = holder as Sema;
@@ -900,15 +914,27 @@ namespace Nana.Semantics
             if (holder.GetType() == typeof(Typ))
             {
                 y = holder as Typ;
+                mbr = y.FindMemeber(t.Second.Value);
+            }
+            else if (holder.GetType() == typeof(AccEvnt))
+            {
+                AccEvnt accev = holder as AccEvnt;
+                Fun fun = accev.Evn.Find(t.Second.Value) as Fun;
+                if (null == fun)
+                { throw new SemanticError(string.Format("{0} is not a memeber of {1}", new object[] { t.Second.Value, accev.Evn.Name })); }
+                AccFun af = new AccFun(accev.HoldingTyp, fun, accev.Instance);
+                return af;
             }
             if (y == null) { throw new SemanticError(string.Format("It has no member: {0}", t.Second.Value), t.Second); }
 
             //TODO load funcs automaticaly
             //y.GetActions();
 
-            Nmd mbr = y.FindMemeber(t.Second.Value);
+            if (null == mbr && null != y)
+            {
+                mbr = y.FindMemeber(t.Second.Value);
+            }
 
-            //if (mbr == null) { throw new SyntaxError("It is not a member", t.Second); }
             if (mbr == null) { throw new SemanticError(string.Format("{0} is not a member of {1}", t.Second.Value, y._FullName), t.Second); }
             if (mbr is Enu) { return mbr; }
             if (mbr is Prop) { return new AccProp(y, mbr as Prop, v); };
@@ -1313,7 +1339,7 @@ namespace Nana.Semantics
             if (null == Fu) { return null; }
             Variable v = Fu.Find(name) as Variable;
             if (null == v) { return null; }
-            return new LocalAccessInfo(Fu, v);
+            return new AccLoc(Fu, v);
         }
     }
 

@@ -1125,6 +1125,12 @@ namespace Nana.Semantics
             BeAMember<Fun>(f);
             Add = f;
         }
+
+        public override Nmd Find(string name)
+        {
+            string n = name == "+=" ? "add_" + Name : name;
+            return base.Find(n);
+        }
     }
 
     public class AccEvnt : Sema
@@ -1948,12 +1954,12 @@ namespace Nana.Semantics
         }
     }
 
-    public class LocalAccessInfo : Sema
+    public class AccLoc : Sema
     {
         public Fun HoldingFun;
         public Variable Var;
 
-        public LocalAccessInfo(Fun vriableHoldingFun, Variable var)
+        public AccLoc(Fun vriableHoldingFun, Variable var)
         {
             HoldingFun = vriableHoldingFun;
             Var = var;
