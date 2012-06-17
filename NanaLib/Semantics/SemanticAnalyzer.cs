@@ -455,10 +455,9 @@ namespace Nana.Semantics
             if (false == giv.Att.CanGet)
             { throw new SemanticError("The source side cannot assign to destination", give); }
 
-            if ("+=" == assign.Value && tak.GetType() == typeof(EvntAccessInfo))
+            if ("+=" == assign.Value && tak.GetType() == typeof(AccEvnt))
             {
-                EvntAccessInfo eai = tak as EvntAccessInfo;
-                CallFun cf = new CallFun(Semas.S1(giv), new AccFun(eai.HoldingTyp, eai.Evn.Add, eai.Instance));
+                CallFun cf = new CallFun(Semas.S1(giv), tak as AccEvnt);
                 return cf;
             }
 
@@ -913,7 +912,7 @@ namespace Nana.Semantics
             if (mbr == null) { throw new SemanticError(string.Format("{0} is not a member of {1}", t.Second.Value, y._FullName), t.Second); }
             if (mbr is Enu) { return mbr; }
             if (mbr is Prop) { return new AccProp(y, mbr as Prop, v); };
-            if (mbr is Evnt) { return new EvntAccessInfo(y, v, mbr as Evnt); }
+            if (mbr is Evnt) { return new AccEvnt(y, v, mbr as Evnt); }
             if (mbr is Variable && (mbr as Variable).VarKind == Variable.VariableKind.Field)
             { return new AccFld(y, v, mbr as Variable); }
 

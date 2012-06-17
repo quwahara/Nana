@@ -1127,13 +1127,13 @@ namespace Nana.Semantics
         }
     }
 
-    public class EvntAccessInfo : Sema
+    public class AccEvnt : Sema
     {
         public Typ HoldingTyp;
         public Sema Instance;
         public Evnt Evn;
 
-        public EvntAccessInfo(Typ fieldHoldingTyp, Sema instance, Evnt evn)
+        public AccEvnt(Typ fieldHoldingTyp, Sema instance, Evnt evn)
         {
             HoldingTyp = fieldHoldingTyp;
             Evn = evn;
@@ -1141,27 +1141,26 @@ namespace Nana.Semantics
             Att.TypGet = Att.TypSet = evn.Att.TypGet;
         }
 
+        public override void Prepare(IMRGenerator gen)
+        {
+            Instance.Give(gen);
+        }
+
         public override void Give(IMRGenerator gen)
         {
-            //if (false == Field.Att.IsStatic)
-            //{ Instance.Give(gen); }
-            //gen.LoadField(HoldingTyp, Field);
         }
 
         public override void Take(IMRGenerator gen)
         {
-            //gen.StoreField(HoldingTyp, Field);
+            gen.CallFunction(HoldingTyp, Evn.Add);
         }
 
         public override void Addr(IMRGenerator gen)
         {
-            //Give(gen);
         }
 
         public override void Exec(IMRGenerator gen)
         {
-            //Give(gen);
-            //gen.Pop();
         }
     }
 
