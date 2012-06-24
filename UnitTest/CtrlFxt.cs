@@ -1480,6 +1480,14 @@ fun Main():void
         //[Test]
         public void ZZZ()
         {
+            //Tuple2<string, string> t1, t2;
+            //t1 = new Tuple2<string, string>();
+            //t2 = new Tuple2<string, string>();
+            //t1.F1 = t2.F1 = "a";
+            //t1.F2 = t2.F2 = "a";
+            //bool b = t1 == t2;
+            //bool b2 = t1 != t2;
+
             References.Add("system.windows.forms.dll");
 
             Inp =
@@ -1489,8 +1497,8 @@ using System.Windows.Forms
 @STAThreadAttribute
 fun Main():void
 ..
-    Application.EnableVisualStyles()
-    Application.SetCompatibleTextRenderingDefault(false)
+//    Application.EnableVisualStyles()
+//    Application.SetCompatibleTextRenderingDefault(false)
 
     f   = Form()
     c   = `(sender:object, a:EventArgs)

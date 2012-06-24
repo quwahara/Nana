@@ -897,10 +897,10 @@ namespace Nana.Semantics
 
         public Evnt NewEvnt(EventInfo ei)
         {
-            Evnt prp = new Evnt(ei, E);
-            Evnts.Add(prp);
-            BeAMember<Evnt>(new Evnt(ei, E));
-            return prp;
+            Evnt ev = new Evnt(ei, E);
+            Evnts.Add(ev);
+            BeAMember<Evnt>(ev);
+            return ev;
         }
 
         public bool IsAssignableFrom(Typ y)

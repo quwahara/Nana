@@ -449,19 +449,22 @@ namespace Nana.Semantics
 
         public object Asgn(Token assign, Token give, Token take)
         {
-            if ("+=" == assign.Value)
-            {
-                Token callfun = new Token("(", "Expr");
-                Token callee = new Token(".", "Dot");
-                callee.First = take;
-                callee.Second =  new Token(assign.Value, "Id");
-                callfun.First = callee;
-                callfun.Second = give;
-                return Gate(callfun);
-            }
-
+            string sign = assign.Value;
             Sema giv = Require<Sema>(give);
             object tak = Gate(take);
+
+            Type takty = tak.GetType();
+            if (takty == typeof(AccEvnt))
+            {
+                if (sign == "-=")
+                { throw new InternalError("'-=' sign is not supported for events yet"); }
+
+                if (sign != "+=" && sign != "-=")
+                { throw new SemanticError(string.Format("Cannot use '{0}' sign for events", new object[] { sign })); }
+
+                CallFun cf = new CallFun(Semas.S1(giv), tak as AccEvnt);
+                return cf;
+            }
 
             if (false == giv.Att.CanGet)
             { throw new SemanticError("The source side cannot assign to destination", give); }
@@ -739,7 +742,7 @@ namespace Nana.Semantics
             bool notDottedMethodCall = firstty == typeof(Ovld);
             bool constructorCall = firstty == typeof(Typ);
             bool delegateCall = false;
-            bool accFun = firstty == typeof(AccFun);
+            bool acc = firstty == typeof(AccFun);
 
             if (first is Sema)
             {
@@ -747,7 +750,7 @@ namespace Nana.Semantics
                 if (null != typget) { delegateCall = typget.IsDelegate; }
             }
 
-            if (false == (dottedMethodCall | notDottedMethodCall | constructorCall | delegateCall | accFun))
+            if (false == (dottedMethodCall | notDottedMethodCall | constructorCall | delegateCall | acc))
             { throw new SemanticError("Cannot call it. It is not a function nor a constructor", t); }
 
             Ovld ovl = null;
@@ -866,7 +869,7 @@ namespace Nana.Semantics
                 Semas ss = new Semas(argvals.ToArray());
                 Sema ac = null;
 
-                if (false == accFun)
+                if (false == acc)
                 {
                     Fun calleefun = ovl.GetFunOf(calleetyp, argtyps.ToArray(), Ty);
                     if (calleefun == null)
@@ -879,7 +882,7 @@ namespace Nana.Semantics
                 }
                 else
                 {
-                    ac = first as AccFun;
+                    ac = first as Sema;
                 }
                 CallFun cf = new CallFun(ss, ac);
                 return cf;
