@@ -337,41 +337,33 @@ namespace Nana.Semantics
             Typ bol = e.BTY.Bool;
 
             foreach (string ope in "+,-,*,/,%".Split(new char[] { ',' }))
-            { RegisterOperator(ope, int_, int_, int_); }
+            { NewOpeFunByOpe(ope, int_, int_, int_); }
 
             foreach (string ope in "==,!=,<,>,<=,>=,and,or,xor".Split(new char[] { ',' }))
-            { RegisterOperator(ope, int_, int_, bol); }
+            { NewOpeFunByOpe(ope, int_, int_, bol); }
 
             foreach (string ope in "==,!=,and,or,xor".Split(new char[] { ',' }))
-            { RegisterOperator(ope, bol, bol, bol); }
-            
+            { NewOpeFunByOpe(ope, bol, bol, bol); }
+
             Typ str = e.BTY.String;
-            RegisterOperatorLikeFun("+", str, "Concat", new Typ[] { str, str });
+            NewOpeFunByFun("+", str, "Concat", new Typ[] { str, str });
 
             RegisterOvldAlias(E.FindOrNewRefType(typeof(Console)), "`p", "WriteLine");
         }
 
-        public void RegisterOperator(string ope, Typ left, Typ right, Typ ret)
-        {
-            Ovld o = NewOperatorFun(ope, left, right, ret);
-            AddToMembers(E.BTY.Void, ope, o);
-        }
-
-        public Ovld NewOperatorFun(string ope, Typ left, Typ right, Typ ret)
+        public void NewOpeFunByOpe(string ope, Typ left, Typ right, Typ ret)
         {
             List<Variable> vs = new List<Variable>();
             vs.Add(new Variable("a", left, Variable.VariableKind.Param));
             vs.Add(new Variable("b", right, Variable.VariableKind.Param));
-            Ovld o = FindOrNewOvld(ope);
-            Fun f = o.NewFun(ope, vs, ret);
+            Fun f = left.NewOvldAndFun(ope, vs, ret);
             f.IsOperator = true;
-            f.MthdAttrs = MethodAttributes.Public;
-            return o;
+            f.MthdAttrs = MethodAttributes.Public | MethodAttributes.Static;
         }
 
-        public void RegisterOperatorLikeFun(string ope, Typ calleetyp, string funname, Typ[] argtyps)
+        public void NewOpeFunByFun(string ope, Typ calleetyp, string funname, Typ[] argtyps)
         {
-            Ovld o = FindOrNewOvld(ope);
+            Ovld o = calleetyp.FindOrNewOvld(ope);
             Fun actual = calleetyp.FindOvld(funname).GetFunOf(calleetyp, argtyps, E.BTY.Void);
             Fun newfun = o.NewFun(actual.Name, actual.Params, actual.ReturnTyp);
             newfun.MthdAttrs = actual.MthdAttrs;
@@ -379,7 +371,6 @@ namespace Nana.Semantics
             newfun.CalleeTypOfOperatorLikeFun = calleetyp;
             o.Members.Add(newfun);
             o.Funs.Add(newfun);
-            AddToMembers(E.BTY.Void, ope, o);
         }
 
         public void RegisterOvldAlias(Typ calleetyp, string name, string actualname)
@@ -393,17 +384,6 @@ namespace Nana.Semantics
             if (Members.ContainsKey(name))
             { return; }
             Members.Add(name, new Member(calletyp, o, /*instance=*/ null));
-        }
-
-        public Ovld FindOrNewOvld(string ope)
-        {
-            Ovld o;
-            if (false == Ovrlds.TryGetValue(ope, out o))
-            {
-                o = new Ovld(ope, E);
-                Ovrlds.Add(ope, o);
-            }
-            return o;
         }
     }
 

@@ -524,13 +524,24 @@ namespace Nana.Semantics
 
         public object Ope(Token t)
         {
-            //  transform infix to call-fun
-            Token callfun = new Token("(", "Expr");
-            callfun.First = new Token(t.Value, "Id");
-            Token prm = callfun.Second = new Token(",", "_End_Cma_");
-            prm.First = t.First;
-            prm.Second = t.Second;
-            return Gate(callfun);
+            Sema fst = Gate(t.First) as Sema;
+            if (null == fst)
+            { throw new SemanticError("Left-hand side cannot apply the operator", t); }
+
+            Sema scd = Gate(t.Second) as Sema;
+            if (null == scd)
+            { throw new SemanticError("Right-hand side cannot apply the operator", t); }
+
+            Typ fstty = fst.Att.TypGet;
+            Typ scdty = scd.Att.TypGet;
+
+            Ovld opeovl = fstty.FindOvld(t.Value);
+            Fun opefun =   opeovl.GetFunOf(fstty, new Typ[] { fstty, scdty }, E.BTY.Void);
+            Sema instance = opefun.IsStatic ? null : fst;
+
+            AccFun acf = new AccFun(fstty, opefun, instance);
+            CallFun cf = new CallFun(Semas.S2(fst, scd), acf);
+            return cf;
         }
 
         public object While(Token while_)
