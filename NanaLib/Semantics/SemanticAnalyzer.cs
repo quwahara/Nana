@@ -462,7 +462,15 @@ namespace Nana.Semantics
                 if (sign != "+=" && sign != "-=")
                 { throw new SemanticError(string.Format("Cannot use '{0}' sign for events", new object[] { sign })); }
 
-                CallFun cf = new CallFun(Semas.S1(giv), tak as AccEvnt);
+                AccEvnt ae = tak as AccEvnt;
+                Typ evn = ae.Att.TypGet;
+                Ovld o = evn.FindOvld(sign);
+                Fun f = o.GetFunOf(evn, new Typ[] { giv.Att.TypGet }, evn);
+
+                Sema inst = ae.Instance;
+                AccFun af = new AccFun(inst.Att.TypGet, f, inst);
+                CallFun cf = new CallFun(Semas.S1(giv), af);
+
                 return cf;
             }
 

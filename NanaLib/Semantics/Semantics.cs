@@ -346,7 +346,7 @@ namespace Nana.Semantics
             { NewOpeFunByOpe(ope, bol, bol, bol); }
 
             Typ str = e.BTY.String;
-            NewOpeFunByFun("+", str, "Concat", new Typ[] { str, str });
+            str.NewOpeFunByFun("+", "Concat", new Typ[] { str, str });
 
             RegisterOvldAlias(E.FindOrNewRefType(typeof(Console)), "`p", "WriteLine");
         }
@@ -359,18 +359,6 @@ namespace Nana.Semantics
             Fun f = left.NewOvldAndFun(ope, vs, ret);
             f.IsOperator = true;
             f.MthdAttrs = MethodAttributes.Public | MethodAttributes.Static;
-        }
-
-        public void NewOpeFunByFun(string ope, Typ calleetyp, string funname, Typ[] argtyps)
-        {
-            Ovld o = calleetyp.FindOrNewOvld(ope);
-            Fun actual = calleetyp.FindOvld(funname).GetFunOf(calleetyp, argtyps, E.BTY.Void);
-            Fun newfun = o.NewFun(actual.Name, actual.Params, actual.ReturnTyp);
-            newfun.MthdAttrs = actual.MthdAttrs;
-            newfun.IsOperatorLikeFun = true;
-            newfun.CalleeTypOfOperatorLikeFun = calleetyp;
-            o.Members.Add(newfun);
-            o.Funs.Add(newfun);
         }
 
         public void RegisterOvldAlias(Typ calleetyp, string name, string actualname)
@@ -411,6 +399,16 @@ namespace Nana.Semantics
             f.MthdAttrs = mb.Attributes;
             Funs.Add(f);
             return BeAMember(f);
+        }
+
+        public void NewOpeFunByFun(Typ calleetyp, Fun actual)
+        {
+            Fun newfun = NewFun(actual.Name, actual.Params, actual.ReturnTyp);
+            newfun.MthdAttrs = actual.MthdAttrs;
+            newfun.IsOperatorLikeFun = true;
+            newfun.CalleeTypOfOperatorLikeFun = calleetyp;
+            Members.Add(newfun);
+            Funs.Add(newfun);
         }
 
         public Fun GetFunOf(Typ calleetyp, Typ[] argtyps, Typ callertyp)
@@ -877,10 +875,22 @@ namespace Nana.Semantics
 
         public Evnt NewEvnt(EventInfo ei)
         {
-            Evnt ev = new Evnt(ei, E);
+            Evnt ev = new Evnt(this, ei, E);
             Evnts.Add(ev);
             BeAMember<Evnt>(ev);
             return ev;
+        }
+
+        public void NewOpeFunByFun(string ope, string funname, Typ[] argtyps)
+        {
+            Ovld actualovld = FindOvld(funname);
+            if (null == actualovld)
+            { throw new InternalError(string.Format("No Fun in this overload. Fun:{0}", new object[] { funname })); }
+            Fun actual = FindOvld(funname).GetFunOf(this, argtyps, E.BTY.Void);
+            if (null == actual)
+            { throw new InternalError(string.Format("No Fun in this overload. Fun:{0}", new object[] { funname })); }
+            Ovld o = FindOrNewOvld(ope);
+            o.NewOpeFunByFun(this, actual);
         }
 
         public bool IsAssignableFrom(Typ y)
@@ -1091,25 +1101,57 @@ namespace Nana.Semantics
         }
     }
 
-    public class Evnt : Ovld
+    public class Evnt : Typ
     {
+        public Typ Holder;
         public EventInfo Evn;
         public Fun Add;
+        public Fun Rmv;
 
-        public Evnt(EventInfo evn, Env env)
-            : base(evn.Name, env)
+        public Evnt(Typ holder, EventInfo evn, Env env)
+            : base(evn.EventHandlerType, env)
         {
+            Holder = holder;
             Evn = evn;
-            MethodInfo mi = evn.GetAddMethod(/*nonPublic*/ true);
-            Fun f = new Fun(mi, env);
-            BeAMember<Fun>(f);
-            Add = f;
+            Name = evn.Name;
+            Att.TypGet = this;
+            MethodInfo mi; Fun f;
+            mi = evn.GetAddMethod(/*nonPublic*/ true);
+            if (null != mi)
+            {
+                f = new Fun(mi, env);
+                BeAMember<Fun>(f);
+                Add = f;
+                NewOpeFunForEH(holder, f, "+=");
+            }
+            mi = evn.GetRemoveMethod(/*nonPublic*/ true);
+            if (null != mi)
+            {
+                f = new Fun(mi, env);
+                BeAMember<Fun>(f);
+                Rmv = f;
+                NewOpeFunForEH(holder, f, "-=");
+            }
         }
 
-        public override Nmd Find(string name)
+        private void NewOpeFunForEH(Typ holder, Fun f, string ope)
         {
-            string n = name == "+=" ? "add_" + Name : name;
-            return base.Find(n);
+            string funname = f.Name;
+            Ovld actualovld = holder.FindOvld(funname);
+            if (null == actualovld)
+            { throw new InternalError(string.Format("No Fun in this overload. Fun:{0}", new object[] { funname })); }
+            Typ[] argtyps = f.Signature;
+            Fun actual = actualovld.GetFunOf(holder, argtyps, holder);
+            if (null == actual)
+            { throw new InternalError(string.Format("No Fun in this overload. Fun:{0}", new object[] { funname })); }
+
+            Ovld o = FindOrNewOvld(ope);
+            Fun newfun = o.NewFun(actual.Name, actual.Params, actual.ReturnTyp);
+            newfun.MthdAttrs = actual.MthdAttrs;
+            newfun.IsOperatorLikeFun = true;
+            newfun.CalleeTypOfOperatorLikeFun = holder;
+            o.Members.Add(newfun);
+            o.Funs.Add(newfun);
         }
     }
 
@@ -1125,28 +1167,6 @@ namespace Nana.Semantics
             Evn = evn;
             Instance = instance;
             Att.TypGet = Att.TypSet = evn.Att.TypGet;
-        }
-
-        public override void Prepare(IMRGenerator gen)
-        {
-            Instance.Give(gen);
-        }
-
-        public override void Give(IMRGenerator gen)
-        {
-        }
-
-        public override void Take(IMRGenerator gen)
-        {
-            gen.CallFunction(HoldingTyp, Evn.Add);
-        }
-
-        public override void Addr(IMRGenerator gen)
-        {
-        }
-
-        public override void Exec(IMRGenerator gen)
-        {
         }
     }
 
