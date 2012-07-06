@@ -447,75 +447,71 @@ namespace Nana.Semantics
             return found;
         }
 
+        public static string NormalizeAssignSymbol(string sym)
+        {
+            if (sym.EndsWith("="))          /**/ { return sym; }
+            else if ("<-" == sym)           /**/ { return "="; }
+            else if ("->" == sym)           /**/ { return "="; }
+            else if (sym.EndsWith("<-"))    /**/ { return sym.Substring(0, 1) + "="; }
+            else if (sym.StartsWith("->"))  /**/ { return sym.Substring(3, 1) + "="; }
+            else
+            { throw new InternalError("It is not an assign symbol:" + sym ?? "(null)"); }
+        }
+
+        public static string SubSign(string sym)
+        {
+            if ("=" == sym) { return ""; }
+            return sym.Substring(0, 1);
+        }
+
         public object Asgn(Token assign, Token give, Token take)
         {
-            string sign = assign.Value;
             Sema giv = Require<Sema>(give);
             object tak = Gate(take);
 
-            Type takty = tak.GetType();
-            if (takty == typeof(AccEvnt))
-            {
-                if (sign == "-=")
-                { throw new InternalError("'-=' sign is not supported for events yet"); }
-
-                if (sign != "+=" && sign != "-=")
-                { throw new SemanticError(string.Format("Cannot use '{0}' sign for events", new object[] { sign })); }
-
-                AccEvnt ae = tak as AccEvnt;
-                Typ evn = ae.Att.TypGet;
-                Ovld o = evn.FindOvld(sign);
-                Fun f = o.GetFunOf(evn, new Typ[] { giv.Att.TypGet }, evn);
-
-                Sema inst = ae.Instance;
-                AccFun af = new AccFun(inst.Att.TypGet, f, inst);
-                CallFun cf = new CallFun(Semas.S1(giv), af);
-
-                return cf;
-            }
-
-            if (false == giv.Att.CanGet)
-            { throw new SemanticError("The source side cannot assign to destination", give); }
-
-            if ((tak.GetType() == typeof(Nmd)) == false
-                && (tak is AccArr) == false
-                && (tak is AccFld) == false
-                && ((tak is Sema) && (tak as Sema).Att.CanSet) == false
-                && (tak is CallFun) == false
-                )
-            {
-                throw new SyntaxError("Can not assign to: " + take.Value, take);
-            }
-
-            if (tak is CallFun)
-            {
-                CallFun cf = new CallFun(Semas.S1(giv), tak as CallFun);
-                return cf;
-            }
-
-            if (tak is AccFld)
-            {
-                CallFun cf = new CallFun(Semas.S1(giv), tak as AccFld);
-                return cf;
-            }
-
-            if (tak is AccArr)
-            {
-                CallFun cf = new CallFun(Semas.S1(giv), tak as AccArr);
-                return cf;
-            }
-            if (tak.GetType() == typeof(AccProp))
-            {
-                CallFun cf = new CallFun(Semas.S1(giv), tak as AccProp);
-                return cf;
-            }
+            //  generate variable by giving side type
             if (tak.GetType() == typeof(Nmd))
             {
                 tak = NewVar((tak as Nmd).Name, giv.Att.TypGet);
             }
 
+            string sign = NormalizeAssignSymbol(assign.Value);
+            string subsign = SubSign(sign);
+
+            //  resolve to method from sign and equal symbol (e.g. +=)
+            if ("" != subsign && tak is IAcc)
             {
-                CallFun cf = new CallFun(Semas.S1(giv), tak as Sema);
+                IAcc acc = tak as IAcc;
+                Typ owt = acc.OwnerTyp;
+                Ovld o = owt.FindOvld(sign);
+
+                if (null == o)
+                {
+                    //  TODO reproduce an expression token
+                    throw new NotImplementedException("reproduce an expression token");
+                }
+
+                Fun f = o.GetFunOf(owt, new Typ[] { giv.Att.TypGet }, owt);
+                Sema inst = acc.OwnerIns;
+                AccFun af = new AccFun(inst.Att.TypGet, f, inst);
+                CallFun cf = new CallFun(Semas.S1(giv), af);
+
+                return cf;
+            }
+            {
+                if (false == giv.Att.CanGet)
+                { throw new SemanticError("The source side cannot assign to the destination", give); }
+
+                bool isTakeInvalid = false;
+                Sema taks = tak as Sema;
+                isTakeInvalid |= null == taks;
+                isTakeInvalid |= false == taks.Att.CanSet;
+                isTakeInvalid |= null == taks.Att.TypSet || false == taks.Att.TypSet.IsAssignableFrom(giv.Att.TypGet);
+
+                if (isTakeInvalid)
+                { throw new SemanticError("The destination side cannot assign from the source", take); }
+
+                CallFun cf = new CallFun(Semas.S1(giv), taks);
                 return cf;
             }
         }
@@ -544,7 +540,7 @@ namespace Nana.Semantics
             Typ scdty = scd.Att.TypGet;
 
             Ovld opeovl = fstty.FindOvld(t.Value);
-            Fun opefun =   opeovl.GetFunOf(fstty, new Typ[] { fstty, scdty }, E.BTY.Void);
+            Fun opefun = opeovl.GetFunOf(fstty, new Typ[] { fstty, scdty }, E.BTY.Void);
             Sema instance = opefun.IsStatic ? null : fst;
 
             AccFun acf = new AccFun(fstty, opefun, instance);

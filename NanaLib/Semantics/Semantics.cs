@@ -1155,7 +1155,16 @@ namespace Nana.Semantics
         }
     }
 
-    public class AccEvnt : Sema
+    /// <summary>
+    /// ACCess information
+    /// </summary>
+    interface IAcc
+    {
+        Typ OwnerTyp { get;}
+        Sema OwnerIns { get;}
+    }
+
+    public class AccEvnt : Sema, IAcc
     {
         public Typ HoldingTyp;
         public Sema Instance;
@@ -1168,6 +1177,13 @@ namespace Nana.Semantics
             Instance = instance;
             Att.TypGet = Att.TypSet = evn.Att.TypGet;
         }
+
+        public Typ OwnerTyp
+        {
+            get { return Evn.Att.TypGet; }
+        }
+
+        public Sema OwnerIns { get { return Instance; } }
     }
 
     //  Return Determinacy State (It's doubtful to make sense in English.)
@@ -1362,11 +1378,18 @@ namespace Nana.Semantics
         public bool RDS { get { return true; } }
     }
 
-    public class AccFun : Sema
+    public class AccFun : Sema, IAcc
     {
         public Typ CalleeTy;
         public Fun Callee;
         public Sema Instance;
+
+        public Typ OwnerTyp
+        {
+            get { return CalleeTy; }
+        }
+
+        public Sema OwnerIns { get { return Instance; } }
 
         public AccFun(Typ calleety, Fun callee, Sema instance)
         {
@@ -1417,10 +1440,17 @@ namespace Nana.Semantics
     /// <summary>
     /// Constructor access information
     /// </summary>
-    public class AccNew : Sema
+    public class AccNew : Sema, IAcc
     {
         public Typ CalleeTy;
         public Fun Callee;
+        
+        public Typ OwnerTyp
+        {
+            get { return CalleeTy; }
+        }
+
+        public Sema OwnerIns { get { return null; } }
 
         public AccNew(Typ calleety, Fun callee)
         {
@@ -1506,11 +1536,18 @@ namespace Nana.Semantics
         }
     }
 
-    public class AccProp : Sema
+    public class AccProp : Sema, IAcc
     {
         public Typ CalleeTy;
         public Prop Prop;
         public Sema Instance;
+
+        public Typ OwnerTyp
+        {
+            get { return CalleeTy; }
+        }
+
+        public Sema OwnerIns { get { return Instance; } }
 
         public AccProp(Typ calleety, Prop prop, Sema instance)
         {
@@ -1864,7 +1901,7 @@ namespace Nana.Semantics
             Val = val;
             Indices = indices;
 
-            Att.TypGet = val.Att.TypGet.ArrayType;
+            Att.TypSet = Att.TypGet = val.Att.TypGet.ArrayType;
         }
 
         public override void Prepare(IMRGenerator gen)
@@ -1911,11 +1948,18 @@ namespace Nana.Semantics
         }
     }
 
-    public class AccFld : Sema
+    public class AccFld : Sema, IAcc
     {
         public Typ HoldingTyp;
         public Sema Instance;
         public Variable Field;
+
+        public Typ OwnerTyp
+        {
+            get { return HoldingTyp; }
+        }
+
+        public Sema OwnerIns { get { return Instance; } }
 
         public AccFld(Typ fieldHoldingTyp, Sema instance, Variable field)
         {
@@ -1954,10 +1998,17 @@ namespace Nana.Semantics
         }
     }
 
-    public class AccLoc : Sema
+    public class AccLoc : Sema, IAcc
     {
         public Fun HoldingFun;
         public Variable Var;
+
+        public Typ OwnerTyp
+        {
+            get { return Att.TypGet; }
+        }
+
+        public Sema OwnerIns { get { return Var; } }
 
         public AccLoc(Fun vriableHoldingFun, Variable var)
         {

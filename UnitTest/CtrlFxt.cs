@@ -1053,13 +1053,12 @@ class C
     sfun Main():void
     ..
         c       = C()
-        ; (c.Field = 7) = 8
+        c.Field = 7
         Console.WriteLine(c.Field);
     ,,
 ,,,
 ";
             EpcSyn = @"";
-
             EpcIL = @".class public C {
     .field int32 Field
     .method public static void Main() {
@@ -1070,10 +1069,7 @@ class C
         newobj instance void [NanaFxt]C::.ctor()
         stloc c
         ldloc c
-        ldc.i4 8
-        ldloc c
         ldc.i4 7
-        stfld int32 [NanaFxt]C::Field
         stfld int32 [NanaFxt]C::Field
         ldloc c
         ldfld int32 [NanaFxt]C::Field
@@ -1476,6 +1472,24 @@ fun Main():void
 ";
             Test();
         }
+
+        //[Test]
+        public void ZZZZ()
+        {
+            References.Add("system.windows.forms.dll");
+
+            Inp =
+@"
+1 + 2 -> a
+";
+            EpcSyn = @"";
+
+            EpcIL =
+@"
+";
+            Test();
+        }
+
 
         //[Test]
         public void ZZZ()
