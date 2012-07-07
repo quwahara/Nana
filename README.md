@@ -5,9 +5,10 @@
 Nana プログラミング言語は .NET Framework で動くプログラミング言語です。
 Nana は「左から右に代入したい！」を野望に開発を始めました。
 そのころはまだ **R言語** の存在を知りませんでした。
-ほかに文法で目指しているところは
+ほかに目指しているところは
 * なるべく一人でメンテナンスできるように、コンパイラの実装が単純であること
 * なるべくタイプしないでいいように済むような文法であること
+
 です。
 
 完成度は低く、まだ簡単な文法しかビルドできません。
@@ -17,23 +18,22 @@ Nana は「左から右に代入したい！」を野望に開発を始めました。
 ## 実行環境
 
 Nana を使うには
-
-Windows XP 32bit
-Microsoft.NET Framework v2.0
+*Windows XP 32bit
+*Microsoft.NET Framework v2.0
 
 が必要です。
 多分、v2.0 以上の .NET が入っていれば動くと思います。
 
 ## 動かし方
 
-とりあえず c:\tmp ディレクトリがあるとして、
+とりあえず空の c:\tmp ディレクトリがあるとして、
 そこに次の3つのファイルをダウンロードします。
 
 https://github.com/quwahara/Nana/raw/master/Nana/bin/Release/Nana.exe
 https://github.com/quwahara/Nana/raw/master/Nana/bin/Release/NanaLib.dll
 https://github.com/quwahara/Nana/raw/master/Nana/bin/Release/HelloWorld.nana
 
-cmd.exe を開き、c:tmp の下に移動し、次のように入力、リターンします。
+cmd.exe を開き、c:\tmp の下に移動し、次のように入力、リターンします。
 
 ```
 C:\Tmp>Nana.exe HelloWorld.nana
@@ -67,7 +67,7 @@ C:\Tmp>
 
 ```
 
-そして同じディレクトリに  HelloWorld.exe ができていので
+そして同じディレクトリに  HelloWorld.exe ができています。
 それを実行すると下のように出ます。
 
 ```
