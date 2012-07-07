@@ -6,8 +6,8 @@ Nana プログラミング言語は .NET Framework で動くプログラミング言語です。
 Nana は「左から右に代入したい！」を野望に開発を始めました。
 そのころはまだ **R言語** の存在を知りませんでした。
 ほかに文法で目指しているところは
-なるべく一人でメンテナンスできるように、コンパイラの実装が単純であること
-なるべくタイプしないでいいように済むような文法であること
+* なるべく一人でメンテナンスできるように、コンパイラの実装が単純であること
+* なるべくタイプしないでいいように済むような文法であること
 です。
 
 完成度は低く、まだ簡単な文法しかビルドできません。
@@ -84,7 +84,7 @@ Nanaでは ilasm.exe というプログラムを実行しています。
 これは通常、下のディレクトリに配置されていてます。
 Nana では規定でそこに ilasm.exe があることを期待しています。
 ```
-C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727
+C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727\ilasm.exe
 ```
 
 
@@ -98,4 +98,12 @@ or
 ```
 c:\tmp> set NANA_ILASM_PATH=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\ilasm.exe
 ```
+
+
+## ライセンス
+
+MIT ライセンスで公開しています。 
+ライセンスの全文は下で参照できます。
+
+https://raw.github.com/quwahara/Nana/master/LICENSE
 
