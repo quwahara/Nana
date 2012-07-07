@@ -18,11 +18,11 @@ Nana は「左から右に代入したい！」を野望に開発を始めました。
 ## 実行環境
 
 Nana を使うには
-*Windows XP 32bit
-*Microsoft.NET Framework v2.0
+* Windows XP 32bit
+* Microsoft.NET Framework v2.0
 
 が必要です。
-多分、v2.0 以上の .NET が入っていれば動くと思います。
+多分 v2.0 以上の .NET が入っていれば、Widows Vsita や 7 でも動くと思います。
 
 ## 動かし方
 

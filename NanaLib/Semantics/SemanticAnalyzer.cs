@@ -100,10 +100,12 @@ namespace Nana.Semantics
             }
             else
             {
+                Sema retval = Require<Sema>(Seed);
+                if (false == Fu.ReturnTyp.IsAssignableFrom(retval.Att.TypGet))
+                { throw new SemanticError("The type of the Value is not assignable for the return", Seed); }
                 ReturnValue rv = Above.RequiredReturnValue.Pop();
-                rv.GiveVal = Require<Sema>(Seed);
+                rv.GiveVal = retval;
             }
-
         }
 
         public TR Require<TR>(Token t)
@@ -730,11 +732,16 @@ namespace Nana.Semantics
                 if (false == (exe is ReturnValue)) { continue; }
 
                 if (i >= block.Length)
-                { throw new SyntaxError("Value is not specified for the return", line); }
+                { throw new SemanticError("The value is not specified for the return", line); }
                 ReturnValue rv = exe as ReturnValue;
                 line = block[i];
 
-                rv.GiveVal = Require<Sema>(line);
+                Sema retval = Require<Sema>(line);
+                if (false == Fu.ReturnTyp.IsAssignableFrom(retval.Att.TypGet))
+                { throw new SemanticError("The type of the Value is not assignable for the return", line); }
+                rv.GiveVal = retval;
+                Above.RequiredReturnValue.Pop();
+
                 ++i;
             }
 
