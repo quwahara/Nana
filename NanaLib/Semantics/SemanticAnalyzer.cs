@@ -469,7 +469,7 @@ namespace Nana.Semantics
             Sema giv = Require<Sema>(give);
             object tak = Gate(take);
 
-            //  generate variable by giving side type
+            //  generate a variable by giving side type
             if (tak.GetType() == typeof(Nmd))
             {
                 tak = NewVar((tak as Nmd).Name, giv.Att.TypGet);
