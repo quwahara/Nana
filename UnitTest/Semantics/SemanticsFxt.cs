@@ -211,11 +211,13 @@ end
     .method public static void Main() {
         .entrypoint
         call void [mscorlib]System.Console::WriteLine()
+rp$000001:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000002:
         ret
     }
 }
@@ -241,11 +243,13 @@ end
         .entrypoint
         ldstr ""P1""
         call void [mscorlib]System.Console::WriteLine(string)
+rp$000001:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000002:
         ret
     }
 }
@@ -273,14 +277,17 @@ end
     .method public static void Main() {
         .entrypoint
         call void [Call]CallDecFuncP0::Sub()
+rp$000001:
         ret
     }
     .method public static void Sub() {
+rp$000002:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000003:
         ret
     }
 }
@@ -310,16 +317,19 @@ end
         .entrypoint
         ldstr ""st""
         call void [Call]CallDecFuncP1::Sub(string)
+rp$000001:
         ret
     }
     .method public static void Sub(string s) {
         ldarg s
         call void [mscorlib]System.Console::WriteLine(string)
+rp$000002:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000003:
         ret
     }
 }
@@ -350,16 +360,19 @@ end
         ldstr ""st""
         ldstr ""ring""
         call void [Call]CallDecFuncP2::Sub(string, string)
+rp$000001:
         ret
     }
     .method public static void Sub(string s, string t) {
         ldarg t
         call void [mscorlib]System.Console::WriteLine(string)
+rp$000002:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000003:
         ret
     }
 }
@@ -386,10 +399,12 @@ System.Console.WriteLine(s)
     stsfld string s
     ldsfld string s
     call void [mscorlib]System.Console::WriteLine(string)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -415,10 +430,12 @@ System.Console.WriteLine(s)
     stsfld string s
     ldsfld string s
     call void [mscorlib]System.Console::WriteLine(string)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -439,10 +456,12 @@ System.Console.WriteLine(a)
     stsfld string a
     ldsfld string a
     call void [mscorlib]System.Console::WriteLine(string)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -460,10 +479,12 @@ a:int <- 10
 .method public static void .cctor() {
     ldc.i4 10
     stsfld int32 a
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -499,11 +520,13 @@ end
         stloc s
         ldloc s
         call void [mscorlib]System.Console::WriteLine(string)
+rp$000001:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000002:
         ret
     }
 }
@@ -531,11 +554,13 @@ end
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000001:
         ret
     }
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -557,11 +582,13 @@ end
 @".class public T102_Class1Func1P0 {
     .method public static void Main() {
         .entrypoint
+rp$000001:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000002:
         ret
     }
 }
@@ -587,14 +614,17 @@ end
 @".class public Class1Func2P0 {
     .method public static void Main() {
         .entrypoint
+rp$000001:
         ret
     }
     .method public static void Sub() {
+rp$000002:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000003:
         ret
     }
 }
@@ -617,11 +647,13 @@ end
 @".class public Class1Func1P1 {
     .method public static void Main(string s) {
         .entrypoint
+rp$000001:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000002:
         ret
     }
 }
@@ -644,11 +676,13 @@ end
 @".class public Class1Func1P2 {
     .method public static void Main(string s, string t) {
         .entrypoint
+rp$000001:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000002:
         ret
     }
 }
@@ -711,10 +745,12 @@ System.Console.WriteLine(v)
     stsfld bool v
     ldsfld bool v
     call void [mscorlib]System.Console::WriteLine(bool)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -768,10 +804,12 @@ System.Console.WriteLine(i)
     stsfld int32 i
     ldsfld int32 i
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -837,10 +875,12 @@ System.Console.WriteLine(i)
     stsfld bool i
     ldsfld bool i
     call void [mscorlib]System.Console::WriteLine(bool)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -863,10 +903,12 @@ System.Console.WriteLine(s)
     stsfld string s
     ldsfld string s
     call void [mscorlib]System.Console::WriteLine(string)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -895,10 +937,12 @@ end
     call void [mscorlib]System.Console::WriteLine(string)
     br endif$000001
 endif$000001:
+rp$000002:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000003:
     ret
 }
 ";
@@ -926,10 +970,12 @@ else$000001:
     ldstr ""else""
     call void [mscorlib]System.Console::WriteLine(string)
 endif$000001:
+rp$000002:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000003:
     ret
 }
 ";
@@ -960,10 +1006,12 @@ elif$000001_1:
     call void [mscorlib]System.Console::WriteLine(string)
     br endif$000001
 endif$000001:
+rp$000002:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000003:
     ret
 }
 ";
@@ -999,10 +1047,12 @@ else$000001:
     ldstr ""else""
     call void [mscorlib]System.Console::WriteLine(string)
 endif$000001:
+rp$000002:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000003:
     ret
 }
 ";
@@ -1041,10 +1091,12 @@ elif$000001_2:
     call void [mscorlib]System.Console::WriteLine(string)
     br endif$000001
 endif$000001:
+rp$000002:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000003:
     ret
 }
 ";
@@ -1088,10 +1140,12 @@ else$000001:
     ldstr ""else""
     call void [mscorlib]System.Console::WriteLine(string)
 endif$000001:
+rp$000002:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000003:
     ret
 }
 ";
@@ -1125,10 +1179,12 @@ do$000001:
     call void [mscorlib]System.Console::WriteLine(string)
     br do$000001
 endwhile$000001:
+rp$000002:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000003:
     ret
 }
 ";
@@ -1191,10 +1247,12 @@ System.Console.WriteLine(b)
     stsfld int32 b
     ldsfld int32 b
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1227,10 +1285,12 @@ System.Console.WriteLine(b[0])
     ldc.i4 0
     ldelem int32
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1271,10 +1331,12 @@ System.Console.WriteLine(a[1])
     ldc.i4 1
     ldelem int32
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1338,10 +1400,12 @@ System.Console.WriteLine(a[0] + a[3])
     ldelem int32
     add
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1374,10 +1438,12 @@ System.Console.WriteLine(b)
     stsfld object b
     ldsfld object b
     call void [mscorlib]System.Console::WriteLine(object)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1400,10 +1466,12 @@ System.Console.WriteLine(a.Length)
     ldsfld int32[] a
     callvirt instance int32 int32[]::get_Length()
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1419,25 +1487,27 @@ System.Console.WriteLine(b)
 ";
             Epc +=
 @".field static int32 b
-.field static int32[] $000001
+.field static int32[] $000003
 .method public static void .cctor() {
     ldc.i4 5
     newarr int32
-    stsfld int32[] $000001
-    ldsfld int32[] $000001
+    stsfld int32[] $000003
+    ldsfld int32[] $000003
     ldc.i4 0
     ldc.i4 7
     stelem int32
-    ldsfld int32[] $000001
+    ldsfld int32[] $000003
     ldc.i4 0
     ldelem int32
     stsfld int32 b
     ldsfld int32 b
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1477,10 +1547,12 @@ System.Console.WriteLine(b)
     stsfld int32 b
     ldsfld int32 b
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1516,10 +1588,12 @@ System.Console.WriteLine(b[3, 1])
     ldc.i4 1
     call instance int32 int32[0...,0...]::Get(int32, int32)
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1703,10 +1777,12 @@ System.Console.WriteLine(a[1, 2])
     ldc.i4 2
     call instance int32 int32[0...,0...]::Get(int32, int32)
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1874,10 +1950,12 @@ System.Console.WriteLine(a[3, 3])
     ldc.i4 3
     call instance int32 int32[0...,0...]::Get(int32, int32)
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1913,10 +1991,12 @@ System.Console.WriteLine(b)
     stsfld object b
     ldsfld object b
     call void [mscorlib]System.Console::WriteLine(object)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1940,10 +2020,12 @@ System.Console.WriteLine(a.Length)
     ldsfld int32[0...,0...] a
     callvirt instance int32 int32[0...,0...]::get_Length()
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1959,28 +2041,30 @@ System.Console.WriteLine(b)
 ";
             Epc +=
 @".field static int32 b
-.field static int32[0...,0...] $000001
+.field static int32[0...,0...] $000003
 .method public static void .cctor() {
     ldc.i4 7
     ldc.i4 5
     newobj instance void int32[0...,0...]::.ctor(int32, int32)
-    stsfld int32[0...,0...] $000001
-    ldsfld int32[0...,0...] $000001
+    stsfld int32[0...,0...] $000003
+    ldsfld int32[0...,0...] $000003
     ldc.i4 4
     ldc.i4 3
     ldc.i4 2
     call instance void int32[0...,0...]::Set(int32, int32, int32)
-    ldsfld int32[0...,0...] $000001
+    ldsfld int32[0...,0...] $000003
     ldc.i4 4
     ldc.i4 3
     call instance int32 int32[0...,0...]::Get(int32, int32)
     stsfld int32 b
     ldsfld int32 b
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2022,6 +2106,7 @@ fun Main(args:string[]):void
     ldc.i4 5
     call instance int32 int32[0...,0...,0...]::Get(int32, int32, int32)
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 ";
@@ -2068,10 +2153,12 @@ System.Console.WriteLine(b)
     stsfld int32 b
     ldsfld int32 b
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2114,10 +2201,12 @@ System.Console.WriteLine(b[0][1])
     ldc.i4 1
     ldelem int32
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2172,10 +2261,12 @@ System.Console.WriteLine(a[1][3])
     ldc.i4 3
     ldelem int32
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2250,10 +2341,12 @@ System.Console.WriteLine(a[3][5])
     ldc.i4 5
     ldelem int32
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2298,10 +2391,12 @@ System.Console.WriteLine(a[1].GetValue(3))
     ldc.i4 3
     callvirt instance object int32[]::GetValue(int32)
     call void [mscorlib]System.Console::WriteLine(object)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2332,10 +2427,12 @@ System.Console.WriteLine(a[0].Length)
     ldelem int32[]
     callvirt instance int32 int32[]::get_Length()
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2351,30 +2448,30 @@ System.Console.WriteLine(b)
 ";
             Epc +=
 @".field static int32 b
-.field static int32[][] $000001
-.field static int32[] $000002
+.field static int32[][] $000003
+.field static int32[] $000004
 .method public static void .cctor() {
     ldc.i4 11
     newarr int32[]
-    stsfld int32[][] $000001
-    ldsfld int32[][] $000001
+    stsfld int32[][] $000003
+    ldsfld int32[][] $000003
     ldc.i4 9
     ldc.i4 7
     newarr int32
-    stsfld int32[] $000002
-    ldsfld int32[] $000002
+    stsfld int32[] $000004
+    ldsfld int32[] $000004
     stelem int32[]
-    ldsfld int32[][] $000001
+    ldsfld int32[][] $000003
     ldc.i4 9
     ldelem int32[]
     ldc.i4 5
     ldc.i4 3
     stelem int32
-    ldsfld int32[][] $000001
+    ldsfld int32[][] $000003
     ldc.i4 9
-    ldsfld int32[] $000002
+    ldsfld int32[] $000004
     stelem int32[]
-    ldsfld int32[][] $000001
+    ldsfld int32[][] $000003
     ldc.i4 9
     ldelem int32[]
     ldc.i4 5
@@ -2382,10 +2479,12 @@ System.Console.WriteLine(b)
     stsfld int32 b
     ldsfld int32 b
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2418,10 +2517,12 @@ System.Console.WriteLine(s)
     stsfld string s
     ldsfld string s
     call void [mscorlib]System.Console::WriteLine(string)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2499,6 +2600,7 @@ end
     .method public void .ctor() {
         ldarg.0
         call instance void [UnitTest]UnitTest.Class0::.ctor()
+rp$000001:
         ret
     }
     .method public static void Main() {
@@ -2511,6 +2613,7 @@ end
         ldloc a
         callvirt instance string [AccessModifiersFxt]A::Pub0()
         pop
+rp$000002:
         ret
     }
 }
@@ -2545,10 +2648,12 @@ namespace UnitTest.Semantics.Precedings
     stsfld int32 a
     ldsfld int32 a
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2581,10 +2686,12 @@ namespace UnitTest.Semantics.Precedings
     stsfld int32 a
     ldsfld int32 a
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2606,10 +2713,12 @@ namespace UnitTest.Semantics.Tutorial
 @".method public static void .cctor() {
     ldstr ""Hello, world!""
     call void [mscorlib]System.Console::WriteLine(string)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -2642,10 +2751,12 @@ namespace UnitTest.Semantics.Tutorial
     stsfld int32 len
     ldsfld int32 len
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";

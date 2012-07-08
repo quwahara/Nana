@@ -365,13 +365,13 @@ namespace Nana.Semantics
         {
             if (Fu.IsReturnValue)
             {
-                ReturnValue rv = new ReturnValue();
+                ReturnValue rv = new ReturnValue(Fu.RetPoint);
                 Above.RequiredReturnValue.Push(rv);
                 return rv;
             }
             else
             {
-                return new Ret();
+                return new Ret(Fu.RetPoint);
             }
         }
 
@@ -1299,6 +1299,13 @@ namespace Nana.Semantics
 
             Bl = Fu = ovld.NewFun(nameasm, prmls, returnType);
 
+            //  generate exit
+            ReturnPoint rp = Fu.RetPoint = new ReturnPoint();
+            string fix = E.GetTempName();
+            rp.Lbl = new Literal("rp" + fix, null); //  Return Point
+            if (false == isCtor && E.BTY.Void != returnType)
+            { rp.Var = Fu.NewVar("'0rv" + fix + "'", returnType); }
+
             MethodAttributes attrs = MethodAttributes.Public;
             bool isStatic = ftyp[0] == 's';
             if (isStatic) { attrs |= MethodAttributes.Static; }
@@ -1350,13 +1357,9 @@ namespace Nana.Semantics
             if (false == f.IsConstructor && f.IsReturnValue)
             {
                 if (false == rds)
-                { throw new SyntaxError("Function doesn't return value"); }
+                { throw new SemanticError("Function doesn't return value"); }
             }
-            else
-            {
-                if (false == rds)
-                { f.Exes.Add(new Ret()); }
-            }
+            f.Exes.Add(f.RetPoint);
         }
 
         public override object Find(string name)

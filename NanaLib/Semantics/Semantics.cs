@@ -539,6 +539,7 @@ namespace Nana.Semantics
         public MethodImplAttributes ImplAttrs = MethodImplAttributes.IL | MethodImplAttributes.Managed;
         public List<Variable> Params = new List<Variable>();
         public Typ ReturnTyp;
+        public ReturnPoint RetPoint;
 
         public Typ[] Signature
         {
@@ -1243,14 +1244,17 @@ namespace Nana.Semantics
 
     public class Ret : Sema, IReturnDeterminacyState
     {
-        public Ret()
+        public ReturnPoint RP;
+        
+        public Ret(ReturnPoint rp)
         {
             Att.CanExec_ = true;
+            RP = rp;
         }
 
         public override void Exec(IMRGenerator gen)
         {
-            gen.Ret();
+            gen.Br(RP.Lbl.Value.ToString());
         }
 
         public bool RDS { get { return true; } }
@@ -1360,19 +1364,42 @@ namespace Nana.Semantics
         }
     }
 
-    public class ReturnValue : Sema, IReturnDeterminacyState
+    public class ReturnPoint : Sema, IReturnDeterminacyState
     {
-        public Sema GiveVal = null;
+        public Literal Lbl;
+        public Variable Var;
 
-        public ReturnValue()
+        public ReturnPoint()
         {
             Att.CanExec_ = true;
         }
 
         public override void Exec(IMRGenerator gen)
         {
-            GiveVal.Give(gen);
+            gen.PutLabel(Lbl.Value.ToString());
+            if (null != Var) { Var.Give(gen); }
             gen.Ret();
+        }
+
+        public bool RDS { get { return true; } }
+    }
+
+    public class ReturnValue : Sema, IReturnDeterminacyState
+    {
+        public ReturnPoint RP;
+        public Sema GiveVal = null;
+
+        public ReturnValue(ReturnPoint rp)
+        {
+            Att.CanExec_ = true;
+            RP = rp;
+        }
+
+        public override void Exec(IMRGenerator gen)
+        {
+            GiveVal.Give(gen);
+            RP.Var.Take(gen);
+            gen.Br(RP.Lbl.Value.ToString());
         }
 
         public bool RDS { get { return true; } }

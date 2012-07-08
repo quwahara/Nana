@@ -214,10 +214,12 @@ namespace UnitTest
             EpcIL = @".method public static void .cctor() {
     ldstr ""Hello, World!""
     call void [mscorlib]System.Console::WriteLine(string)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -241,17 +243,19 @@ namespace UnitTest
 ";
 
             EpcIL = @".field static string s
-.field static int32 $000001
+.field static int32 $000003
 .method public static void .cctor() {
     ldc.i4 1
-    stsfld int32 $000001
-    ldsflda int32 $000001
+    stsfld int32 $000003
+    ldsflda int32 $000003
     callvirt instance string int32::ToString()
     stsfld string s
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -282,10 +286,12 @@ namespace UnitTest
             EpcIL = @".method public static void .cctor() {
     ldstr ""Hello, World!""
     call void [mscorlib]System.Console::WriteLine(string)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -344,10 +350,12 @@ namespace UnitTest
     stsfld int32 len
     ldsfld int32 len
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -401,14 +409,17 @@ class sub
     .method public static void Main() {
         .entrypoint
         call void [NanaFxt]'sub'::'pop'()
+rp$000001:
         ret
     }
     .method public static void 'pop'() {
+rp$000002:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000003:
         ret
     }
 }
@@ -463,63 +474,98 @@ class A
             EpcIL = @".class public A {
     .method public static int32 Main() {
         .entrypoint
+        .locals (
+            int32 '0rv$000001'
+        )
         ldc.i4 1
+        stloc '0rv$000001'
+        br rp$000001
+rp$000001:
+        ldloc '0rv$000001'
         ret
     }
     .method public static bool IfElse() {
+        .locals (
+            bool '0rv$000002'
+        )
         ldc.i4.1
-        brfalse else$000001
+        brfalse else$000006
         ldc.i4.1
-        ret
-        br endif$000001
-else$000001:
+        stloc '0rv$000002'
+        br rp$000002
+        br endif$000006
+else$000006:
         ldc.i4.0
+        stloc '0rv$000002'
+        br rp$000002
+endif$000006:
+rp$000002:
+        ldloc '0rv$000002'
         ret
-endif$000001:
     }
     .method public static bool IfElifElse() {
+        .locals (
+            bool '0rv$000003'
+        )
         ldc.i4.1
-        brfalse elif$000002_1
+        brfalse elif$000007_1
         ldc.i4.1
-        ret
-        br endif$000002
-elif$000002_1:
+        stloc '0rv$000003'
+        br rp$000003
+        br endif$000007
+elif$000007_1:
         ldc.i4.1
-        brfalse else$000002
+        brfalse else$000007
         ldc.i4.1
-        ret
-        br endif$000002
-else$000002:
+        stloc '0rv$000003'
+        br rp$000003
+        br endif$000007
+else$000007:
         ldc.i4.0
+        stloc '0rv$000003'
+        br rp$000003
+endif$000007:
+rp$000003:
+        ldloc '0rv$000003'
         ret
-endif$000002:
     }
     .method public static bool IfElifElifElse() {
+        .locals (
+            bool '0rv$000004'
+        )
         ldc.i4.1
-        brfalse elif$000003_1
+        brfalse elif$000008_1
         ldc.i4.1
-        ret
-        br endif$000003
-elif$000003_1:
+        stloc '0rv$000004'
+        br rp$000004
+        br endif$000008
+elif$000008_1:
         ldc.i4.1
-        brfalse elif$000003_2
+        brfalse elif$000008_2
         ldc.i4.1
-        ret
-        br endif$000003
-elif$000003_2:
+        stloc '0rv$000004'
+        br rp$000004
+        br endif$000008
+elif$000008_2:
         ldc.i4.1
-        brfalse else$000003
+        brfalse else$000008
         ldc.i4.1
-        ret
-        br endif$000003
-else$000003:
+        stloc '0rv$000004'
+        br rp$000004
+        br endif$000008
+else$000008:
         ldc.i4.0
+        stloc '0rv$000004'
+        br rp$000004
+endif$000008:
+rp$000004:
+        ldloc '0rv$000004'
         ret
-endif$000003:
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000005:
         ret
     }
 }
@@ -556,38 +602,48 @@ class A
             EpcIL = @".class public A {
     .method public static int32 Main() {
         .entrypoint
-        ldc.i4.1
-        brfalse else$000001
-        ldc.i4.1
-        brfalse else$000002
-        ldc.i4 21
-        ret
-        br endif$000002
-else$000002:
-        ldc.i4 22
-        ret
-endif$000002:
-        br endif$000001
-else$000001:
+        .locals (
+            int32 '0rv$000001'
+        )
         ldc.i4.1
         brfalse else$000003
-        ldc.i4 31
-        ret
+        ldc.i4.1
+        brfalse else$000004
+        ldc.i4 21
+        stloc '0rv$000001'
+        br rp$000001
+        br endif$000004
+else$000004:
+        ldc.i4 22
+        stloc '0rv$000001'
+        br rp$000001
+endif$000004:
         br endif$000003
 else$000003:
+        ldc.i4.1
+        brfalse else$000005
+        ldc.i4 31
+        stloc '0rv$000001'
+        br rp$000001
+        br endif$000005
+else$000005:
         ldc.i4 32
-        ret
+        stloc '0rv$000001'
+        br rp$000001
+endif$000005:
 endif$000003:
-endif$000001:
+rp$000001:
+        ldloc '0rv$000001'
+        ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000002:
         ret
     }
 }
 ";
-
             Test();
         }
 
@@ -804,6 +860,7 @@ fun Main():void
     call void [System.Windows.Forms]System.Windows.Forms.Application::SetCompatibleTextRenderingDefault(bool)
     newobj instance void [System.Windows.Forms]System.Windows.Forms.Form::.ctor()
     call void [System.Windows.Forms]System.Windows.Forms.Application::Run(class [System.Windows.Forms]System.Windows.Forms.Form)
+rp$000001:
     ret
 }
 ";
@@ -844,6 +901,7 @@ fun Main():void
     callvirt instance void [System.Windows.Forms]System.Windows.Forms.Form::set_Text(string)
     ldloc f
     call void [System.Windows.Forms]System.Windows.Forms.Application::Run(class [System.Windows.Forms]System.Windows.Forms.Form)
+rp$000001:
     ret
 }
 ";
@@ -900,10 +958,12 @@ exitcatch$000001:
     endfinally
     }
 exitfinally$000001:
+rp$000002:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000003:
     ret
 }
 ";
@@ -963,10 +1023,12 @@ System.Console.WriteLine(i)
     stsfld int32 i
     ldsfld int32 i
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1031,10 +1093,12 @@ System.Console.WriteLine(i)
     stsfld int32 i
     ldsfld int32 i
     call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000002:
     ret
 }
 ";
@@ -1074,11 +1138,13 @@ class C
         ldloc c
         ldfld int32 [NanaFxt]C::Field
         call void [mscorlib]System.Console::WriteLine(int32)
+rp$000001:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000002:
         ret
     }
 }
@@ -1118,11 +1184,13 @@ d()
     .method public virtual void M() {
         ldstr ""Hi""
         call void [mscorlib]System.Console::WriteLine(string)
+rp$000001:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000004:
         ret
     }
 }
@@ -1143,10 +1211,12 @@ d()
     callvirt instance void [NanaFxt]MyD::Invoke()
     ldsfld class [NanaFxt]MyD d
     callvirt instance void [NanaFxt]MyD::Invoke()
+rp$000005:
     ret
 }
 .method public static void '0'() {
     .entrypoint
+rp$000006:
     ret
 }
 ";
@@ -1165,21 +1235,24 @@ class C
 ";
             EpcSyn = @"";
 
-            EpcIL = 
+            EpcIL =
 @".class public C {
     .method public virtual void F() {
         newobj instance void object::.ctor()
         pop
+rp$000001:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000002:
         ret
     }
 }
 .method public static void '0'() {
     .entrypoint
+rp$000003:
     ret
 }
 ";
@@ -1203,22 +1276,24 @@ fun Main()
 
             EpcIL = 
 @".field static string gv
-.field static class [NanaFxt]'0clsr$000001' $000004
+.field static class [NanaFxt]'0clsr$000002' $000014
 .method public static void Main() {
     .entrypoint
     .locals (
-        class [NanaFxt]'0clsr$000002' $000003
+        class [NanaFxt]'0clsr$000007' $000013
     )
-    newobj instance void [NanaFxt]'0clsr$000002'::.ctor()
-    stloc $000003
-    ldloc $000003
-    ldftn instance void [NanaFxt]'0clsr$000002'::'0impl'()
-    newobj instance void [NanaFxt]'0dlgt$000002'::.ctor(object, native int)
+    newobj instance void [NanaFxt]'0clsr$000007'::.ctor()
+    stloc $000013
+    ldloc $000013
+    ldftn instance void [NanaFxt]'0clsr$000007'::'0impl'()
+    newobj instance void [NanaFxt]'0dlgt$000007'::.ctor(object, native int)
     pop
+rp$000001:
     ret
 }
-.class public '0clsr$000001' {
+.class public '0clsr$000002' {
     .method public void .ctor() {
+rp$000003:
         ret
     }
     .method public void '0impl'() {
@@ -1227,25 +1302,7 @@ fun Main()
         )
         ldsfld string gv
         stloc cv1
-        ret
-    }
-}
-.class public sealed '0dlgt$000001' extends [mscorlib]System.MulticastDelegate {
-    .method public hidebysig newslot void .ctor(object obj, native int mth) runtime {
-    }
-    .method public hidebysig newslot void Invoke() runtime {
-    }
-}
-.class public '0clsr$000002' {
-    .method public void .ctor() {
-        ret
-    }
-    .method public void '0impl'() {
-        .locals (
-            string cv2
-        )
-        ldsfld string gv
-        stloc cv2
+rp$000004:
         ret
     }
 }
@@ -1255,15 +1312,37 @@ fun Main()
     .method public hidebysig newslot void Invoke() runtime {
     }
 }
+.class public '0clsr$000007' {
+    .method public void .ctor() {
+rp$000008:
+        ret
+    }
+    .method public void '0impl'() {
+        .locals (
+            string cv2
+        )
+        ldsfld string gv
+        stloc cv2
+rp$000009:
+        ret
+    }
+}
+.class public sealed '0dlgt$000007' extends [mscorlib]System.MulticastDelegate {
+    .method public hidebysig newslot void .ctor(object obj, native int mth) runtime {
+    }
+    .method public hidebysig newslot void Invoke() runtime {
+    }
+}
 .method public static void .cctor() {
     ldstr ""global variable""
     stsfld string gv
-    newobj instance void [NanaFxt]'0clsr$000001'::.ctor()
-    stsfld class [NanaFxt]'0clsr$000001' $000004
-    ldsfld class [NanaFxt]'0clsr$000001' $000004
-    ldftn instance void [NanaFxt]'0clsr$000001'::'0impl'()
-    newobj instance void [NanaFxt]'0dlgt$000001'::.ctor(object, native int)
+    newobj instance void [NanaFxt]'0clsr$000002'::.ctor()
+    stsfld class [NanaFxt]'0clsr$000002' $000014
+    ldsfld class [NanaFxt]'0clsr$000002' $000014
+    ldftn instance void [NanaFxt]'0clsr$000002'::'0impl'()
+    newobj instance void [NanaFxt]'0dlgt$000002'::.ctor(object, native int)
     pop
+rp$000012:
     ret
 }
 ";
@@ -1300,16 +1379,19 @@ class C
         ldarg.0
         ldfld int32 [NanaFxt]C::F
         stloc v
+rp$000001:
         ret
     }
     .method public void .ctor() {
         ldarg.0
         call instance void object::.ctor()
+rp$000002:
         ret
     }
 }
 .method public static void '0'() {
     .entrypoint
+rp$000003:
     ret
 }
 ";
@@ -1328,6 +1410,7 @@ class C
             EpcIL =
 @".method public static void '0'() {
     .entrypoint
+rp$000001:
     ret
 }
 ";
@@ -1352,24 +1435,26 @@ fun Main()
     .entrypoint
     .locals (
         int32 lv
-        , class [NanaFxt]'0clsr$000001' $000002
+        , class [NanaFxt]'0clsr$000002' $000007
     )
     ldc.i4 0
     stloc lv
-    newobj instance void [NanaFxt]'0clsr$000001'::.ctor()
-    stloc $000002
-    ldloc $000002
+    newobj instance void [NanaFxt]'0clsr$000002'::.ctor()
+    stloc $000007
+    ldloc $000007
     ldloc lv
-    stfld int32 [NanaFxt]'0clsr$000001'::lv
-    ldloc $000002
-    ldftn instance void [NanaFxt]'0clsr$000001'::'0impl'()
-    newobj instance void [NanaFxt]'0dlgt$000001'::.ctor(object, native int)
+    stfld int32 [NanaFxt]'0clsr$000002'::lv
+    ldloc $000007
+    ldftn instance void [NanaFxt]'0clsr$000002'::'0impl'()
+    newobj instance void [NanaFxt]'0dlgt$000002'::.ctor(object, native int)
     pop
+rp$000001:
     ret
 }
-.class public '0clsr$000001' {
+.class public '0clsr$000002' {
     .field int32 lv
     .method public void .ctor() {
+rp$000003:
         ret
     }
     .method public void '0impl'() {
@@ -1377,12 +1462,13 @@ fun Main()
             int32 cv
         )
         ldarg.0
-        ldfld int32 [NanaFxt]'0clsr$000001'::lv
+        ldfld int32 [NanaFxt]'0clsr$000002'::lv
         stloc cv
+rp$000004:
         ret
     }
 }
-.class public sealed '0dlgt$000001' extends [mscorlib]System.MulticastDelegate {
+.class public sealed '0dlgt$000002' extends [mscorlib]System.MulticastDelegate {
     .method public hidebysig newslot void .ctor(object obj, native int mth) runtime {
     }
     .method public hidebysig newslot void Invoke() runtime {
@@ -1426,23 +1512,23 @@ fun Main():void
     .entrypoint
     .locals (
         class [System.Windows.Forms]System.Windows.Forms.Form f
-        , class [NanaFxt]'0dlgt$000001' c
+        , class [NanaFxt]'0dlgt$000002' c
         , class [mscorlib]System.EventHandler h
-        , class [NanaFxt]'0clsr$000001' $000002
+        , class [NanaFxt]'0clsr$000002' $000007
     )
     call void [System.Windows.Forms]System.Windows.Forms.Application::EnableVisualStyles()
     ldc.i4.0
     call void [System.Windows.Forms]System.Windows.Forms.Application::SetCompatibleTextRenderingDefault(bool)
     newobj instance void [System.Windows.Forms]System.Windows.Forms.Form::.ctor()
     stloc f
-    newobj instance void [NanaFxt]'0clsr$000001'::.ctor()
-    stloc $000002
-    ldloc $000002
-    ldftn instance void [NanaFxt]'0clsr$000001'::'0impl'(object, class [mscorlib]System.EventArgs)
-    newobj instance void [NanaFxt]'0dlgt$000001'::.ctor(object, native int)
+    newobj instance void [NanaFxt]'0clsr$000002'::.ctor()
+    stloc $000007
+    ldloc $000007
+    ldftn instance void [NanaFxt]'0clsr$000002'::'0impl'(object, class [mscorlib]System.EventArgs)
+    newobj instance void [NanaFxt]'0dlgt$000002'::.ctor(object, native int)
     stloc c
     ldloc c
-    ldftn instance void [NanaFxt]'0dlgt$000001'::Invoke(object, class [mscorlib]System.EventArgs)
+    ldftn instance void [NanaFxt]'0dlgt$000002'::Invoke(object, class [mscorlib]System.EventArgs)
     newobj instance void [mscorlib]System.EventHandler::.ctor(object, native int)
     stloc h
     ldloc f
@@ -1450,20 +1536,23 @@ fun Main():void
     callvirt instance void [System.Windows.Forms]System.Windows.Forms.Form::add_Load(class [mscorlib]System.EventHandler)
     ldloc f
     call void [System.Windows.Forms]System.Windows.Forms.Application::Run(class [System.Windows.Forms]System.Windows.Forms.Form)
+rp$000001:
     ret
 }
-.class public '0clsr$000001' {
+.class public '0clsr$000002' {
     .method public void .ctor() {
+rp$000003:
         ret
     }
     .method public void '0impl'(object sender, class [mscorlib]System.EventArgs a) {
         ldstr ""xxx""
         call valuetype [System.Windows.Forms]System.Windows.Forms.DialogResult [System.Windows.Forms]System.Windows.Forms.MessageBox::Show(string)
         pop
+rp$000004:
         ret
     }
 }
-.class public sealed '0dlgt$000001' extends [mscorlib]System.MulticastDelegate {
+.class public sealed '0dlgt$000002' extends [mscorlib]System.MulticastDelegate {
     .method public hidebysig newslot void .ctor(object obj, native int mth) runtime {
     }
     .method public hidebysig newslot void Invoke(object sender, class [mscorlib]System.EventArgs a) runtime {
@@ -1473,23 +1562,101 @@ fun Main():void
             Test();
         }
 
-        //[Test]
-        public void ZZZZ()
+        [Test]
+        public void TC0708_StoreReturnValueToTemporaryVariable()
         {
-            References.Add("system.windows.forms.dll");
-
             Inp =
 @"
-1 + 2 -> a
+fun Fibo(n:int):int
+..
+    if      0 == n then
+        return 0
+    elif    1 == n then
+        return 1
+    else
+        return Fibo(n - 2) + Fibo(n - 1)
+    end
+,,
+
+num = 0
+while   17 > num do
+    Fibo(num)   -> fi
+    `p(fi)
+    num = num + 1
+end
 ";
             EpcSyn = @"";
-
             EpcIL =
-@"
+@".field static int32 num
+.field static int32 fi
+.method public static int32 Fibo(int32 n) {
+    .locals (
+        int32 '0rv$000001'
+    )
+    ldc.i4 0
+    ldarg n
+    ceq
+    brfalse elif$000003_1
+    ldc.i4 0
+    stloc '0rv$000001'
+    br rp$000001
+    br endif$000003
+elif$000003_1:
+    ldc.i4 1
+    ldarg n
+    ceq
+    brfalse else$000003
+    ldc.i4 1
+    stloc '0rv$000001'
+    br rp$000001
+    br endif$000003
+else$000003:
+    ldarg n
+    ldc.i4 2
+    sub
+    call int32 Fibo(int32)
+    ldarg n
+    ldc.i4 1
+    sub
+    call int32 Fibo(int32)
+    add
+    stloc '0rv$000001'
+    br rp$000001
+endif$000003:
+rp$000001:
+    ldloc '0rv$000001'
+    ret
+}
+.method public static void .cctor() {
+    ldc.i4 0
+    stsfld int32 num
+do$000002:
+    ldc.i4 17
+    ldsfld int32 num
+    cgt
+    brfalse endwhile$000002
+    ldsfld int32 num
+    call int32 Fibo(int32)
+    stsfld int32 fi
+    ldsfld int32 fi
+    call void [mscorlib]System.Console::WriteLine(int32)
+    ldsfld int32 num
+    ldc.i4 1
+    add
+    stsfld int32 num
+    br do$000002
+endwhile$000002:
+rp$000004:
+    ret
+}
+.method public static void '0'() {
+    .entrypoint
+rp$000005:
+    ret
+}
 ";
             Test();
         }
-
 
         //[Test]
         public void ZZZ()
