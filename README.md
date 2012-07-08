@@ -100,6 +100,33 @@ c:\tmp> set NANA_ILASM_PATH=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\ilasm.
 ```
 
 
+## 実例
+0 から 16 までのフィボナッチ数列を表示します
+```
+//  Save as 'fibo.nana'
+//  build:
+//  > nana fibo
+fun Fibo(n:int):int
+..
+    if      0 == n then
+        return 0
+    elif    1 == n then
+        return 1
+    else
+        return Fibo(n - 2) + Fibo(n - 1)
+    end
+,,
+
+num = 0
+while   17 > num do
+    Fibo(num)   -> fi
+    `p(fi)
+    num = num + 1
+end
+```
+
+
+
 ## ライセンス
 
 MIT ライセンスで公開しています。 
