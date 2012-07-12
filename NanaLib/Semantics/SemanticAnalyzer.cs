@@ -153,6 +153,7 @@ namespace Nana.Semantics
                 case "Throw":       /**/ u = Throw(t); break;
                 case "Try":         /**/ u = Try(t); break;
                 case "Cls":         /**/ u = Closure(t); break;
+                case "Cst":         /**/ u = Cast(t); break;
                 default:
                     throw new SemanticError(string.Format("'{0}' cannot be in there", t.Value), t);
             }
@@ -408,17 +409,22 @@ namespace Nana.Semantics
 
         public object Id(Token t)
         {
-            if (t.Value == "break")
+            string id = t.Value;
+
+            if ("null" == id)
+            { return new Literal(null, E.BTY.Object); }
+
+            if ("break" == id)
             {
                 if (Breaks.Count == 0)
-                { throw new SyntaxError("Can not place break", t); }
+                { throw new SemanticError("Can not place break", t); }
                 return new BranchInfo(Breaks.Peek());
             }
 
-            if (t.Value == "continue")
+            if ("continue" == id)
             {
                 if (Continues.Count == 0)
-                { throw new SyntaxError("Can not place continue", t); }
+                { throw new SemanticError("Can not place continue", t); }
                 return new BranchInfo(Continues.Peek());
             }
 
@@ -526,6 +532,25 @@ namespace Nana.Semantics
 
             Typ ty = RequireTyp(t.Second);
             return NewVar(t.First.Value, ty);
+        }
+
+        public object Cast(Token t)
+        {
+            Sema instance = Gate(t.First) as Sema;
+            Typ totyp = Gate(t.Second) as Typ;
+            bool doThrowInvalidCast = "as!" == t.Value;
+            
+            if (null == instance)
+            { throw new SemanticError("Could not cast the left-hand side", t); }
+
+            if (false == instance.Att.CanGet)
+            { throw new SemanticError("Could not cast the left-hand side", t); }
+
+            if (null == totyp)
+            { throw new SemanticError("Could not cast to the right-hand side type", t); }
+
+            Cast c = new Cast(instance, totyp, doThrowInvalidCast);
+            return c;
         }
 
         public object Ope(Token t)

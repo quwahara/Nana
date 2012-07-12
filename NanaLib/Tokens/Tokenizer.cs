@@ -323,6 +323,7 @@ namespace Nana.Tokens
 |(?<AsgnL>=)
 |(?<Expr>(\(|\)|\[|\]|@))
 |(?<Num>(\d+)(\.(\d)+)?)
+|(?<Cst>(as!|as))
 |(?<Ope>(and|xor|or))
 |(?<Bol>(true|false))
 |(?<Ret>return)

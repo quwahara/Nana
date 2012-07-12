@@ -1242,6 +1242,36 @@ namespace Nana.Semantics
 
     }
 
+    public class Cast : Sema
+    {
+        public Sema Instance;
+        public Typ ToTyp;
+        public bool DoThrowInvalidCast;
+
+        public Cast(Sema instance, Typ totyp, bool doThrowInvalidCast)
+        {
+            Instance = instance;
+            ToTyp = totyp;
+            DoThrowInvalidCast = doThrowInvalidCast;
+
+            Att.TypGet = totyp;
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            Instance.Give(gen);
+            if (DoThrowInvalidCast)
+            {
+                gen.CastNoisy(ToTyp);
+            }
+            else
+            {
+                gen.CastSilent(ToTyp);
+            }
+        }
+
+    }
+
     public class Ret : Sema, IReturnDeterminacyState
     {
         public ReturnPoint RP;

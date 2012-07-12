@@ -603,7 +603,8 @@ namespace Nana.Generations
                 case C.LdField: return LoadField(imr.TypV, imr.VariableV);
                 case C.StField: return StoreField(imr.TypV, imr.VariableV);
                 case C.LdFunction: return LoadFunction(imr);
-
+                case C.CastNoisy: return CastNoisy(imr);
+                case C.CastSilent: return CastSilent(imr);
             }
             throw new NotSupportedException();
         }
@@ -623,6 +624,8 @@ namespace Nana.Generations
 
         public static string LoadLiteral(Literal l)
         {
+            if (null == l.Value)                /**/ { return S(OpCodes.Ldnull); }
+
             Typ t = l.Att.TypGet;
             if (t.RefType == typeof(bool))      /**/ return ((bool)l.Value) ? S(OpCodes.Ldc_I4_1) : S(OpCodes.Ldc_I4_0);
             if (t.RefType == typeof(string))    /**/ return S(OpCodes.Ldstr, @"""" + l.Value + @"""");
@@ -829,6 +832,18 @@ namespace Nana.Generations
         {
             string label = imr.StringV;
             return label + ":";
+        }
+
+        public static string CastNoisy(IMR imr)
+        {
+            string s = S(OpCodes.Castclass) + " " + TypeFullName(imr.TypV);
+            return s;
+        }
+
+        public static string CastSilent(IMR imr)
+        {
+            string s = "// silent cast to " + TypeFullName(imr.TypV);
+            return s;
         }
 
         public static string Ope(IMR imr, out string[] extra)

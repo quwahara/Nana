@@ -70,6 +70,7 @@ namespace Nana.Syntaxes
         #region Defs
 
         static public readonly string InfixBpsTxt = @"
+            310 as! as
             300 .
             290 :
             280 *   /   %

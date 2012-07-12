@@ -1658,94 +1658,57 @@ rp$000005:
             Test();
         }
 
-        //[Test]
-        public void ZZZ()
+        [Test]
+        public void TC0712_CastClass()
         {
-            //Tuple2<string, string> t1, t2;
-            //t1 = new Tuple2<string, string>();
-            //t2 = new Tuple2<string, string>();
-            //t1.F1 = t2.F1 = "a";
-            //t1.F2 = t2.F2 = "a";
-            //bool b = t1 == t2;
-            //bool b2 = t1 != t2;
-
             References.Add("system.windows.forms.dll");
 
             Inp =
 @"
-using System.Windows.Forms
-
-@STAThreadAttribute
-fun Main():void
-..
-//    Application.EnableVisualStyles()
-//    Application.SetCompatibleTextRenderingDefault(false)
-
-    f   = Form()
-    c   = `(sender:object, a:EventArgs)
-    ..
-        MessageBox.Show(""xxx"")
-    ,,
-    h   = EventHandler(c)
-    f.Load  += h
-
-    Application.Run(f)
-,,
+o   = null  as object
+s   = o     as! string
 ";
             EpcSyn = @"";
 
             EpcIL =
-@".method public static void Main() {
-    .custom instance void [mscorlib]System.STAThreadAttribute::.ctor()
-    .entrypoint
-    .locals (
-        class [System.Windows.Forms]System.Windows.Forms.Form f
-        , class [NanaFxt]'0dlgt$000001' c
-        , class [mscorlib]System.EventHandler h
-        , class [NanaFxt]'0clsr$000001' $000002
-    )
-    call void [System.Windows.Forms]System.Windows.Forms.Application::EnableVisualStyles()
-    ldc.i4.0
-    call void [System.Windows.Forms]System.Windows.Forms.Application::SetCompatibleTextRenderingDefault(bool)
-    newobj instance void [System.Windows.Forms]System.Windows.Forms.Form::.ctor()
-    stloc f
-    newobj instance void [NanaFxt]'0clsr$000001'::.ctor()
-    stloc $000002
-    ldloc $000002
-    ldftn instance void [NanaFxt]'0clsr$000001'::'0impl'(object, class [mscorlib]System.EventArgs)
-    newobj instance void [NanaFxt]'0dlgt$000001'::.ctor(object, native int)
-    stloc c
-    ldloc c
-    ldftn instance void [NanaFxt]'0dlgt$000001'::Invoke(object, class [mscorlib]System.EventArgs)
-    newobj instance void [mscorlib]System.EventHandler::.ctor(object, native int)
-    stloc h
-    ldloc f
-    ldloc h
-    callvirt instance void [System.Windows.Forms]System.Windows.Forms.Form::add_Load(class [mscorlib]System.EventHandler)
-    ldloc f
-    call void [System.Windows.Forms]System.Windows.Forms.Application::Run(class [System.Windows.Forms]System.Windows.Forms.Form)
+@".field static object o
+.field static string s
+.method public static void .cctor() {
+    ldnull
+    // silent cast to object
+    stsfld object o
+    ldsfld object o
+    castclass string
+    stsfld string s
+rp$000001:
     ret
 }
-.class public '0clsr$000001' {
-    .method public void .ctor() {
-        ret
-    }
-    .method public void '0impl'(object sender, class [mscorlib]System.EventArgs a) {
-        ldstr ""xxx""
-        call valuetype [System.Windows.Forms]System.Windows.Forms.DialogResult [System.Windows.Forms]System.Windows.Forms.MessageBox::Show(string)
-        pop
-        ret
-    }
-}
-.class public sealed '0dlgt$000001' extends [mscorlib]System.MulticastDelegate {
-    .method public hidebysig newslot void .ctor(object obj, native int mth) runtime {
-    }
-    .method public hidebysig newslot void Invoke(object sender, class [mscorlib]System.EventArgs a) runtime {
-    }
+.method public static void '0'() {
+    .entrypoint
+rp$000002:
+    ret
 }
 ";
             Test();
         }
+
+
+//        [Test]
+//        public void ZZZ_TestStub()
+//        {
+//            References.Add("system.windows.forms.dll");
+
+//            Inp =
+//@"
+//";
+//            EpcSyn = @"";
+
+//            EpcIL =
+//@"
+//";
+//            Test();
+//        }
+
         public void Test()
         {
             Func<TestCase, string> f = delegate(TestCase c)

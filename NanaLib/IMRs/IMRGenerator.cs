@@ -48,6 +48,9 @@ namespace Nana.IMRs
 
         Ope,
 
+        CastNoisy,
+        CastSilent,
+
         Throw,
         Try,
         Catch,
@@ -151,6 +154,9 @@ namespace Nana.IMRs
 
         public IMR Ope(string sign, Typ t) { return Append(new IMR(C.Ope, sign, t)); }
 
+        public IMR CastNoisy(Typ t) { return Append(new IMR(C.CastNoisy, t)); }
+        public IMR CastSilent(Typ t) { return Append(new IMR(C.CastSilent, t)); }
+
         public IMR Catch(Typ t) { return Append(new IMR(C.Catch, t)); }
         public IMR Leave(string label) { return Append(new IMR(C.Leave, label)); }
 
@@ -160,6 +166,7 @@ namespace Nana.IMRs
 
 
         public IMR LoadFunction(Typ t, Fun f) { return Append(new IMR(C.LdFunction, t, f)); }
+
 
     }
 
