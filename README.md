@@ -100,6 +100,9 @@ c:\tmp> set NANA_ILASM_PATH=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\ilasm.
 ```
 
 
+
+
+
 ## 実例
 0 から 16 までのフィボナッチ数列を表示します
 ```
@@ -125,7 +128,26 @@ while   17 > num do
 end
 ```
 
+## 文法
 
+### 参照型キャスト
+
+```
+//  "as" の後に指定されている型にキャストします。
+//  キャストに失敗したときは null になります。
+
+o   = "hi" as object    // => o は string型 "hi" を持つ object 型の変数になる
+
+p   = 1 as object       // => p は null を持つ object 型の変数になる
+
+
+//  "as!" の後に指定されている型にキャストします。
+//  キャストに失敗したときは System.InvalidCastException が投入されます。
+
+q   = "hi" as! object   // => q は string型 "hi" を持つ object 型の変数になる
+
+r   = 1 as! object      // => System.InvalidCastException が投入される
+```
 
 ## ライセンス
 
