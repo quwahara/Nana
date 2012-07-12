@@ -593,6 +593,7 @@ namespace Nana.Generations
                 case C.BrFalse: return BrFalse(imr);
                 case C.PutLabel: return PutLabel(imr);
                 case C.Ope: return Ope(imr, out extra);
+                case C.Box: return Box(imr);
                 case C.Throw: return OpCodes.Throw.ToString();
                 case C.Try: return ".try {";
                 case C.Catch: return Catch(imr.TypV);
@@ -843,6 +844,12 @@ namespace Nana.Generations
         public static string CastSilent(IMR imr)
         {
             string s = "// silent cast to " + TypeFullName(imr.TypV);
+            return s;
+        }
+
+        public static string Box(IMR imr)
+        {
+            string s = S(OpCodes.Box) + " " + TypeFullName(imr.TypV);
             return s;
         }
 

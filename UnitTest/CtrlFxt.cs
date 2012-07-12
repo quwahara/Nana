@@ -1661,18 +1661,18 @@ rp$000005:
         [Test]
         public void TC0712_CastClass()
         {
-            References.Add("system.windows.forms.dll");
-
             Inp =
 @"
 o   = null  as object
 s   = o     as! string
+n   = 1     as object
 ";
             EpcSyn = @"";
 
             EpcIL =
 @".field static object o
 .field static string s
+.field static object n
 .method public static void .cctor() {
     ldnull
     // silent cast to object
@@ -1680,6 +1680,10 @@ s   = o     as! string
     ldsfld object o
     castclass string
     stsfld string s
+    ldc.i4 1
+    box int32
+    // silent cast to object
+    stsfld object n
 rp$000001:
     ret
 }

@@ -399,7 +399,25 @@ namespace Nana.Semantics
 
         public object Str(Token t)
         {
-            return new Literal(t.Value.Substring(1, t.Value.Length - 2), E.BTY.String);
+            StringBuilder b = new StringBuilder();
+            string s = t.Value.Substring(1, t.Value.Length - 2);
+            for (int i = 0; i < s.Length; ++i)
+            {
+                char c = s[i];
+                if ('\'' == c) { b.Append("\\'"); }
+                else if ('\"' == c) { b.Append("\\\""); }
+                else if ('\0' == c) { b.Append("\\0"); }
+                else if ('\a' == c) { b.Append("\\a"); }
+                else if ('\b' == c) { b.Append("\\b"); }
+                else if ('\f' == c) { b.Append("\\f"); }
+                else if ('\n' == c) { b.Append("\\n"); }
+                else if ('\r' == c) { b.Append("\\r"); }
+                else if ('\t' == c) { b.Append("\\t"); }
+                else if ('\v' == c) { b.Append("\\v"); }
+                else { b.Append(c); }
+            }
+            Literal lt = new Literal(b.ToString(), E.BTY.String);
+            return lt;
         }
 
         public object Bol(Token t)

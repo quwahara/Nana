@@ -48,6 +48,9 @@ namespace Nana.IMRs
 
         Ope,
 
+        Box,
+        Unbox,
+
         CastNoisy,
         CastSilent,
 
@@ -153,6 +156,8 @@ namespace Nana.IMRs
         public IMR PutLabel(string label) { return Append(new IMR(C.PutLabel, label)); }
 
         public IMR Ope(string sign, Typ t) { return Append(new IMR(C.Ope, sign, t)); }
+
+        public IMR Box(Typ t) { return Append(new IMR(C.Box, t)); }
 
         public IMR CastNoisy(Typ t) { return Append(new IMR(C.CastNoisy, t)); }
         public IMR CastSilent(Typ t) { return Append(new IMR(C.CastSilent, t)); }

@@ -1253,21 +1253,18 @@ namespace Nana.Semantics
             Instance = instance;
             ToTyp = totyp;
             DoThrowInvalidCast = doThrowInvalidCast;
-
             Att.TypGet = totyp;
         }
 
         public override void Give(IMRGenerator gen)
         {
             Instance.Give(gen);
+            if (Instance.Att.TypGet.IsValueType)
+            { gen.Box(Instance.Att.TypGet); }
             if (DoThrowInvalidCast)
-            {
-                gen.CastNoisy(ToTyp);
-            }
+            { gen.CastNoisy(ToTyp); }
             else
-            {
-                gen.CastSilent(ToTyp);
-            }
+            { gen.CastSilent(ToTyp); }
         }
 
     }
