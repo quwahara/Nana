@@ -146,7 +146,7 @@ p   = 1 as object       // => p ‚Í null ‚ğ‚Â object Œ^‚Ì•Ï”‚É‚È‚é
 
 q   = "hi" as! object   // => q ‚Í stringŒ^ "hi" ‚ğ‚Â object Œ^‚Ì•Ï”‚É‚È‚é
 
-r   = 1 as! object      // => System.InvalidCastException ‚ª“Š“ü‚³‚ê‚é
+r   = 1 as! string      // => System.InvalidCastException ‚ª“Š“ü‚³‚ê‚é
 ```
 
 ## ƒ‰ƒCƒZƒ“ƒX
