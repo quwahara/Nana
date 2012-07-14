@@ -723,7 +723,8 @@ System.Console.WriteLine(v)
     ldc.i4.1
     ldc.i4.1
     ceq
-    neg
+    ldc.i4.0
+    ceq
     stsfld bool v
     ldsfld bool v
     call void [mscorlib]System.Console::WriteLine(bool)
@@ -845,7 +846,8 @@ System.Console.WriteLine(i)
     ldc.i4 1
     ldc.i4 1
     ceq
-    neg
+    ldc.i4.0
+    ceq
     stsfld bool i
     ldsfld bool i
     call void [mscorlib]System.Console::WriteLine(bool)

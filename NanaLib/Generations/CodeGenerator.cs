@@ -865,7 +865,7 @@ namespace Nana.Generations
                 case "op_Division":             /**/ return S(OpCodes.Div);
                 case "op_Modulus":              /**/ return S(OpCodes.Rem);
                 case "op_Equality":             /**/ return S(OpCodes.Ceq);
-                case "op_Inequality":           /**/ extra = new string[] { S(OpCodes.Ceq), S(OpCodes.Neg) }; return null;
+                case "op_Inequality":           /**/ extra = new string[] { S(OpCodes.Ceq), S(OpCodes.Ldc_I4_0), S(OpCodes.Ceq) }; return null;
                 case "op_LessThan":             /**/ return S(OpCodes.Clt);
                 case "op_GreaterThan":          /**/ return S(OpCodes.Cgt);
                 case "op_LessThanOrEqual":      /**/ extra = new string[] { S(OpCodes.Cgt), S(OpCodes.Neg) }; return null;

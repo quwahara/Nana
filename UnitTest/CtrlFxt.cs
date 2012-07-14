@@ -1696,8 +1696,97 @@ rp$000002:
             Test();
         }
 
+        [Test]
+        public void TC0714_OperatorMethod()
+        {
+            Inp =
+@"
+Decimal(13) ->  a
+Decimal(4)  ->  b
+c   =   a   ==  b
+c   =   a   !=  b
+c   =   a   <   b
+c   =   a   <=  b
+c   =   a   >   b
+c   =   a   >=  b
+d   =   a   +   b
+d   =   a   -   b
+d   =   a   *   b
+d   =   a   /   b
+d   =   a   %   b
 
-//        [Test]
+        ";
+            EpcSyn = @"";
+
+            EpcIL =
+@".field static valuetype [mscorlib]System.Decimal a
+.field static valuetype [mscorlib]System.Decimal b
+.field static bool c
+.field static valuetype [mscorlib]System.Decimal d
+.method public static void .cctor() {
+    ldc.i4 13
+    newobj instance void [mscorlib]System.Decimal::.ctor(int32)
+    stsfld valuetype [mscorlib]System.Decimal a
+    ldc.i4 4
+    newobj instance void [mscorlib]System.Decimal::.ctor(int32)
+    stsfld valuetype [mscorlib]System.Decimal b
+    ldsfld valuetype [mscorlib]System.Decimal a
+    ldsfld valuetype [mscorlib]System.Decimal b
+    call bool [mscorlib]System.Decimal::op_Equality(valuetype [mscorlib]System.Decimal, valuetype [mscorlib]System.Decimal)
+    stsfld bool c
+    ldsfld valuetype [mscorlib]System.Decimal a
+    ldsfld valuetype [mscorlib]System.Decimal b
+    call bool [mscorlib]System.Decimal::op_Inequality(valuetype [mscorlib]System.Decimal, valuetype [mscorlib]System.Decimal)
+    stsfld bool c
+    ldsfld valuetype [mscorlib]System.Decimal a
+    ldsfld valuetype [mscorlib]System.Decimal b
+    call bool [mscorlib]System.Decimal::op_LessThan(valuetype [mscorlib]System.Decimal, valuetype [mscorlib]System.Decimal)
+    stsfld bool c
+    ldsfld valuetype [mscorlib]System.Decimal a
+    ldsfld valuetype [mscorlib]System.Decimal b
+    call bool [mscorlib]System.Decimal::op_LessThanOrEqual(valuetype [mscorlib]System.Decimal, valuetype [mscorlib]System.Decimal)
+    stsfld bool c
+    ldsfld valuetype [mscorlib]System.Decimal a
+    ldsfld valuetype [mscorlib]System.Decimal b
+    call bool [mscorlib]System.Decimal::op_GreaterThan(valuetype [mscorlib]System.Decimal, valuetype [mscorlib]System.Decimal)
+    stsfld bool c
+    ldsfld valuetype [mscorlib]System.Decimal a
+    ldsfld valuetype [mscorlib]System.Decimal b
+    call bool [mscorlib]System.Decimal::op_GreaterThanOrEqual(valuetype [mscorlib]System.Decimal, valuetype [mscorlib]System.Decimal)
+    stsfld bool c
+    ldsfld valuetype [mscorlib]System.Decimal a
+    ldsfld valuetype [mscorlib]System.Decimal b
+    call valuetype [mscorlib]System.Decimal [mscorlib]System.Decimal::op_Addition(valuetype [mscorlib]System.Decimal, valuetype [mscorlib]System.Decimal)
+    stsfld valuetype [mscorlib]System.Decimal d
+    ldsfld valuetype [mscorlib]System.Decimal a
+    ldsfld valuetype [mscorlib]System.Decimal b
+    call valuetype [mscorlib]System.Decimal [mscorlib]System.Decimal::op_Subtraction(valuetype [mscorlib]System.Decimal, valuetype [mscorlib]System.Decimal)
+    stsfld valuetype [mscorlib]System.Decimal d
+    ldsfld valuetype [mscorlib]System.Decimal a
+    ldsfld valuetype [mscorlib]System.Decimal b
+    call valuetype [mscorlib]System.Decimal [mscorlib]System.Decimal::op_Multiply(valuetype [mscorlib]System.Decimal, valuetype [mscorlib]System.Decimal)
+    stsfld valuetype [mscorlib]System.Decimal d
+    ldsfld valuetype [mscorlib]System.Decimal a
+    ldsfld valuetype [mscorlib]System.Decimal b
+    call valuetype [mscorlib]System.Decimal [mscorlib]System.Decimal::op_Division(valuetype [mscorlib]System.Decimal, valuetype [mscorlib]System.Decimal)
+    stsfld valuetype [mscorlib]System.Decimal d
+    ldsfld valuetype [mscorlib]System.Decimal a
+    ldsfld valuetype [mscorlib]System.Decimal b
+    call valuetype [mscorlib]System.Decimal [mscorlib]System.Decimal::op_Modulus(valuetype [mscorlib]System.Decimal, valuetype [mscorlib]System.Decimal)
+    stsfld valuetype [mscorlib]System.Decimal d
+rp$000001:
+    ret
+}
+.method public static void '0'() {
+    .entrypoint
+rp$000002:
+    ret
+}
+";
+            Test();
+        }
+
+        //        [Test]
 //        public void ZZZ_TestStub()
 //        {
 //            References.Add("system.windows.forms.dll");

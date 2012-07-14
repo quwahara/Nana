@@ -587,12 +587,24 @@ namespace Nana.Semantics
             string sig = t.Value;
             string fn = BuiltInFun.SignToFuncationName(sig);
             Ovld opeovl = fstty.FindOvld(fn);
-            if (null == opeovl)
-            { throw new SemanticError(string.Format("Could not use the operator '{0}' for the type '{1}'", new object[] { sig, fstty.Name }), t); }
-
-            Fun opefun = opeovl.GetFunOf(fstty, new Typ[] { fstty, scdty }, E.BTY.Void);
-            Sema instance = opefun.IsStatic ? null : fst;
-
+            Sema instance;
+            Fun opefun;
+            if (null == opeovl && false == fstty.IsValueType
+                && ("==" == sig || "!=" == sig))
+            {
+                opefun = new Fun(fn, E);
+                opefun.SetReturnTyp(E.BTY.Bool);
+                opefun.IsOperator = true;
+                opefun.MthdAttrs = MethodAttributes.Static;
+                instance = null;
+            }
+            else
+            {
+                if (null == opeovl)
+                { throw new SemanticError(string.Format("Could not use the operator '{0}' for the type '{1}'", new object[] { sig, fstty.Name }), t); }
+                opefun = opeovl.GetFunOf(fstty, new Typ[] { fstty, scdty }, E.BTY.Void);
+                instance = opefun.IsStatic ? null : fst;
+            }
             AccFun acf = new AccFun(fstty, opefun, instance);
             CallFun cf = new CallFun(Semas.S2(fst, scd), acf);
             return cf;
