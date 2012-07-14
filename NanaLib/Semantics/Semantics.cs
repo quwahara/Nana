@@ -336,17 +336,29 @@ namespace Nana.Semantics
             Typ int_ = e.BTY.Int;
             Typ bol = e.BTY.Bool;
 
-            foreach (string ope in "+,-,*,/,%".Split(new char[] { ',' }))
-            { NewOpeFunByOpe(ope, int_, int_, int_); }
+            foreach (string sig in "+,-,*,/,%".Split(new char[] { ',' }))
+            {
+                string fn = SignToFuncationName(sig);
+                NewOpeFunByOpe(fn, int_, int_, int_);
+            }
 
-            foreach (string ope in "==,!=,<,>,<=,>=,and,or,xor".Split(new char[] { ',' }))
-            { NewOpeFunByOpe(ope, int_, int_, bol); }
+            foreach (string sig in "==,!=,<,>,<=,>=,and,or,xor".Split(new char[] { ',' }))
+            {
+                string fn = SignToFuncationName(sig);
+                NewOpeFunByOpe(fn, int_, int_, bol);
+            }
 
-            foreach (string ope in "==,!=,and,or,xor".Split(new char[] { ',' }))
-            { NewOpeFunByOpe(ope, bol, bol, bol); }
+            foreach (string sig in "==,!=,and,or,xor".Split(new char[] { ',' }))
+            {
+                string fn = SignToFuncationName(sig);
+                NewOpeFunByOpe(fn, bol, bol, bol);
+            }
 
-            Typ str = e.BTY.String;
-            str.NewOpeFunByFun("+", "Concat", new Typ[] { str, str });
+            {
+                Typ str = e.BTY.String;
+                string fn = SignToFuncationName("+");
+                str.NewOpeFunByFun(fn, "Concat", new Typ[] { str, str });
+            }
 
             RegisterOvldAlias(E.FindOrNewRefType(typeof(Console)), "`p", "WriteLine");
         }
@@ -373,6 +385,42 @@ namespace Nana.Semantics
             { return; }
             Members.Add(name, new Member(calletyp, o, /*instance=*/ null));
         }
+
+        public static string SignToFuncationName(string sig)
+        {
+            switch (sig)
+            {
+                case "+":   /**/ return "op_Addition";
+                case "--":  /**/ return "op_Decrement";
+                case "/":   /**/ return "op_Division";
+                case "==":  /**/ return "op_Equality";
+                case ">":   /**/ return "op_GreaterThan";
+                case ">=":  /**/ return "op_GreaterThanOrEqual";
+                case "++":  /**/ return "op_Increment";
+                case "!=":  /**/ return "op_Inequality";
+                case "<":   /**/ return "op_LessThan";
+                case "<=":  /**/ return "op_LessThanOrEqual";
+                case "%":   /**/ return "op_Modulus";
+                case "*":   /**/ return "op_Multiply";
+                case "-":   /**/ return "op_Subtraction";
+                //case "":    /**/ return "op_Explicit";
+                //case "":    /**/ return "op_Implicit";
+                //case "":    /**/ return "op_UnaryNegation";
+                //case "":    /**/ return "op_UnaryPlus";
+
+                /* Extension */
+                case "and":     /**/ return "op_And";
+                case "or":      /**/ return "op_Or";
+                case "xor":     /**/ return "op_Xor";
+
+                default:
+                    throw new InternalError(string.Format("The sign is not an operator:'{0}'", new object[] { sig }));
+            }
+
+            //  reference
+            //  http://msdn.microsoft.com/en-us/library/system.decimal.op_unaryplus(v=vs.80)
+        }
+
     }
 
     public class Ovld : Blk

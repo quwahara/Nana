@@ -14,6 +14,7 @@ using Nana.Delegates;
 using Nana.Semantics;
 using Nana.IMRs;
 using System.Text.RegularExpressions;
+using Nana.Infr;
 
 namespace Nana.Generations
 {
@@ -858,25 +859,23 @@ namespace Nana.Generations
             extra = null;
             switch (imr.StringV)
             {
-                case "+": return S(OpCodes.Add);
-                case "-": return S(OpCodes.Sub);
-                case "*": return S(OpCodes.Mul);
-                case "/": return S(OpCodes.Div);
-                case "%": return S(OpCodes.Rem);
-                case "==": return S(OpCodes.Ceq);
-                case "!=": extra = new string[] { S(OpCodes.Ceq), S(OpCodes.Neg) }; return null;
-                case "<":
-                case "<_": return S(OpCodes.Clt);
-                case ">":
-                case ">_": return S(OpCodes.Cgt);
-                case "<=": extra = new string[] { S(OpCodes.Cgt), S(OpCodes.Neg) }; return null;
-                case ">=": extra = new string[] { S(OpCodes.Clt), S(OpCodes.Neg) }; return null;
-                case "and": return S(OpCodes.And);
-                case "or": return S(OpCodes.Or);
-                case "xor": return S(OpCodes.Xor);
+                case "op_Addition":             /**/ return S(OpCodes.Add);
+                case "op_Subtraction":          /**/ return S(OpCodes.Sub);
+                case "op_Multiply":             /**/ return S(OpCodes.Mul);
+                case "op_Division":             /**/ return S(OpCodes.Div);
+                case "op_Modulus":              /**/ return S(OpCodes.Rem);
+                case "op_Equality":             /**/ return S(OpCodes.Ceq);
+                case "op_Inequality":           /**/ extra = new string[] { S(OpCodes.Ceq), S(OpCodes.Neg) }; return null;
+                case "op_LessThan":             /**/ return S(OpCodes.Clt);
+                case "op_GreaterThan":          /**/ return S(OpCodes.Cgt);
+                case "op_LessThanOrEqual":      /**/ extra = new string[] { S(OpCodes.Cgt), S(OpCodes.Neg) }; return null;
+                case "op_GreaterThanOrEqual":   /**/ extra = new string[] { S(OpCodes.Clt), S(OpCodes.Neg) }; return null;
+                case "op_And":                  /**/ return S(OpCodes.And);
+                case "op_Or":                   /**/ return S(OpCodes.Or);
+                case "op_Xor":                  /**/ return S(OpCodes.Xor);
             }
 
-            throw new NotSupportedException();
+            throw new InternalError(string.Format("The IMR operator '{0}' is not supported", new object[] { imr.StringV }));
         }
 
     }

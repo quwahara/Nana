@@ -584,7 +584,12 @@ namespace Nana.Semantics
             Typ fstty = fst.Att.TypGet;
             Typ scdty = scd.Att.TypGet;
 
-            Ovld opeovl = fstty.FindOvld(t.Value);
+            string sig = t.Value;
+            string fn = BuiltInFun.SignToFuncationName(sig);
+            Ovld opeovl = fstty.FindOvld(fn);
+            if (null == opeovl)
+            { throw new SemanticError(string.Format("Could not use the operator '{0}' for the type '{1}'", new object[] { sig, fstty.Name }), t); }
+
             Fun opefun = opeovl.GetFunOf(fstty, new Typ[] { fstty, scdty }, E.BTY.Void);
             Sema instance = opefun.IsStatic ? null : fst;
 
