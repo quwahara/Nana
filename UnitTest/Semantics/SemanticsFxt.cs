@@ -866,14 +866,16 @@ System.Console.WriteLine(i)
     ldc.i4 1
     ldc.i4 1
     clt
-    neg
+    ldc.i4.0
+    ceq
     stsfld bool i
     ldsfld bool i
     call void [mscorlib]System.Console::WriteLine(bool)
     ldc.i4 1
     ldc.i4 1
     cgt
-    neg
+    ldc.i4.0
+    ceq
     stsfld bool i
     ldsfld bool i
     call void [mscorlib]System.Console::WriteLine(bool)

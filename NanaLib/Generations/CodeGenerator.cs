@@ -868,8 +868,8 @@ namespace Nana.Generations
                 case "op_Inequality":           /**/ extra = new string[] { S(OpCodes.Ceq), S(OpCodes.Ldc_I4_0), S(OpCodes.Ceq) }; return null;
                 case "op_LessThan":             /**/ return S(OpCodes.Clt);
                 case "op_GreaterThan":          /**/ return S(OpCodes.Cgt);
-                case "op_LessThanOrEqual":      /**/ extra = new string[] { S(OpCodes.Cgt), S(OpCodes.Neg) }; return null;
-                case "op_GreaterThanOrEqual":   /**/ extra = new string[] { S(OpCodes.Clt), S(OpCodes.Neg) }; return null;
+                case "op_LessThanOrEqual":      /**/ extra = new string[] { S(OpCodes.Cgt), S(OpCodes.Ldc_I4_0), S(OpCodes.Ceq) }; return null;
+                case "op_GreaterThanOrEqual":   /**/ extra = new string[] { S(OpCodes.Clt), S(OpCodes.Ldc_I4_0), S(OpCodes.Ceq) }; return null;
                 case "op_And":                  /**/ return S(OpCodes.And);
                 case "op_Or":                   /**/ return S(OpCodes.Or);
                 case "op_Xor":                  /**/ return S(OpCodes.Xor);
