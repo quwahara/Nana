@@ -236,6 +236,9 @@ namespace Nana.Generations
             if (t.RefType == typeof(void)) { return "void" + brk; }
             if (t.RefType == typeof(bool)) { return "bool" + brk; }
             if (t.RefType == typeof(int)) { return "int32" + brk; }
+            if (t.RefType == typeof(uint)) { return "uint32" + brk; }
+            if (t.RefType == typeof(long)) { return "int64" + brk; }
+            if (t.RefType == typeof(ulong)) { return "uint64" + brk; }
             if (t.RefType == typeof(object)) { return "object" + brk; }
             if (t.RefType == typeof(string)) { return "string" + brk; }
             if (t.RefType == typeof(IntPtr)) { return "native int" + brk; }
@@ -632,6 +635,9 @@ namespace Nana.Generations
             if (t.RefType == typeof(bool))      /**/ return ((bool)l.Value) ? S(OpCodes.Ldc_I4_1) : S(OpCodes.Ldc_I4_0);
             if (t.RefType == typeof(string))    /**/ return S(OpCodes.Ldstr, @"""" + l.Value + @"""");
             if (t.RefType == typeof(int))       /**/ return S(OpCodes.Ldc_I4, l.Value);
+            if (t.RefType == typeof(uint))      /**/ return S(OpCodes.Ldc_I4, l.Value);
+            if (t.RefType == typeof(long))      /**/ return S(OpCodes.Ldc_I8, l.Value);
+            if (t.RefType == typeof(ulong))     /**/ return S(OpCodes.Ldc_I8, l.Value);
             throw new NotSupportedException();
         }
 

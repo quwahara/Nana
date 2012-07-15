@@ -303,6 +303,11 @@ namespace Nana.Semantics
         public Typ Void;
         public Typ Bool;
         public Typ Int;
+        public Typ Long;
+        public Typ Short;
+        public Typ Ushort;
+        public Typ Uint;
+        public Typ Ulong;
         public Typ Array;
         public Typ String;
         public Typ Delegate;
@@ -315,6 +320,11 @@ namespace Nana.Semantics
             this.Void = e.FindOrNewRefType(typeof(void));
             this.Bool = e.FindOrNewRefType(typeof(bool));
             this.Int = e.FindOrNewRefType(typeof(int));
+            this.Long = e.FindOrNewRefType(typeof(long));
+            this.Short = e.FindOrNewRefType(typeof(short));
+            this.Ushort = e.FindOrNewRefType(typeof(ushort));
+            this.Uint = e.FindOrNewRefType(typeof(uint));
+            this.Ulong = e.FindOrNewRefType(typeof(ulong));
             this.Array = e.FindOrNewRefType(typeof(System.Array));
             this.String = e.FindOrNewRefType(typeof(string));
             this.Delegate = e.FindOrNewRefType(typeof(System.Delegate));
@@ -1288,6 +1298,80 @@ namespace Nana.Semantics
             gen.Pop();
         }
 
+    }
+
+    public class IntLiteral
+    {
+        public static int UlongMaxValueStringLength;
+
+        public static decimal IntMaxValue;
+        public static decimal LongMaxValue;
+
+        public static decimal UintMaxValue;
+        public static decimal UlongMaxValue;
+
+        static IntLiteral()
+        {
+            IntMaxValue = new decimal(int.MaxValue);
+            LongMaxValue = new decimal(long.MaxValue);
+
+            UintMaxValue = new decimal(uint.MaxValue);
+            UlongMaxValue = new decimal(ulong.MaxValue);
+
+            UlongMaxValueStringLength = ulong.MaxValue.ToString().Length;
+        }
+
+        public static bool IsLessThanOrEqualWithUlongMaxValueStringLength(string val)
+        {
+            return val.Length <= UlongMaxValueStringLength;
+        }
+
+        public static bool IsLessThanOrEqualWithUlongMaxValue(decimal vd)
+        {
+            return vd <= UlongMaxValue;
+        }
+
+        public static Typ ParseToValueAndTyp(Env e, decimal vd, string sfx)
+        {
+            Typ ty;
+            string sfxup = sfx.ToUpper();
+            if ("UL" == sfxup || "LU" == sfxup) /**/ { ty = e.BTY.Ulong; }
+            else if ("L" == sfxup)
+            {
+                if (vd <= LongMaxValue)         /**/ { ty = e.BTY.Long; }
+                else                            /**/ { ty = e.BTY.Ulong; }
+            }
+            else if ("U" == sfxup)
+            {
+                if (vd <= UintMaxValue)         /**/ { ty = e.BTY.Uint; }
+                else                            /**/ { ty = e.BTY.Ulong; }
+            }
+            else
+            {
+                if (vd <= IntMaxValue)          /**/ { ty = e.BTY.Int; }
+                else if (vd <= UintMaxValue)    /**/ { ty = e.BTY.Uint; }
+                else if (vd <= LongMaxValue)    /**/ { ty = e.BTY.Long; }
+                else                            /**/ { ty = e.BTY.Ulong; }
+            }
+            return ty;
+        }
+
+        public static Tuple2<string, string> SeparateValueAndSuffix(string v)
+        {
+            string up = v.ToUpper();
+
+            bool ul = up.EndsWith("UL") || up.EndsWith("LU");
+            bool u = false == ul && up.EndsWith("U");
+            bool l = false == ul && up.EndsWith("L");
+
+            int sublen = ul ? 2 : (u || l ? 1 : 0);
+
+            Tuple2<string, string> r = new Tuple2<string, string>();
+            r.F1 = v.Substring(0, v.Length - sublen);
+            r.F2 = v.Substring(v.Length - sublen);
+
+            return r;
+        }
     }
 
     public class Cast : Sema

@@ -52,7 +52,7 @@ namespace UnitTest.Syntaxes.SyntaxAnalyzerFxts
         public void T101_0Source()
         {
             Inp = @"
-0   Num
+0   Int
 ";
             Epc =
 @"0Source
@@ -244,7 +244,7 @@ namespace UnitTest.Syntaxes.InfixAnalyzerFxts
         public void T101()
         {
             Inp = @"
-0   Num
+0   Int
 ";
             Epc =
 @"0
@@ -256,9 +256,9 @@ namespace UnitTest.Syntaxes.InfixAnalyzerFxts
         public void T102()
         {
             Inp = @"
-1   Num
+1   Int
 +   Sig
-2   Num
+2   Int
 ";
             Epc =
 @"+
@@ -272,9 +272,9 @@ namespace UnitTest.Syntaxes.InfixAnalyzerFxts
         public void T103()
         {
             Inp = @"
-1   Num
+1   Int
 *   Sig
-2   Num
+2   Int
 ";
             Epc =
 @"*
@@ -288,11 +288,11 @@ namespace UnitTest.Syntaxes.InfixAnalyzerFxts
         public void T104()
         {
             Inp = @"
-1   Num
+1   Int
 *   Sig
-2   Num
+2   Int
 +   Sig
-3   Num
+3   Int
 ";
             Epc =
 @"+
@@ -308,11 +308,11 @@ namespace UnitTest.Syntaxes.InfixAnalyzerFxts
         public void T105()
         {
             Inp = @"
-1   Num
+1   Int
 +   Sig
-2   Num
+2   Int
 *   Sig
-3   Num
+3   Int
 ";
             Epc =
 @"+
@@ -330,7 +330,7 @@ namespace UnitTest.Syntaxes.InfixAnalyzerFxts
             Inp = @"
 a   Id
 =   Sig
-1   Num
+1   Int
 ";
             Epc =
 @"=
@@ -346,9 +346,9 @@ a   Id
             Inp = @"
 a   Id
 =   Sig
-1   Num
+1   Int
 +   Sig
-2   Num
+2   Int
 ";
             Epc =
 @"=
@@ -382,7 +382,7 @@ f   Id
             Inp = @"
 f   Id
 (   Circumfix
-1   Num
+1   Int
 )
 ";
             Epc =

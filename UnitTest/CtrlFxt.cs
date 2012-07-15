@@ -1786,6 +1786,75 @@ rp$000002:
             Test();
         }
 
+        [Test]
+        public void TC0715_IntegerLiteral()
+        {
+            Inp =
+@"
+ul  = 1UL
+
+l1  = 9223372036854775807L      //  long.MaxValue
+l2  = 9223372036854775808L
+
+u1  = 4294967295u               //  uint.MaxValue  
+u2  = 4294967296u
+
+i1  = 2147483647                //  int.MaxValue
+i2  = 2147483648
+i3  = 4294967295                //  uint.MaxValue
+i4  = 4294967296
+i5  = 9223372036854775807       //  long.MaxValue
+i6  = 9223372036854775808
+        ";
+            EpcSyn = @"";
+
+            EpcIL =
+@".field static uint64 ul
+.field static int64 l1
+.field static uint64 l2
+.field static uint32 u1
+.field static uint64 u2
+.field static int32 i1
+.field static uint32 i2
+.field static uint32 i3
+.field static int64 i4
+.field static int64 i5
+.field static uint64 i6
+.method public static void .cctor() {
+    ldc.i8 1
+    stsfld uint64 ul
+    ldc.i8 9223372036854775807
+    stsfld int64 l1
+    ldc.i8 9223372036854775808
+    stsfld uint64 l2
+    ldc.i4 4294967295
+    stsfld uint32 u1
+    ldc.i8 4294967296
+    stsfld uint64 u2
+    ldc.i4 2147483647
+    stsfld int32 i1
+    ldc.i4 2147483648
+    stsfld uint32 i2
+    ldc.i4 4294967295
+    stsfld uint32 i3
+    ldc.i8 4294967296
+    stsfld int64 i4
+    ldc.i8 9223372036854775807
+    stsfld int64 i5
+    ldc.i8 9223372036854775808
+    stsfld uint64 i6
+rp$000001:
+    ret
+}
+.method public static void '0'() {
+    .entrypoint
+rp$000002:
+    ret
+}
+";
+            Test();
+        }
+
         //        [Test]
 //        public void ZZZ_TestStub()
 //        {

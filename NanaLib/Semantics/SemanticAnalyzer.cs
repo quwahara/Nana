@@ -135,7 +135,7 @@ namespace Nana.Semantics
             switch (t.Group)
             {
                 case "Prior":       /**/ u = Gate(t.Follows[0]); break;
-                case "Num":         /**/ u = Num(t); break;
+                case "Int":         /**/ u = Int(t); break;
                 case "Str":         /**/ u = Str(t); break;
                 case "Bol":         /**/ u = Bol(t); break;
                 case "Id":          /**/ u = Id(t); break;
@@ -392,9 +392,24 @@ namespace Nana.Semantics
             return u;
         }
 
-        public object Num(Token t)
+        public object Int(Token t)
         {
-            return new Literal(int.Parse(t.Value), E.BTY.Int, TmpVarGen);
+            Tuple2<string, string> valsfx = IntLiteral.SeparateValueAndSuffix(t.Value);
+            string val = valsfx.F1.Replace("_", "");
+            if (false == IntLiteral.IsLessThanOrEqualWithUlongMaxValueStringLength(val))
+            { throw new SemanticError(string.Format("The value '{0}' is greater than ulong max value", new object[] { val }), t); }
+
+            decimal vald;
+            if (false == decimal.TryParse(val, out vald))
+            { throw new InternalError(string.Format("The value '{0}' cannot parse to decimal", new object[] { val }), t); }
+
+            if (false == IntLiteral.IsLessThanOrEqualWithUlongMaxValue(vald))
+            { throw new SemanticError(string.Format("The value '{0}' is greater than ulong max value", new object[] { val }), t); }
+
+            string suffix = valsfx.F2;
+            Typ ty = IntLiteral.ParseToValueAndTyp(E, vald, suffix);
+            Literal lt = new Literal(val, ty, TmpVarGen);
+            return lt;
         }
 
         public object Str(Token t)

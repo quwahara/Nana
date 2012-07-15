@@ -363,6 +363,218 @@ hij,/ G:Cmt B:0/Pos=5";
     }
 
     [TestFixture]
+    public class ScriptTokenizerInlineRxPatternFxt
+    {
+        public string Inp;
+        public string Epc;
+        public Dictionary<string, List<string>> Ptns = new Dictionary<string, List<string>>();
+
+        public ScriptTokenizerInlineRxPatternFxt()
+        {
+            List<string> ls = Sty.ToStringList(ScriptTokenizer.InlineRxPattern);
+            foreach (string ln in ls)
+            {
+                int bgn = ln.IndexOf("<");
+                int end = ln.IndexOf(">");
+                if (end <= bgn) { continue; }
+                string key = ln.Substring(bgn + 1, end - bgn -1);
+                int baridx = ln.Length > 0 && '|' == ln[0] ?
+                    0 : -1;
+                string ptn = ln.Substring(baridx + 1);
+                List<string> ptnls;
+                if (false == Ptns.TryGetValue(key, out ptnls))
+                {
+                    ptnls = new List<string>();
+                    Ptns.Add(key, ptnls);
+                }
+                ptnls.Add(ptn);
+            }
+        }
+
+        [SetUp]
+        public void SetUp()
+        {
+            Inp = ""; Epc = "";
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_01()
+        {
+            Inp = "Int  :0  #9";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_02()
+        {
+            Inp = "Int  :0  #99";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_03()
+        {
+            Inp = "Int  :0  #9_";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_04()
+        {
+            Inp = "Int  :0  #_9";
+            Epc = "9";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_05()
+        {
+            Inp = "Int  :0  #__";
+            Epc = "(fail)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_06()
+        {
+            Inp = "Int  :0  #999";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_07()
+        {
+            Inp = "Int  :0  #99_";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_08()
+        {
+            Inp = "Int  :0  #9_9";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_09()
+        {
+            Inp = "Int  :0  #9__";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_10()
+        {
+            Inp = "Int  :0  #_99";
+            Epc = "99";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_11()
+        {
+            Inp = "Int  :0  #_9_";
+            Epc = "9_";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_12()
+        {
+            Inp = "Int  :0  #__9";
+            Epc = "9";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_13()
+        {
+            Inp = "Int  :0  #___";
+            Epc = "(fail)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_14()
+        {
+            Inp = "Int  :0  #9u";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_15()
+        {
+            Inp = "Int  :0  #9l";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_16()
+        {
+            Inp = "Int  :0  #9ul";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_17()
+        {
+            Inp = "Int  :0  #9lu";
+            Epc = "9lu";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_18()
+        {
+            Inp = "Int  :0  #9UL";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0714_DecimalIntegerLiteral_19()
+        {
+            Inp = "Int  :0  #9LU";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        public void Test()
+        {
+            new TestCase("", Inp, Epc, delegate(TestCase c)
+            {
+                string inp = c.Input;
+                string[] inpspl = inp.Split(new char[] { ':', '#' });
+                string key = inpspl[0].Trim();
+                int index = int.Parse(inpspl[1].Trim());
+                string input = inp.Substring(inp.IndexOf("#") + 1);
+                if ("(same as input)" == c.Expected)
+                { c.Expected = input; }
+                string ptn = Ptns[key][index];
+                RegexOptions inlineRxOptions = RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture;
+                Match m = Regex.Match(input, ptn, inlineRxOptions);
+                string result;
+                if (false == m.Success)
+                { result = "(fail)"; }
+                else
+                { result = m.Groups[key].Value; }
+                return result;
+            })
+            .Run();
+        }
+    }
+
+    [TestFixture]
     public class ScriptTokenizerFxt
     {
         [Test]

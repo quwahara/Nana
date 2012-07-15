@@ -305,7 +305,7 @@ namespace Nana.Tokens
     public class ScriptTokenizer : TokenizerBase
     {
         #region InlineRxPattern
-
+        
         static public string InlineRxPattern = @"(?<Cmt>(//.*))
 |(?<Ope>(==|!=|\<=|\>=|\::))
 |(?<AsgnL>(\+=|\-=))
@@ -322,7 +322,7 @@ namespace Nana.Tokens
 |(?<Dot>\.)
 |(?<AsgnL>=)
 |(?<Expr>(\(|\)|\[|\]|@))
-|(?<Num>(\d+)(\.(\d)+)?)
+|(?<Int>\d[\d_]*(UL|Ul|uL|ul|LU|Lu|lU|lu|L|U|l|u)?)
 |(?<Cst>(as!|as))
 |(?<Ope>(and|xor|or))
 |(?<Bol>(true|false))

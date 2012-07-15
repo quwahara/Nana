@@ -102,7 +102,7 @@ namespace Nana.Syntaxes
 
         static public readonly string FactorsTxt = @"
             Str
-            Num
+            Int
             Bol
             Id
             End
