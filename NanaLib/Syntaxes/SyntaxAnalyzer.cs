@@ -350,6 +350,11 @@ namespace Nana.Syntaxes
             namespace.@0    0iddotdec2.r    0bodydec.r  --  Namespace
 
 
+            _#  unary
+
+            +.@0    Expr.s  --  Una
+            -.@0    Expr.s  --  Una
+
             _#  fundamental elements
 
             0bodydec    _(  Bgn.g@0 Expr.s* _)  End.g   -- Block

@@ -141,6 +141,7 @@ namespace Nana.Semantics
                 case "Id":          /**/ u = Id(t); break;
                 case "AsgnL":       /**/ u = Asgn(t, t.Second, t.First); break;
                 case "AsgnR":       /**/ u = Asgn(t, t.First, t.Second); break;
+                case "Una":         /**/ u = Una(t); break;
                 case "Ope":         /**/ u = Ope(t); break;
                 case "Expr":        /**/ u = Expression(t); break;
                 case "Dot":         /**/ u = Dot(t); break;
@@ -155,9 +156,57 @@ namespace Nana.Semantics
                 case "Cls":         /**/ u = Closure(t); break;
                 case "Cst":         /**/ u = Cast(t); break;
                 default:
-                    throw new SemanticError(string.Format("'{0}' cannot be in there", t.Value), t);
+                    throw new InternalError(string.Format("Unkown group '{0}' was analyzed at Gate() in LineAnalyzer. The value is: '{1}'", new object[] { t.Group, t.Value }), t);
             }
             return u;
+        }
+
+        public object Una(Token una)
+        {
+            Token term = una.Follows[0];
+            
+            if ("Una" == term.Group)
+            {
+                //  calc 'unary' v.s. 'unary' results 'unary'
+                string pair = una.Value + term.Value;
+                if      /**/ ("--" == pair || "++" == pair) { term.Value = "+"; }
+                else if /**/ ("-+" == pair || "+-" == pair) { term.Value = "-"; }
+                else { throw new InternalError(string.Format("The unary sign pair '{0}' and '{1}' is invalid", new object[] { una.Value, term.Value }), una); };
+                object ret = Una(term);
+                return ret;
+            }
+            else if ("Int" == term.Group)
+            {
+                if ("-" == una.Value)
+                { term.Value = "-" + term.Value; }
+                object ret = Int(term);
+                return ret;
+            }
+
+            Sema terms = Gate(term) as Sema;
+            while(true)
+            {
+                if (null == terms) { break; }
+                if (false == terms.Att.CanGet) { break; }
+
+                string sign = una.Value;
+                string fn;
+                if ("+" == sign) { fn = "op_UnaryPlus"; }
+                else if ("-" == sign) { fn = "op_UnaryNegation"; }
+                else { break; }
+
+                Typ ty = terms.Att.TypGet;
+                Ovld ov = ty.FindOvld(fn);
+                if (null == ov) { break; }
+                Fun fu = ov.GetFunOf(ty, new Typ[] { ty }, Ty);
+                if (null == fu) { break; }
+                Sema inst = fu.IsStatic ? null : terms;
+                AccFun af = new AccFun(ty, fu, inst);
+                CallFun cf = new CallFun(Semas.S1(terms), af);
+                return cf;
+            }
+
+            throw new SemanticError(string.Format("Could not apply the unary operator '{0}' to the expression", new object[] { una.Value }), una);
         }
 
         public static readonly string ClosurePrefix = "'0clsr";
@@ -394,21 +443,30 @@ namespace Nana.Semantics
 
         public object Int(Token t)
         {
-            Tuple2<string, string> valsfx = IntLiteral.SeparateValueAndSuffix(t.Value);
-            string val = valsfx.F1.Replace("_", "");
-            if (false == IntLiteral.IsLessThanOrEqualWithUlongMaxValueStringLength(val))
-            { throw new SemanticError(string.Format("The value '{0}' is greater than ulong max value", new object[] { val }), t); }
+            Tuple3<string, string, string> sigvalsfx = IntLiteral.SeparateSignValueSuffix(t.Value);
+            string sig = sigvalsfx.F1;
+            string val = sigvalsfx.F2.Replace("_", "");
+            string suffix = sigvalsfx.F3.ToUpper();
+            string sigval = sig + val;
+            
+            if ("-" == sig && suffix.Contains("U"))
+            { throw new SemanticError(string.Format("Applying '-' to unsigned integer literal is invalid", new object[] { }), t); }
+
+            if (false == IntLiteral.IsLessThanOrEqualUlongMaxValueStringLength(val))
+            { throw new SemanticError(string.Format("The value '{0}' is out of long value range", new object[] { val }), t); }
 
             decimal vald;
-            if (false == decimal.TryParse(val, out vald))
+            if (false == decimal.TryParse(sigval, out vald))
             { throw new InternalError(string.Format("The value '{0}' cannot parse to decimal", new object[] { val }), t); }
 
-            if (false == IntLiteral.IsLessThanOrEqualWithUlongMaxValue(vald))
-            { throw new SemanticError(string.Format("The value '{0}' is greater than ulong max value", new object[] { val }), t); }
+            if (false == IntLiteral.IsGreaterThanThanOrEqualLongMinValue(vald))
+            { throw new SemanticError(string.Format("The value '{0}' is less than long minimum value", new object[] { val }), t); }
 
-            string suffix = valsfx.F2;
+            if (false == IntLiteral.IsLessThanOrEqualUlongMaxValue(vald))
+            { throw new SemanticError(string.Format("The value '{0}' is greater than ulong maximum value", new object[] { val }), t); }
+
             Typ ty = IntLiteral.ParseToValueAndTyp(E, vald, suffix);
-            Literal lt = new Literal(val, ty, TmpVarGen);
+            Literal lt = new Literal(sigval, ty, TmpVarGen);
             return lt;
         }
 

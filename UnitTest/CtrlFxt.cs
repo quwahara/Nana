@@ -1805,6 +1805,10 @@ i3  = 4294967295                //  uint.MaxValue
 i4  = 4294967296
 i5  = 9223372036854775807       //  long.MaxValue
 i6  = 9223372036854775808
+
+im1 = -2147483648               //  int.MinValue
+im2 = -2147483649
+im3 = -9223372036854775808      //  long.MinValue
         ";
             EpcSyn = @"";
 
@@ -1820,6 +1824,9 @@ i6  = 9223372036854775808
 .field static int64 i4
 .field static int64 i5
 .field static uint64 i6
+.field static int32 im1
+.field static int64 im2
+.field static int64 im3
 .method public static void .cctor() {
     ldc.i8 1
     stsfld uint64 ul
@@ -1843,6 +1850,90 @@ i6  = 9223372036854775808
     stsfld int64 i5
     ldc.i8 9223372036854775808
     stsfld uint64 i6
+    ldc.i4 -2147483648
+    stsfld int32 im1
+    ldc.i8 -2147483649
+    stsfld int64 im2
+    ldc.i8 -9223372036854775808
+    stsfld int64 im3
+rp$000001:
+    ret
+}
+.method public static void '0'() {
+    .entrypoint
+rp$000002:
+    ret
+}
+";
+            Test();
+        }
+
+        [Test]
+        public void TC0721_IntegerLiteralUnary()
+        {
+            Inp =
+@"
+iuna1 = + 101
+iuna2 = - 102
+iuna3 = + + 103
+iuna4 = + - 104
+iuna5 = - + 105
+iuna6 = - - 106
+iuna7 = + + + 107
+iuna8 = + + - 108
+iuna9 = + - + 109
+iuna10 = + - - 110
+iuna11 = - + + 111
+iuna12 = - + - 112
+iuna13 = - - + 113
+iuna14 = - - - 114
+        ";
+            EpcSyn = @"";
+
+            EpcIL =
+@".field static int32 iuna1
+.field static int32 iuna2
+.field static int32 iuna3
+.field static int32 iuna4
+.field static int32 iuna5
+.field static int32 iuna6
+.field static int32 iuna7
+.field static int32 iuna8
+.field static int32 iuna9
+.field static int32 iuna10
+.field static int32 iuna11
+.field static int32 iuna12
+.field static int32 iuna13
+.field static int32 iuna14
+.method public static void .cctor() {
+    ldc.i4 101
+    stsfld int32 iuna1
+    ldc.i4 -102
+    stsfld int32 iuna2
+    ldc.i4 103
+    stsfld int32 iuna3
+    ldc.i4 -104
+    stsfld int32 iuna4
+    ldc.i4 -105
+    stsfld int32 iuna5
+    ldc.i4 106
+    stsfld int32 iuna6
+    ldc.i4 107
+    stsfld int32 iuna7
+    ldc.i4 -108
+    stsfld int32 iuna8
+    ldc.i4 -109
+    stsfld int32 iuna9
+    ldc.i4 110
+    stsfld int32 iuna10
+    ldc.i4 -111
+    stsfld int32 iuna11
+    ldc.i4 112
+    stsfld int32 iuna12
+    ldc.i4 113
+    stsfld int32 iuna13
+    ldc.i4 -114
+    stsfld int32 iuna14
 rp$000001:
     ret
 }

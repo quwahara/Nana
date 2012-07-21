@@ -352,6 +352,8 @@ namespace Nana.Semantics
                 NewOpeFunByOpe(fn, int_, int_, int_);
             }
 
+            NewOpeFunByOpe("op_UnaryNegation", int_, null /* unuse to be unary */, int_);
+
             foreach (string sig in "==,!=,<,>,<=,>=,and,or,xor".Split(new char[] { ',' }))
             {
                 string fn = SignToFuncationName(sig);
@@ -373,12 +375,13 @@ namespace Nana.Semantics
             RegisterOvldAlias(E.FindOrNewRefType(typeof(Console)), "`p", "WriteLine");
         }
 
-        public void NewOpeFunByOpe(string ope, Typ left, Typ right, Typ ret)
+        public void NewOpeFunByOpe(string funnm, Typ left, Typ right, Typ ret)
         {
             List<Variable> vs = new List<Variable>();
             vs.Add(new Variable("a", left, Variable.VariableKind.Param));
-            vs.Add(new Variable("b", right, Variable.VariableKind.Param));
-            Fun f = left.NewOvldAndFun(ope, vs, ret);
+            if (null != right)
+            { vs.Add(new Variable("b", right, Variable.VariableKind.Param)); }
+            Fun f = left.NewOvldAndFun(funnm, vs, ret);
             f.IsOperator = true;
             f.MthdAttrs = MethodAttributes.Public | MethodAttributes.Static;
         }
@@ -1304,14 +1307,24 @@ namespace Nana.Semantics
     {
         public static int UlongMaxValueStringLength;
 
+        public static decimal LongMinValue;
+        public static decimal IntMinValue;
+        
         public static decimal IntMaxValue;
         public static decimal LongMaxValue;
 
         public static decimal UintMaxValue;
         public static decimal UlongMaxValue;
 
+        public static List<Type> SignedIntegerTypes;
+        public static List<Type> UnsignedIntegerTypes;
+        public static List<Type> IntegerTypes;
+
         static IntLiteral()
         {
+            LongMinValue = new decimal(long.MinValue);
+            IntMinValue = new decimal(int.MinValue);
+
             IntMaxValue = new decimal(int.MaxValue);
             LongMaxValue = new decimal(long.MaxValue);
 
@@ -1319,14 +1332,25 @@ namespace Nana.Semantics
             UlongMaxValue = new decimal(ulong.MaxValue);
 
             UlongMaxValueStringLength = ulong.MaxValue.ToString().Length;
+
+            SignedIntegerTypes = new List<Type>(new Type[] { typeof(int), typeof(long) });
+            UnsignedIntegerTypes = new List<Type>(new Type[] { typeof(uint), typeof(ulong) });
+            IntegerTypes = new List<Type>();
+            IntegerTypes.AddRange(SignedIntegerTypes);
+            IntegerTypes.AddRange(UnsignedIntegerTypes);
         }
 
-        public static bool IsLessThanOrEqualWithUlongMaxValueStringLength(string val)
+        public static bool IsLessThanOrEqualUlongMaxValueStringLength(string val)
         {
             return val.Length <= UlongMaxValueStringLength;
         }
 
-        public static bool IsLessThanOrEqualWithUlongMaxValue(decimal vd)
+        public static bool IsGreaterThanThanOrEqualLongMinValue(decimal vd)
+        {
+            return vd >= LongMinValue;
+        }
+
+        public static bool IsLessThanOrEqualUlongMaxValue(decimal vd)
         {
             return vd <= UlongMaxValue;
         }
@@ -1348,7 +1372,8 @@ namespace Nana.Semantics
             }
             else
             {
-                if (vd <= IntMaxValue)          /**/ { ty = e.BTY.Int; }
+                if (vd < IntMinValue)           /**/ { ty = e.BTY.Long; }
+                else if (vd <= IntMaxValue)     /**/ { ty = e.BTY.Int; }
                 else if (vd <= UintMaxValue)    /**/ { ty = e.BTY.Uint; }
                 else if (vd <= LongMaxValue)    /**/ { ty = e.BTY.Long; }
                 else                            /**/ { ty = e.BTY.Ulong; }
@@ -1356,8 +1381,12 @@ namespace Nana.Semantics
             return ty;
         }
 
-        public static Tuple2<string, string> SeparateValueAndSuffix(string v)
+        public static Tuple3<string, string, string> SeparateSignValueSuffix(string v)
         {
+            string sig = "";
+            if      /**/ (v.StartsWith("-")) { sig = "-"; v = v.Substring(1); }
+            else if /**/ (v.StartsWith("+")) { sig = "+"; v = v.Substring(1); }
+
             string up = v.ToUpper();
 
             bool ul = up.EndsWith("UL") || up.EndsWith("LU");
@@ -1366,9 +1395,10 @@ namespace Nana.Semantics
 
             int sublen = ul ? 2 : (u || l ? 1 : 0);
 
-            Tuple2<string, string> r = new Tuple2<string, string>();
-            r.F1 = v.Substring(0, v.Length - sublen);
-            r.F2 = v.Substring(v.Length - sublen);
+            Tuple3<string, string, string> r = new Tuple3<string, string, string>();
+            r.F1 = sig;
+            r.F2 = v.Substring(0, v.Length - sublen);
+            r.F3 = v.Substring(v.Length - sublen);
 
             return r;
         }
@@ -2300,6 +2330,22 @@ namespace Nana.Semantics
             gen.LoadFunction(Ty, Fu);
         }
     }
+
+    //>>
+    //public class Negation : Sema
+    //{
+    //    public Sema Term;
+    //    public Negation(Sema term)
+    //    {
+    //        Term = term;
+    //    }
+
+    //    public override void Give(IMRGenerator gen)
+    //    {
+    //        Term.Give(gen);
+    //        gen.Ope("op_UnaryNegation", null);
+    //    }
+    //}
 
     public enum Accessibility
     {

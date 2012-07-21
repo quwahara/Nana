@@ -879,6 +879,7 @@ namespace Nana.Generations
                 case "op_And":                  /**/ return S(OpCodes.And);
                 case "op_Or":                   /**/ return S(OpCodes.Or);
                 case "op_Xor":                  /**/ return S(OpCodes.Xor);
+                case "op_UnaryNegation":        /**/ return S(OpCodes.Neg);
             }
 
             throw new InternalError(string.Format("The IMR operator '{0}' is not supported", new object[] { imr.StringV }));
