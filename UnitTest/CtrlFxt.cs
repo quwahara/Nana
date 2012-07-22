@@ -1791,34 +1791,29 @@ rp$000002:
         {
             Inp =
 @"
-ul  = 1UL
+i1  = 2147483647                //  int型になります。int.MaxValue以下に収まっているので。
+i2  = 2147483648                //  uint型になります。int.MaxValueを超えているので。
+i3  = 4294967295                //  uint型になります。uint.MaxValuee以下に収まっているので。
+i4  = 4294967296                //  longt型になります。uint.MaxValueを超えているので。
+i5  = 9223372036854775807       //  long型になります。long.MaxValue以下に収まっているので。
+i6  = 9223372036854775808       //  ulong型になります。long.MaxValueを超えているので。
 
-l1  = 9223372036854775807L      //  long.MaxValue
-l2  = 9223372036854775808L
+im1 = -2147483648               //  int型になります。int.MinValue以上に収まっているので。
+im2 = -2147483649               //  longt型になります。int.MinValueを下回っているので。
+im3 = -9223372036854775808      //  longt型になります。
 
-u1  = 4294967295u               //  uint.MaxValue  
-u2  = 4294967296u
+ul  = 1UL                       //  ulong型になります。
 
-i1  = 2147483647                //  int.MaxValue
-i2  = 2147483648
-i3  = 4294967295                //  uint.MaxValue
-i4  = 4294967296
-i5  = 9223372036854775807       //  long.MaxValue
-i6  = 9223372036854775808
+l1  = 9223372036854775807L      //  long型になります。long.MaxValue以下に収まっているので。
+l2  = 9223372036854775808L      //  ulong型になります。long.MaxValueを超えているので。
 
-im1 = -2147483648               //  int.MinValue
-im2 = -2147483649
-im3 = -9223372036854775808      //  long.MinValue
-        ";
+u1  = 4294967295u               //  uint型になります。uint.MaxValue以下に収まっているので
+u2  = 4294967296u               //  ulong型になります。uint.MaxValueを超えているので。
+";
             EpcSyn = @"";
 
             EpcIL =
-@".field static uint64 ul
-.field static int64 l1
-.field static uint64 l2
-.field static uint32 u1
-.field static uint64 u2
-.field static int32 i1
+@".field static int32 i1
 .field static uint32 i2
 .field static uint32 i3
 .field static int64 i4
@@ -1827,17 +1822,12 @@ im3 = -9223372036854775808      //  long.MinValue
 .field static int32 im1
 .field static int64 im2
 .field static int64 im3
+.field static uint64 ul
+.field static int64 l1
+.field static uint64 l2
+.field static uint32 u1
+.field static uint64 u2
 .method public static void .cctor() {
-    ldc.i8 1
-    stsfld uint64 ul
-    ldc.i8 9223372036854775807
-    stsfld int64 l1
-    ldc.i8 9223372036854775808
-    stsfld uint64 l2
-    ldc.i4 4294967295
-    stsfld uint32 u1
-    ldc.i8 4294967296
-    stsfld uint64 u2
     ldc.i4 2147483647
     stsfld int32 i1
     ldc.i4 2147483648
@@ -1856,6 +1846,16 @@ im3 = -9223372036854775808      //  long.MinValue
     stsfld int64 im2
     ldc.i8 -9223372036854775808
     stsfld int64 im3
+    ldc.i8 1
+    stsfld uint64 ul
+    ldc.i8 9223372036854775807
+    stsfld int64 l1
+    ldc.i8 9223372036854775808
+    stsfld uint64 l2
+    ldc.i4 4294967295
+    stsfld uint32 u1
+    ldc.i8 4294967296
+    stsfld uint64 u2
 rp$000001:
     ret
 }
@@ -1934,6 +1934,40 @@ iuna14 = - - - 114
     stsfld int32 iuna13
     ldc.i4 -114
     stsfld int32 iuna14
+rp$000001:
+    ret
+}
+.method public static void '0'() {
+    .entrypoint
+rp$000002:
+    ret
+}
+";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral()
+        {
+            Inp =
+@"
+d1  = 0.1                       //  小数を指定すると double型になります
+f1  = 0.1F                      //  suffix 'F' を指定すると float型になります
+d2  = 314E-2                    //  'E' 10の階乗の指数を指定できます。double型になります。
+        ";
+            EpcSyn = @"";
+
+            EpcIL =
+@".field static float64 d1
+.field static float32 f1
+.field static float64 d2
+.method public static void .cctor() {
+    ldc.r8 0.1E0
+    stsfld float64 d1
+    ldc.r4 0.1E0
+    stsfld float32 f1
+    ldc.r8 314.0E-2
+    stsfld float64 d2
 rp$000001:
     ret
 }

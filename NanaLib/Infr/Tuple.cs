@@ -53,4 +53,11 @@ namespace Nana.Infr
         public Tuple3(T1 f1, T2 f2, T3 f3) { F1 = f1; F2 = f2; F3 = f3; }
         public T1 F1; public T2 F2; public T3 F3;
     }
+
+    public class Tuple4<T1, T2, T3, T4>
+    {
+        public Tuple4() { }
+        public Tuple4(T1 f1, T2 f2, T3 f3, T4 f4) { F1 = f1; F2 = f2; F3 = f3; F4 = f4; }
+        public T1 F1; public T2 F2; public T3 F3; public T4 F4;
+    }
 }

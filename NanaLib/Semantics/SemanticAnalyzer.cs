@@ -135,6 +135,7 @@ namespace Nana.Semantics
             switch (t.Group)
             {
                 case "Prior":       /**/ u = Gate(t.Follows[0]); break;
+                case "Ral":         /**/ u = Ral(t); break;
                 case "Int":         /**/ u = Int(t); break;
                 case "Str":         /**/ u = Str(t); break;
                 case "Bol":         /**/ u = Bol(t); break;
@@ -180,6 +181,13 @@ namespace Nana.Semantics
                 if ("-" == una.Value)
                 { term.Value = "-" + term.Value; }
                 object ret = Int(term);
+                return ret;
+            }
+            else if ("Ral" == term.Group)
+            {
+                if ("-" == una.Value)
+                { term.Value = "-" + term.Value; }
+                object ret = Ral(term);
                 return ret;
             }
 
@@ -439,6 +447,43 @@ namespace Nana.Semantics
                     throw new InternalError(@"The operator is not supported: " + t.Value, t);
             }
             return u;
+        }
+
+        public object Ral(Token t)
+        {
+            string[] r = RalLiteral.Separate(t.Value);
+
+            string sig = r[0];
+            string integ = r[1];
+            string frac = r[2];
+            string expsig = r[3];
+            string expval = r[4];
+            string sfx = r[5];
+
+            bool isfloat = "F" == sfx.ToUpper();
+            if ("" == integ) { integ = "0"; }
+            if ("" == frac) { frac = "0"; }
+            if ("" == expval) { expval = "0"; }
+
+            string asmb = sig + integ + "." + frac + "E" + expsig + expval;
+            Typ ty;
+            if (isfloat)
+            {
+                float dummy;
+                if (false == float.TryParse(asmb, out dummy))
+                { throw new SemanticError(string.Format("Invalid value for float", new object[] { }), t); }
+                ty = E.BTY.Float;
+            }
+            else
+            {
+                double dummy;
+                if (false == double.TryParse(asmb, out dummy))
+                { throw new SemanticError(string.Format("Invalid value for double", new object[] { }), t); }
+                ty = E.BTY.Double;
+            }
+
+            Literal lit = new Literal(asmb, ty);
+            return lit;
         }
 
         public object Int(Token t)

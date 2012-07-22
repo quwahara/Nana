@@ -308,6 +308,8 @@ namespace Nana.Semantics
         public Typ Ushort;
         public Typ Uint;
         public Typ Ulong;
+        public Typ Float;
+        public Typ Double;
         public Typ Array;
         public Typ String;
         public Typ Delegate;
@@ -325,6 +327,8 @@ namespace Nana.Semantics
             this.Ushort = e.FindOrNewRefType(typeof(ushort));
             this.Uint = e.FindOrNewRefType(typeof(uint));
             this.Ulong = e.FindOrNewRefType(typeof(ulong));
+            this.Float = e.FindOrNewRefType(typeof(float));
+            this.Double = e.FindOrNewRefType(typeof(double));
             this.Array = e.FindOrNewRefType(typeof(System.Array));
             this.String = e.FindOrNewRefType(typeof(string));
             this.Delegate = e.FindOrNewRefType(typeof(System.Delegate));
@@ -342,22 +346,32 @@ namespace Nana.Semantics
         public BuiltInFun(Env e)
         {
             E = e;
-
-            Typ int_ = e.BTY.Int;
             Typ bol = e.BTY.Bool;
-
-            foreach (string sig in "+,-,*,/,%".Split(new char[] { ',' }))
+            Typ[] numtyps = new Typ[] {
+                e.BTY.Short
+                , e.BTY.Ushort
+                , e.BTY.Int
+                , e.BTY.Uint
+                , e.BTY.Long
+                , e.BTY.Ulong
+                , e.BTY.Float
+                , e.BTY.Double
+            };
+            foreach (Typ numtyp in numtyps)
             {
-                string fn = SignToFuncationName(sig);
-                NewOpeFunByOpe(fn, int_, int_, int_);
-            }
+                foreach (string sig in "+,-,*,/,%".Split(new char[] { ',' }))
+                {
+                    string fn = SignToFuncationName(sig);
+                    NewOpeFunByOpe(fn, numtyp, numtyp, numtyp);
+                }
 
-            NewOpeFunByOpe("op_UnaryNegation", int_, null /* unuse to be unary */, int_);
+                NewOpeFunByOpe("op_UnaryNegation", numtyp, null /* unuse to be unary */, numtyp);
 
-            foreach (string sig in "==,!=,<,>,<=,>=,and,or,xor".Split(new char[] { ',' }))
-            {
-                string fn = SignToFuncationName(sig);
-                NewOpeFunByOpe(fn, int_, int_, bol);
+                foreach (string sig in "==,!=,<,>,<=,>=,and,or,xor".Split(new char[] { ',' }))
+                {
+                    string fn = SignToFuncationName(sig);
+                    NewOpeFunByOpe(fn, numtyp, numtyp, bol);
+                }
             }
 
             foreach (string sig in "==,!=,and,or,xor".Split(new char[] { ',' }))
@@ -1301,6 +1315,67 @@ namespace Nana.Semantics
             gen.Pop();
         }
 
+    }
+
+    public class RalLiteral
+    {
+        public static string[] Separate(string v)
+        {
+            string up = v.ToUpper();
+
+            bool hassig = up.StartsWith("-") || up.StartsWith("+");
+            int dotidx = up.IndexOf('.');
+            int expidx = up.IndexOf('E');
+            bool hassfx = up.EndsWith("D") || up.EndsWith("F");
+
+            string sfx = "";
+            if (hassfx)
+            {
+                sfx = up[up.Length - 1].ToString();
+                up = up.Substring(0, up.Length - 1);
+            }
+
+            string expsig = "";
+            string expval = "";
+            if (0 <= expidx)
+            {
+                string exp = up.Substring(expidx + 1);
+                expsig = "";
+                if (exp.StartsWith("+") || exp.StartsWith("-"))
+                {
+                    expsig = exp[0].ToString();
+                    exp = exp.Substring(1);
+                }
+                expval = exp;
+                up = up.Substring(0, expidx);
+            }
+
+            string frac = "";
+            if (0 <= dotidx)
+            {
+                frac = up.Substring(dotidx + 1);
+                up = up.Substring(0, dotidx);
+            }
+
+            string sig = "";
+            if (hassig)
+            {
+                sig = up[0].ToString();
+                up = up.Substring(1);
+            }
+
+            string integ = up;
+
+            string[] r = new string[6];
+            r[0] = sig;
+            r[1] = integ;
+            r[2] = frac;
+            r[3] = expsig;
+            r[4] = expval;
+            r[5] = sfx;
+
+            return r;
+        }
     }
 
     public class IntLiteral

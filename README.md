@@ -133,14 +133,6 @@ end
 ### ®”ƒŠƒeƒ‰ƒ‹
 
 ```
-ul  = 1UL                       //  ulongŒ^‚É‚È‚è‚Ü‚·B
-
-l1  = 9223372036854775807L      //  longŒ^‚É‚È‚è‚Ü‚·Blong.MaxValueˆÈ‰º‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚ÅB
-l2  = 9223372036854775808L      //  ulongŒ^‚É‚È‚è‚Ü‚·Blong.MaxValue‚ð’´‚¦‚Ä‚¢‚é‚Ì‚ÅB
-
-u1  = 4294967295u               //  uintŒ^‚É‚È‚è‚Ü‚·Buint.MaxValueˆÈ‰º‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚Å
-u2  = 4294967296u               //  ulongŒ^‚É‚È‚è‚Ü‚·Buint.MaxValue‚ð’´‚¦‚Ä‚¢‚é‚Ì‚ÅB
-
 i1  = 2147483647                //  intŒ^‚É‚È‚è‚Ü‚·Bint.MaxValueˆÈ‰º‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚ÅB
 i2  = 2147483648                //  uintŒ^‚É‚È‚è‚Ü‚·Bint.MaxValue‚ð’´‚¦‚Ä‚¢‚é‚Ì‚ÅB
 i3  = 4294967295                //  uintŒ^‚É‚È‚è‚Ü‚·Buint.MaxValueeˆÈ‰º‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚ÅB
@@ -152,7 +144,23 @@ im1 = -2147483648               //  intŒ^‚É‚È‚è‚Ü‚·Bint.MinValueˆÈã‚ÉŽû‚Ü‚Á‚Ä‚
 im2 = -2147483649               //  longtŒ^‚É‚È‚è‚Ü‚·Bint.MinValue‚ð‰º‰ñ‚Á‚Ä‚¢‚é‚Ì‚ÅB
 im3 = -9223372036854775808      //  longtŒ^‚É‚È‚è‚Ü‚·B
 
+ul  = 1UL                       //  ulongŒ^‚É‚È‚è‚Ü‚·B
+
+l1  = 9223372036854775807L      //  longŒ^‚É‚È‚è‚Ü‚·Blong.MaxValueˆÈ‰º‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚ÅB
+l2  = 9223372036854775808L      //  ulongŒ^‚É‚È‚è‚Ü‚·Blong.MaxValue‚ð’´‚¦‚Ä‚¢‚é‚Ì‚ÅB
+
+u1  = 4294967295u               //  uintŒ^‚É‚È‚è‚Ü‚·Buint.MaxValueˆÈ‰º‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚Å
+u2  = 4294967296u               //  ulongŒ^‚É‚È‚è‚Ü‚·Buint.MaxValue‚ð’´‚¦‚Ä‚¢‚é‚Ì‚ÅB
+
 //  #16i”‚É‚æ‚é®”ƒŠƒeƒ‰ƒ‹(‚æ‚­'0x'‚ÅŽn‚Ü‚é)‹L–@‚É‚Í‚Ü‚¾*‘Î‰ž‚µ‚Ä‚¢‚Ü‚¹‚ñB*
+```
+
+### ŽÀ”ƒŠƒeƒ‰ƒ‹
+
+```
+d1  = 0.1                       //  ¬”‚ðŽw’è‚·‚é‚Æ doubleŒ^‚É‚È‚è‚Ü‚·
+f1  = 0.1F                      //  suffix 'F' ‚ðŽw’è‚·‚é‚Æ floatŒ^‚É‚È‚è‚Ü‚·
+d2  = 314E-2                    //  'E' 10‚ÌŠKæ‚ÌŽw”‚ðŽw’è‚Å‚«‚Ü‚·BdoubleŒ^‚É‚È‚è‚Ü‚·B
 ```
 
 ### ŽQÆŒ^ƒLƒƒƒXƒg
