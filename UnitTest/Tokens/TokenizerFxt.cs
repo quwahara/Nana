@@ -549,6 +549,270 @@ hij,/ G:Cmt B:0/Pos=5";
             Test();
         }
 
+        [Test]
+        public void TC0722_RealLiteral_01()
+        {
+            Inp = "Ral  :0  #9D";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_02()
+        {
+            Inp = "Ral  :0  #9ED";
+            Epc = "(fail)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_03()
+        {
+            Inp = "Ral  :0  #9E9D";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_04()
+        {
+            Inp = "Ral  :0  #9E+9D";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_05()
+        {
+            Inp = "Ral  :0  #9E-9D";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_51()
+        {
+            Inp = "Ral  :1  #9";
+            Epc = "(fail)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_52()
+        {
+            Inp = "Ral  :1  #.";
+            Epc = "(fail)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_53()
+        {
+            Inp = "Ral  :1  #.9";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_54()
+        {
+            Inp = "Ral  :1  #9.";
+            Epc = "(fail)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_55()
+        {
+            Inp = "Ral  :1  #..";
+            Epc = "(fail)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_56()
+        {
+            Inp = "Ral  :1  #.99";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_57()
+        {
+            Inp = "Ral  :1  #.9.";
+            Epc = ".9";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_58()
+        {
+            Inp = "Ral  :1  #..9";
+            Epc = ".9";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_59()
+        {
+            Inp = "Ral  :1  #...";
+            Epc = "(fail)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_60()
+        {
+            Inp = "Ral  :1  #.9e";
+            Epc = ".9";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_61()
+        {
+            Inp = "Ral  :1  #.9e+";
+            Epc = ".9";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_62()
+        {
+            Inp = "Ral  :1  #.9e1";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_63()
+        {
+            Inp = "Ral  :1  #.9e++";
+            Epc = ".9";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_64()
+        {
+            Inp = "Ral  :1  #.9e+1";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_65()
+        {
+            Inp = "Ral  :1  #.9e1+";
+            Epc = ".9e1";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_66()
+        {
+            Inp = "Ral  :1  #.9e11";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_67()
+        {
+            Inp = "Ral  :1  #.9e+++";
+            Epc = ".9";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_68()
+        {
+            Inp = "Ral  :1  #.9e++1";
+            Epc = ".9";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_69()
+        {
+            Inp = "Ral  :1  #.9e+1+";
+            Epc = ".9e+1";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_70()
+        {
+            Inp = "Ral  :1  #.9e+11";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_71()
+        {
+            Inp = "Ral  :1  #.9e1++";
+            Epc = ".9e1";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_72()
+        {
+            Inp = "Ral  :1  #.9e1+1";
+            Epc = ".9e1";
+            Test();
+        }
+
+        [Test]
+        public void TC0722_RealLiteral_73()
+        {
+            Inp = "Ral  :1  #.9e11+";
+            Epc = ".9e11";
+            Test();
+        }
+
+        [Test]
+        public void TC0723_RealLiteral_74()
+        {
+            Inp = "Ral  :1  #.9e111";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0723_RealLiteral_101()
+        {
+            Inp = "Ral  :1  #.9d";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0723_RealLiteral_102()
+        {
+            Inp = "Ral  :1  #.9dd";
+            Epc = ".9d";
+            Test();
+        }
+
+        [Test]
+        public void TC0723_RealLiteral_103()
+        {
+            Inp = "Ral  :1  #.9e1d";
+            Epc = "(same as input)";
+            Test();
+        }
+
+        [Test]
+        public void TC0723_RealLiteral_104()
+        {
+            Inp = "Ral  :1  #.9e1dd";
+            Epc = ".9e1d";
+            Test();
+        }
+
         public void Test()
         {
             new TestCase("", Inp, Epc, delegate(TestCase c)

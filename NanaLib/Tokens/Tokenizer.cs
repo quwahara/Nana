@@ -322,6 +322,8 @@ namespace Nana.Tokens
 |(?<Dot>\.)
 |(?<AsgnL>=)
 |(?<Expr>(\(|\)|\[|\]|@))
+|(?<Ral>\d[\d_]*([Ee][+-]?\d[\d_]*)?[DdFfMm])
+|(?<Ral>(\d[\d_]*)?\.\d[\d_]*([Ee][+-]?\d[\d_]*)?[DdFfMm]?)
 |(?<Int>\d[\d_]*(UL|Ul|uL|ul|LU|Lu|lU|lu|L|U|l|u)?)
 |(?<Cst>(as!|as))
 |(?<Ope>(and|xor|or))
