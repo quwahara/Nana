@@ -685,8 +685,18 @@ namespace Nana.Semantics
             if (null == totyp)
             { throw new SemanticError("Could not cast to the right-hand side type", t); }
 
-            Cast c = new Cast(instance, totyp, doThrowInvalidCast);
-            return c;
+            Typ fromTyp = instance.Att.TypGet;
+
+            if (BuiltInTyp.IsNumericType(fromTyp) && BuiltInTyp.IsNumericType(totyp))
+            {
+                Conv c = new Conv(instance, fromTyp, totyp, doThrowInvalidCast);
+                return c;
+            }
+            else
+            {
+                Cast c = new Cast(instance, fromTyp, totyp, doThrowInvalidCast);
+                return c;
+            }
         }
 
         public object Ope(Token t)

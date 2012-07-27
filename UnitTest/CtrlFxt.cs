@@ -1980,7 +1980,7 @@ rp$000002:
             Test();
         }
 
-        //        [Test]
+//        [Test]
 //        public void ZZZ_TestStub()
 //        {
 //            References.Add("system.windows.forms.dll");

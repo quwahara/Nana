@@ -304,6 +304,8 @@ namespace Nana.Semantics
         public Typ Bool;
         public Typ Int;
         public Typ Long;
+        public Typ Sbyte;
+        public Typ Byte;
         public Typ Short;
         public Typ Ushort;
         public Typ Uint;
@@ -323,6 +325,8 @@ namespace Nana.Semantics
             this.Bool = e.FindOrNewRefType(typeof(bool));
             this.Int = e.FindOrNewRefType(typeof(int));
             this.Long = e.FindOrNewRefType(typeof(long));
+            this.Sbyte = e.FindOrNewRefType(typeof(sbyte));
+            this.Byte = e.FindOrNewRefType(typeof(byte));
             this.Short = e.FindOrNewRefType(typeof(short));
             this.Ushort = e.FindOrNewRefType(typeof(ushort));
             this.Uint = e.FindOrNewRefType(typeof(uint));
@@ -334,6 +338,33 @@ namespace Nana.Semantics
             this.Delegate = e.FindOrNewRefType(typeof(System.Delegate));
             this.IntPtr = e.FindOrNewRefType(typeof(System.IntPtr));
         }
+
+        public static Type[] UnsignedIntegerTypes           /**/ = new Type[] { typeof(byte), typeof(ushort), typeof(uint), typeof(ulong) };
+        public static Type[] SignedIntegerTypes             /**/ = new Type[] { typeof(sbyte), typeof(short), typeof(int), typeof(long) };
+
+        public static bool IsUnsignedIntegerType(Type a)    /**/ { return 0 <= System.Array.IndexOf(UnsignedIntegerTypes, a); }
+        public static bool IsSignedIntegerType(Type a)      /**/ { return 0 <= System.Array.IndexOf(SignedIntegerTypes, a); }
+        public static bool IsIntegerType(Type a)            /**/ { return IsSignedIntegerType(a) || IsUnsignedIntegerType(a); }
+
+        public static bool IsRealType(Type a)               /**/ { return typeof(float) == a || typeof(double) == a; }
+
+        public static Type[] NumericTypes = new Type[]
+        {
+            typeof(sbyte)
+            , typeof(byte)
+            , typeof(short)
+            , typeof(ushort)
+            , typeof(int)
+            , typeof(uint)
+            , typeof(long)
+            , typeof(ulong)
+            , typeof(float)
+            , typeof(double)
+            };
+
+        public static bool IsNumericType(Type a) { return 0 <= System.Array.IndexOf(NumericTypes, a); }
+        public static bool IsNumericType(Typ a) { return a.IsReferencing && 0 <= System.Array.IndexOf(NumericTypes, a.RefType); }
+
     }
 
     public class BuiltInFun
@@ -1482,12 +1513,14 @@ namespace Nana.Semantics
     public class Cast : Sema
     {
         public Sema Instance;
+        public Typ FromTyp;
         public Typ ToTyp;
         public bool DoThrowInvalidCast;
 
-        public Cast(Sema instance, Typ totyp, bool doThrowInvalidCast)
+        public Cast(Sema instance, Typ fromTyp, Typ totyp, bool doThrowInvalidCast)
         {
             Instance = instance;
+            FromTyp = fromTyp;
             ToTyp = totyp;
             DoThrowInvalidCast = doThrowInvalidCast;
             Att.TypGet = totyp;
@@ -1499,11 +1532,36 @@ namespace Nana.Semantics
             if (Instance.Att.TypGet.IsValueType)
             { gen.Box(Instance.Att.TypGet); }
             if (DoThrowInvalidCast)
-            { gen.CastNoisy(ToTyp); }
+            { gen.CastNoisy(FromTyp, ToTyp); }
             else
-            { gen.CastSilent(ToTyp); }
+            { gen.CastSilent(FromTyp, ToTyp); }
+        }
+    }
+
+    public class Conv : Sema
+    {
+        public Sema Instance;
+        public Typ FromTyp;
+        public Typ ToTyp;
+        public bool DoThrowInvalidCast;
+
+        public Conv(Sema instance, Typ fromTyp, Typ totyp, bool doThrowInvalidCast)
+        {
+            Instance = instance;
+            FromTyp = fromTyp;
+            ToTyp = totyp;
+            DoThrowInvalidCast = doThrowInvalidCast;
+            Att.TypGet = totyp;
         }
 
+        public override void Give(IMRGenerator gen)
+        {
+            Instance.Give(gen);
+            if (DoThrowInvalidCast)
+            { gen.ConvNoisy(FromTyp, ToTyp); }
+            else
+            { gen.ConvSilent(FromTyp, ToTyp); }
+        }
     }
 
     public class Ret : Sema, IReturnDeterminacyState

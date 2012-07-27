@@ -54,6 +54,9 @@ namespace Nana.IMRs
         CastNoisy,
         CastSilent,
 
+        ConvNoisy,
+        ConvSilent,
+
         Throw,
         Try,
         Catch,
@@ -159,8 +162,11 @@ namespace Nana.IMRs
 
         public IMR Box(Typ t) { return Append(new IMR(C.Box, t)); }
 
-        public IMR CastNoisy(Typ t) { return Append(new IMR(C.CastNoisy, t)); }
-        public IMR CastSilent(Typ t) { return Append(new IMR(C.CastSilent, t)); }
+        public IMR CastNoisy(Typ fromTyp, Typ toTyp) { return Append(new IMR(C.CastNoisy, fromTyp, toTyp)); }
+        public IMR CastSilent(Typ fromTyp, Typ toTyp) { return Append(new IMR(C.CastSilent, fromTyp, toTyp)); }
+
+        public IMR ConvNoisy(Typ fromTyp, Typ toTyp) { return Append(new IMR(C.ConvNoisy, fromTyp, toTyp)); }
+        public IMR ConvSilent(Typ fromTyp, Typ toTyp) { return Append(new IMR(C.ConvSilent, fromTyp, toTyp)); }
 
         public IMR Catch(Typ t) { return Append(new IMR(C.Catch, t)); }
         public IMR Leave(string label) { return Append(new IMR(C.Leave, label)); }

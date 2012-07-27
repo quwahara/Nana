@@ -182,6 +182,13 @@ q   = "hi" as! object   // => q は string型 "hi" を持つ object 型の変数になる
 r   = 1 as! string      // => System.InvalidCastException が投入される
 ```
 
+## TODO
+
+無効な演算子を指定したときのメッセージを分かりやすく
+数値型変換
+自動wideningとメソッド呼び出しの解決
+
+
 ## ライセンス
 
 MIT ライセンスで公開しています。 

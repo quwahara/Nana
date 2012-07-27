@@ -235,6 +235,10 @@ namespace Nana.Generations
 
             if (t.RefType == typeof(void)) { return "void" + brk; }
             if (t.RefType == typeof(bool)) { return "bool" + brk; }
+            if (t.RefType == typeof(sbyte)) { return "int8" + brk; }
+            if (t.RefType == typeof(byte)) { return "uint8" + brk; }
+            if (t.RefType == typeof(short)) { return "int16" + brk; }
+            if (t.RefType == typeof(ushort)) { return "uint16" + brk; }
             if (t.RefType == typeof(int)) { return "int32" + brk; }
             if (t.RefType == typeof(uint)) { return "uint32" + brk; }
             if (t.RefType == typeof(long)) { return "int64" + brk; }
@@ -612,6 +616,8 @@ namespace Nana.Generations
                 case C.LdFunction: return LoadFunction(imr);
                 case C.CastNoisy: return CastNoisy(imr);
                 case C.CastSilent: return CastSilent(imr);
+                case C.ConvNoisy: return ConvNoisy(imr);
+                case C.ConvSilent: return ConvSilent(imr);
             }
             throw new NotSupportedException();
         }
@@ -848,14 +854,69 @@ namespace Nana.Generations
 
         public static string CastNoisy(IMR imr)
         {
-            string s = S(OpCodes.Castclass) + " " + TypeFullName(imr.TypV);
+            Typ toty = imr.TypV2;
+            string s = S(OpCodes.Castclass) + " " + TypeFullName(toty);
             return s;
         }
 
         public static string CastSilent(IMR imr)
         {
-            string s = "// silent cast to " + TypeFullName(imr.TypV);
+            Typ toty = imr.TypV2;
+            string s = "// silent cast to " + TypeFullName(toty);
             return s;
+        }
+
+        public static string ConvNoisy(IMR imr)
+        {
+            Typ fromty = imr.TypV;
+            Typ toty = imr.TypV2;
+            Type fr = fromty.RefType;
+            Type to = toty.RefType;
+            if (BuiltInTyp.IsUnsignedIntegerType(fr) && BuiltInTyp.IsIntegerType(to))
+            {
+                if (typeof(sbyte)           /**/ == to) { return S(OpCodes.Conv_Ovf_I1_Un); }
+                else if (typeof(byte)       /**/ == to) { return S(OpCodes.Conv_Ovf_U1_Un); }
+                else if (typeof(short)      /**/ == to) { return S(OpCodes.Conv_Ovf_I2_Un); }
+                else if (typeof(ushort)     /**/ == to) { return S(OpCodes.Conv_Ovf_U2_Un); }
+                else if (typeof(int)        /**/ == to) { return S(OpCodes.Conv_Ovf_I4_Un); }
+                else if (typeof(uint)       /**/ == to) { return S(OpCodes.Conv_Ovf_U4_Un); }
+                else if (typeof(long)       /**/ == to) { return S(OpCodes.Conv_Ovf_I8_Un); }
+                else if (typeof(ulong)      /**/ == to) { return S(OpCodes.Conv_Ovf_U8_Un); }
+            }
+            else if (BuiltInTyp.IsSignedIntegerType(fr) && BuiltInTyp.IsIntegerType(to))
+            {
+                if (typeof(sbyte)           /**/ == to) { return S(OpCodes.Conv_Ovf_I1); }
+                else if (typeof(byte)       /**/ == to) { return S(OpCodes.Conv_Ovf_U1); }
+                else if (typeof(short)      /**/ == to) { return S(OpCodes.Conv_Ovf_I2); }
+                else if (typeof(ushort)     /**/ == to) { return S(OpCodes.Conv_Ovf_U2); }
+                else if (typeof(int)        /**/ == to) { return S(OpCodes.Conv_Ovf_I4); }
+                else if (typeof(uint)       /**/ == to) { return S(OpCodes.Conv_Ovf_U4); }
+                else if (typeof(long)       /**/ == to) { return S(OpCodes.Conv_Ovf_I8); }
+                else if (typeof(ulong)      /**/ == to) { return S(OpCodes.Conv_Ovf_U8); }
+            }
+            else if (BuiltInTyp.IsNumericType(fr) && BuiltInTyp.IsRealType(to))
+            {
+                if (typeof(float)           /**/ == to) { return S(OpCodes.Conv_R4); }
+                else if (typeof(double)     /**/ == to) { return S(OpCodes.Conv_R8); }
+            }
+            throw new InternalError("Unexpected type was specified");
+        }
+
+        public static string ConvSilent(IMR imr)
+        {
+            Typ toty = imr.TypV2;
+            Type to = toty.RefType;
+            if (typeof(sbyte)           /**/ == to) { return S(OpCodes.Conv_I1); }
+            else if (typeof(byte)       /**/ == to) { return S(OpCodes.Conv_U1); }
+            else if (typeof(short)      /**/ == to) { return S(OpCodes.Conv_I2); }
+            else if (typeof(ushort)     /**/ == to) { return S(OpCodes.Conv_U2); }
+            else if (typeof(int)        /**/ == to) { return S(OpCodes.Conv_I4); }
+            else if (typeof(uint)       /**/ == to) { return S(OpCodes.Conv_U4); }
+            else if (typeof(long)       /**/ == to) { return S(OpCodes.Conv_I8); }
+            else if (typeof(ulong)      /**/ == to) { return S(OpCodes.Conv_U8); }
+            else if (typeof(float)      /**/ == to) { return S(OpCodes.Conv_R4); }
+            else if (typeof(double)     /**/ == to) { return S(OpCodes.Conv_R8); }
+            throw new InternalError("Unexpected type was specified");
         }
 
         public static string Box(IMR imr)
