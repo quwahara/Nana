@@ -1313,6 +1313,34 @@ namespace Nana.Semantics
         }
     }
 
+    public class Box : Sema
+    {
+        public Sema Actual;
+
+        public Box(Sema actual)
+        {
+            Actual = actual;
+            Att.TypGet = actual.Att.TypGet;
+        }
+
+        public override void Give(IMRGenerator gen)
+        {
+            Actual.Give(gen);
+            gen.Box(Att.TypGet);
+        }
+
+        public override void Take(IMRGenerator gen)
+        {
+            throw new InternalError("Boxing cannot take");
+        }
+
+        public override void Addr(IMRGenerator gen)
+        {
+            throw new InternalError("Boxing has no addr");
+        }
+
+    }
+
     public class Literal : Sema
     {
         public object Value;
@@ -2463,22 +2491,6 @@ namespace Nana.Semantics
             gen.LoadFunction(Ty, Fu);
         }
     }
-
-    //>>
-    //public class Negation : Sema
-    //{
-    //    public Sema Term;
-    //    public Negation(Sema term)
-    //    {
-    //        Term = term;
-    //    }
-
-    //    public override void Give(IMRGenerator gen)
-    //    {
-    //        Term.Give(gen);
-    //        gen.Ope("op_UnaryNegation", null);
-    //    }
-    //}
 
     public enum Accessibility
     {

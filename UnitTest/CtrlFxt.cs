@@ -1980,7 +1980,82 @@ rp$000002:
             Test();
         }
 
-//        [Test]
+        [Test]
+        public void TC0729_NumericConversion()
+        {
+            Inp =
+@"
+d   = 1.0
+sb  = d as sbyte
+b   = d as byte
+s   = d as short
+us  = d as ushort
+i   = d as int
+ui  = d as uint
+l   = d as long
+ul  = d as ulong
+f   = d as float
+d   = d as double
+        ";
+            EpcSyn = @"";
+
+            EpcIL =
+@".field static float64 d
+.field static int8 sb
+.field static uint8 b
+.field static int16 s
+.field static uint16 us
+.field static int32 i
+.field static uint32 ui
+.field static int64 l
+.field static uint64 ul
+.field static float32 f
+.method public static void .cctor() {
+    ldc.r8 1.0E0
+    stsfld float64 d
+    ldsfld float64 d
+    conv.i1
+    stsfld int8 sb
+    ldsfld float64 d
+    conv.u1
+    stsfld uint8 b
+    ldsfld float64 d
+    conv.i2
+    stsfld int16 s
+    ldsfld float64 d
+    conv.u2
+    stsfld uint16 us
+    ldsfld float64 d
+    conv.i4
+    stsfld int32 i
+    ldsfld float64 d
+    conv.u4
+    stsfld uint32 ui
+    ldsfld float64 d
+    conv.i8
+    stsfld int64 l
+    ldsfld float64 d
+    conv.u8
+    stsfld uint64 ul
+    ldsfld float64 d
+    conv.r4
+    stsfld float32 f
+    ldsfld float64 d
+    conv.r8
+    stsfld float64 d
+rp$000001:
+    ret
+}
+.method public static void '0'() {
+    .entrypoint
+rp$000002:
+    ret
+}
+";
+            Test();
+        }
+
+        //        [Test]
 //        public void ZZZ_TestStub()
 //        {
 //            References.Add("system.windows.forms.dll");
