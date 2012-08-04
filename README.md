@@ -103,7 +103,7 @@ c:\tmp> set NANA_ILASM_PATH=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\ilasm.
 ```
 $ export NANA_ILASM_PATH=/usr/bin/ilasm
 $ mono Nana.exe HelloWorld.nana
-$ mono HelloWorld..exe
+$ mono HelloWorld.exe
 ```
 
 
