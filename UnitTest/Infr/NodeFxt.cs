@@ -100,7 +100,8 @@ namespace UnitTest.Infr
         public string Test(TestCase c)
         {
             List<Node> lst = Node.Parse(c.Input);
-            string act = Cty.ToText<Node>(lst).Replace("\r\n", " ").TrimEnd();
+            string nl = Environment.NewLine;
+            string act = Cty.ToText<Node>(lst).Replace(nl, " ").TrimEnd();
             return act;
         }
     }
@@ -490,3 +491,4 @@ a
         }
     }
 }
+

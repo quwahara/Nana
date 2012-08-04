@@ -2782,9 +2782,10 @@ namespace UnitTest.Semantics.Root
         {
             //TraceTree = false;
             string asm = GetType().Name;
-
             Inp = "";
-            Epc = @".assembly extern mscorlib {.ver 2:0:0:0 .publickeytoken = (B7 7A 5C 56 19 34 E0 89)}
+			Assembly mscorlib = Assembly.Load("mscorlib.dll");
+			string asmext = CodeGenerator.AssemblyExtern(mscorlib);
+            Epc = asmext + @"
 .assembly extern UnitTest {.ver 1:0:0:0}
 .assembly " + asm + @" { }
 .module " + asm + @".exe

@@ -15,7 +15,53 @@ using System.IO;
 using Nana;
 using Nana.Tokens;
 using Nana.Infr;
+using Nana.Generations;
 
+/// <summary>
+/// Begins the invoke.
+/// </summary>
+/// <returns>
+/// The invoke.
+/// </returns>
+/// <param name='xxx'>
+/// Xxx.
+/// </param>
+/// <param name='yyy'>
+/// Yyy.
+/// </param>
+/// <param name='callback'>
+/// Callback.
+/// </param>
+/// <param name='object'>
+/// Object.
+/// </param>
+/// <summary>
+/// Invoke the specified xxx and yyy.
+/// </summary>
+/// <param name='xxx'>
+/// Xxx.
+/// </param>
+/// <param name='yyy'>
+/// Yyy.
+/// </param>
+/// <summary>
+/// Initializes a new instance of the <see cref="DDD"/> delegate.
+/// </summary>
+/// <param name='object'>
+/// Object.
+/// </param>
+/// <param name='method'>
+/// Method.
+/// </param>
+/// <summary>
+/// Ends the invoke.
+/// </summary>
+/// <returns>
+/// The invoke.
+/// </returns>
+/// <param name='result'>
+/// Result.
+/// </param>
 public delegate string DDD(int xxx, int yyy);
 
 namespace UnitTest
@@ -23,7 +69,13 @@ namespace UnitTest
 
     public class Class0
     {
+        /// <summary>
+        /// Sss this instance.
+        /// </summary>
         public string Sss() { return "ssss"; }
+        /// <summary>
+        /// The FF.
+        /// </summary>
         public int FFF;
 
         private string Prv0()
@@ -99,12 +151,21 @@ namespace UnitTest
             Console.WriteLine(s);
             return s;
         }
+        /// <summary>
+        /// Vs the pub0.
+        /// </summary>
+        /// <returns>
+        /// The pub0.
+        /// </returns>
         public virtual string VPub0()
         {
             string s = GetType().FullName + "." + MethodBase.GetCurrentMethod().Name;
             Console.WriteLine(s);
             return s;
         }
+        /// <summary>
+        /// Pub0 this instance.
+        /// </summary>
         public string Pub0()
         {
             string s = GetType().FullName + "." + MethodBase.GetCurrentMethod().Name;
@@ -115,18 +176,33 @@ namespace UnitTest
 
     public class Class1 : Class0
     {
+        /// <summary>
+        /// Vs the pub0.
+        /// </summary>
+        /// <returns>
+        /// The pub0.
+        /// </returns>
         public override string VPub0()
         {
             string s = GetType().FullName + "." + MethodBase.GetCurrentMethod().Name;
             Console.WriteLine(s);
             return s;
         }
+        /// <summary>
+        /// Vs the pub1.
+        /// </summary>
+        /// <returns>
+        /// The pub1.
+        /// </returns>
         public virtual string VPub1()
         {
             string s = GetType().FullName + "." + MethodBase.GetCurrentMethod().Name;
             Console.WriteLine(s);
             return s;
         }
+        /// <summary>
+        /// Pub1 this instance.
+        /// </summary>
         public string Pub1()
         {
             string s = GetType().FullName + "." + MethodBase.GetCurrentMethod().Name;
@@ -137,24 +213,45 @@ namespace UnitTest
 
     public class Class2 : Class1
     {
+        /// <summary>
+        /// Vs the pub0.
+        /// </summary>
+        /// <returns>
+        /// The pub0.
+        /// </returns>
         public override string VPub0()
         {
             string s = GetType().FullName + "." + MethodBase.GetCurrentMethod().Name;
             Console.WriteLine(s);
             return s;
         }
+        /// <summary>
+        /// Vs the pub1.
+        /// </summary>
+        /// <returns>
+        /// The pub1.
+        /// </returns>
         public override string VPub1()
         {
             string s = GetType().FullName + "." + MethodBase.GetCurrentMethod().Name;
             Console.WriteLine(s);
             return s;
         }
+        /// <summary>
+        /// Vs the pub2.
+        /// </summary>
+        /// <returns>
+        /// The pub2.
+        /// </returns>
         public virtual string VPub2()
         {
             string s = GetType().FullName + "." + MethodBase.GetCurrentMethod().Name;
             Console.WriteLine(s);
             return s;
         }
+        /// <summary>
+        /// Pub2 this instance.
+        /// </summary>
         public string Pub2()
         {
             string s = GetType().FullName + "." + MethodBase.GetCurrentMethod().Name;
@@ -181,13 +278,31 @@ namespace UnitTest
     [TestFixture]
     public class NanaFxt
     {
+        /// <summary>
+        /// The root.
+        /// </summary>
         public Token Root;
 
+        /// <summary>
+        /// The references.
+        /// </summary>
         public List<string> References = new List<string>();
+        /// <summary>
+        /// The inp.
+        /// </summary>
         public string Inp;
+        /// <summary>
+        /// The epc syn.
+        /// </summary>
         public string EpcSyn;
+        /// <summary>
+        /// The epc I.
+        /// </summary>
         public string EpcIL;
 
+        /// <summary>
+        /// Sets up.
+        /// </summary>
         [SetUp]
         public void SetUp()
         {
@@ -198,6 +313,9 @@ namespace UnitTest
             EpcIL = "";
         }
 
+        /// <summary>
+        /// Ts the b1120_ hello world.
+        /// </summary>
         [Test]
         //  T:  20, B:  11
         public void TB1120_HelloWorld()
@@ -227,6 +345,9 @@ rp$000002:
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1217_ call method of literal.
+        /// </summary>
         [Test]
         public void TB1217_CallMethodOfLiteral()
         {
@@ -263,6 +384,9 @@ rp$000002:
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1218_ comments.
+        /// </summary>
         [Test]
         public void TB1218_Comments()
         {
@@ -299,6 +423,9 @@ rp$000002:
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1218_ string operations.
+        /// </summary>
         [Test]
         public void TB1218_StringOperations()
         {
@@ -363,6 +490,9 @@ rp$000002:
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1218_ keywords.
+        /// </summary>
         [Test]
         public void TB1218_Keywords()
         {
@@ -428,6 +558,9 @@ rp$000003:
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1228_ return_ normal_1.
+        /// </summary>
         [Test]
         public void TB1228_Return_Normal_1()
         {
@@ -574,6 +707,9 @@ rp$000005:
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1228_ return_ normal_2_ if if.
+        /// </summary>
         [Test]
         public void TB1228_Return_Normal_2_IfIf()
         {
@@ -647,6 +783,9 @@ rp$000002:
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1228_ return_ error_1_ if.
+        /// </summary>
         [Test]
         public void TB1228_Return_Error_1_If()
         {
@@ -665,6 +804,9 @@ class A
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1228_ return_ error_2_ if then ret else.
+        /// </summary>
         [Test]
         public void TB1228_Return_Error_2_IfThenRetElse()
         {
@@ -684,6 +826,9 @@ class A
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1228_ return_ error_3_ if then else ret.
+        /// </summary>
         [Test]
         public void TB1228_Return_Error_3_IfThenElseRet()
         {
@@ -703,6 +848,9 @@ class A
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1228_ return_ error_4_ if then ret elif ret.
+        /// </summary>
         [Test]
         public void TB1228_Return_Error_4_IfThenRetElifRet()
         {
@@ -723,6 +871,9 @@ class A
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1228_ return_ error_5_ if then ret elif ret else.
+        /// </summary>
         [Test]
         public void TB1228_Return_Error_5_IfThenRetElifRetElse()
         {
@@ -744,6 +895,9 @@ class A
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1228_ return_ error_6_ if then ret elif else ret.
+        /// </summary>
         [Test]
         public void TB1228_Return_Error_6_IfThenRetElifElseRet()
         {
@@ -765,6 +919,9 @@ class A
             Test();
         }
 
+        /// <summary>
+        /// Ts the b1228_ return_ error_7_ if then elif ret else ret.
+        /// </summary>
         [Test]
         public void TB1228_Return_Error_7_IfThenElifRetElseRet()
         {
@@ -786,6 +943,9 @@ class A
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0109_ error_1_ the_variable_is_already_defined.
+        /// </summary>
         [Test]
         public void TC0109_Error_1_The_variable_is_already_defined()
         {
@@ -797,6 +957,9 @@ a:int
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0109_ error_2_ the_type_is_already_defined.
+        /// </summary>
         [Test]
         public void TC0109_Error_2_The_type_is_already_defined()
         {
@@ -808,6 +971,9 @@ class a ... ,,,
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0109_ error_3_ the_function_is_already_defined.
+        /// </summary>
         [Test]
         public void TC0109_Error_3_The_function_is_already_defined()
         {
@@ -819,6 +985,9 @@ fun a() .. ,,
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0211_ RR.
+        /// </summary>
         [Test]
         public void TC0211_RRR()
         {
@@ -837,6 +1006,9 @@ a = b = c = 1
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0227_ windows form.
+        /// </summary>
         [Test]
         public void TC0227_WindowsForm()
         {
@@ -867,6 +1039,9 @@ rp$000001:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0311_ set propety.
+        /// </summary>
         [Test]
         public void TC0311_SetPropety()
         {
@@ -908,6 +1083,9 @@ rp$000001:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0315_ exception handling.
+        /// </summary>
         [Test]
         public void TC0315_ExceptionHandling()
         {
@@ -970,6 +1148,9 @@ rp$000003:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0315_ list_string.
+        /// </summary>
         [Test]
         public void TC0315_List_string()
         {
@@ -1035,6 +1216,9 @@ rp$000002:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0415_ list_ list_string.
+        /// </summary>
         [Test]
         public void TC0415_List_List_string()
         {
@@ -1105,6 +1289,9 @@ rp$000002:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0421_ field.
+        /// </summary>
         [Test]
         public void TC0421_Field()
         {
@@ -1152,6 +1339,9 @@ rp$000002:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0504_ multicast delegate inheritance.
+        /// </summary>
         [Test]
         public void TC0504_MulticastDelegateInheritance()
         {
@@ -1223,6 +1413,9 @@ rp$000006:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0505_ sweep stack on leaving.
+        /// </summary>
         [Test]
         public void TC0505_SweepStackOnLeaving()
         {
@@ -1259,6 +1452,9 @@ rp$000003:
             Test();
         }
         
+        /// <summary>
+        /// Ts the c0505_ limited support closure.
+        /// </summary>
         [Test]
         public void TC0505_LimitedSupportClosure()
         {
@@ -1349,6 +1545,9 @@ rp$000012:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0513_ instance field access.
+        /// </summary>
         [Test]
         public void TC0513_InstanceFieldAccess()
         {
@@ -1398,6 +1597,9 @@ rp$000003:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0520_ source is empty.
+        /// </summary>
         [Test]
         public void TC0520_SrcIsEmpty()
         {
@@ -1417,6 +1619,9 @@ rp$000001:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0523_ closure with local variable capture.
+        /// </summary>
         [Test]
         public void TC0523_ClosureWithLocalVariableCapture()
         {
@@ -1478,6 +1683,9 @@ rp$000004:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0617_ event.
+        /// </summary>
         [Test]
         public void TC0617_Event()
         {
@@ -1562,6 +1770,9 @@ rp$000004:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0708_ store return value to temporary variable.
+        /// </summary>
         [Test]
         public void TC0708_StoreReturnValueToTemporaryVariable()
         {
@@ -1658,6 +1869,9 @@ rp$000005:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0712_ cast class.
+        /// </summary>
         [Test]
         public void TC0712_CastClass()
         {
@@ -1696,6 +1910,9 @@ rp$000002:
             Test();
         }
 
+        /// <summary>
+        /// Ts the c0714_ operator method.
+        /// </summary>
         [Test]
         public void TC0714_OperatorMethod()
         {
@@ -1791,24 +2008,24 @@ rp$000002:
         {
             Inp =
 @"
-i1  = 2147483647                //  intŒ^‚É‚È‚è‚Ü‚·Bint.MaxValueˆÈ‰º‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚ÅB
-i2  = 2147483648                //  uintŒ^‚É‚È‚è‚Ü‚·Bint.MaxValue‚ð’´‚¦‚Ä‚¢‚é‚Ì‚ÅB
-i3  = 4294967295                //  uintŒ^‚É‚È‚è‚Ü‚·Buint.MaxValueeˆÈ‰º‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚ÅB
-i4  = 4294967296                //  longtŒ^‚É‚È‚è‚Ü‚·Buint.MaxValue‚ð’´‚¦‚Ä‚¢‚é‚Ì‚ÅB
-i5  = 9223372036854775807       //  longŒ^‚É‚È‚è‚Ü‚·Blong.MaxValueˆÈ‰º‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚ÅB
-i6  = 9223372036854775808       //  ulongŒ^‚É‚È‚è‚Ü‚·Blong.MaxValue‚ð’´‚¦‚Ä‚¢‚é‚Ì‚ÅB
+i1  = 2147483647                //  int?^???????????Bint.MaxValue???????????????????????B
+i2  = 2147483648                //  uint?^???????????Bint.MaxValue?????????????????B
+i3  = 4294967295                //  uint?^???????????Buint.MaxValuee???????????????????????B
+i4  = 4294967296                //  longt?^???????????Buint.MaxValue?????????????????B
+i5  = 9223372036854775807       //  long?^???????????Blong.MaxValue???????????????????????B
+i6  = 9223372036854775808       //  ulong?^???????????Blong.MaxValue?????????????????B
 
-im1 = -2147483648               //  intŒ^‚É‚È‚è‚Ü‚·Bint.MinValueˆÈã‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚ÅB
-im2 = -2147483649               //  longtŒ^‚É‚È‚è‚Ü‚·Bint.MinValue‚ð‰º‰ñ‚Á‚Ä‚¢‚é‚Ì‚ÅB
-im3 = -9223372036854775808      //  longtŒ^‚É‚È‚è‚Ü‚·B
+im1 = -2147483648               //  int?^???????????Bint.MinValue???????????????????????B
+im2 = -2147483649               //  longt?^???????????Bint.MinValue???????????????????B
+im3 = -9223372036854775808      //  longt?^???????????B
 
-ul  = 1UL                       //  ulongŒ^‚É‚È‚è‚Ü‚·B
+ul  = 1UL                       //  ulong?^???????????B
 
-l1  = 9223372036854775807L      //  longŒ^‚É‚È‚è‚Ü‚·Blong.MaxValueˆÈ‰º‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚ÅB
-l2  = 9223372036854775808L      //  ulongŒ^‚É‚È‚è‚Ü‚·Blong.MaxValue‚ð’´‚¦‚Ä‚¢‚é‚Ì‚ÅB
+l1  = 9223372036854775807L      //  long?^???????????Blong.MaxValue???????????????????????B
+l2  = 9223372036854775808L      //  ulong?^???????????Blong.MaxValue?????????????????B
 
-u1  = 4294967295u               //  uintŒ^‚É‚È‚è‚Ü‚·Buint.MaxValueˆÈ‰º‚ÉŽû‚Ü‚Á‚Ä‚¢‚é‚Ì‚Å
-u2  = 4294967296u               //  ulongŒ^‚É‚È‚è‚Ü‚·Buint.MaxValue‚ð’´‚¦‚Ä‚¢‚é‚Ì‚ÅB
+u1  = 4294967295u               //  uint?^???????????Buint.MaxValue??????????????????????
+u2  = 4294967296u               //  ulong?^???????????Buint.MaxValue?????????????????B
 ";
             EpcSyn = @"";
 
@@ -1951,9 +2168,9 @@ rp$000002:
         {
             Inp =
 @"
-d1  = 0.1                       //  ¬”‚ðŽw’è‚·‚é‚Æ doubleŒ^‚É‚È‚è‚Ü‚·
-f1  = 0.1F                      //  suffix 'F' ‚ðŽw’è‚·‚é‚Æ floatŒ^‚É‚È‚è‚Ü‚·
-d2  = 314E-2                    //  'E' 10‚ÌŠKæ‚ÌŽw”‚ðŽw’è‚Å‚«‚Ü‚·BdoubleŒ^‚É‚È‚è‚Ü‚·B
+d1  = 0.1                       //  ???????w???????? double?^??????????
+f1  = 0.1F                      //  suffix 'F' ???w???????? float?^??????????
+d2  = 314E-2                    //  'E' 10???K?????w?????w???????????Bdouble?^???????????B
         ";
             EpcSyn = @"";
 
@@ -2128,7 +2345,9 @@ rp$000002:
                 {
                     string asm = GetType().Name;
                     StringBuilder b = new StringBuilder();
-                    b.Append(".assembly extern mscorlib {.ver 2:0:0:0 .publickeytoken = (B7 7A 5C 56 19 34 E0 89)}").AppendLine();
+                    Assembly mscorlib = Assembly.Load("mscorlib.dll");
+                    string asmext = CodeGenerator.AssemblyExtern(mscorlib);
+                    b.Append(asmext).AppendLine();
                     if (References.Count > 0)
                     {
                         TypeInAssemblyLoader ldr = new TypeInAssemblyLoader();

@@ -10,6 +10,7 @@ using System.Text;
 
 namespace Nana.Delegates
 {
+#if ! __MonoCS__
     public delegate void Action();
     public delegate void Action<T1, T2>(T1 p1, T2 p2);
     public delegate void Action<T1, T2, T3>(T1 p1, T2 p2, T3 p3);
@@ -18,6 +19,7 @@ namespace Nana.Delegates
     public delegate TR Func<T1, T2, TR>(T1 p1, T2 p2);
     public delegate TR Func<T1, T2, T3, TR>(T1 p1, T2 p2, T3 p3);
     public delegate TR Func<T1, T2, T3, T4, TR>(T1 p1, T2 p2, T3 p3, T4 p4);
+#endif
 
     public class Util
     {

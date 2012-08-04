@@ -420,8 +420,10 @@ namespace Nana.Semantics
             RegisterOvldAlias(E.FindOrNewRefType(typeof(Console)), "`p", "WriteLine");
         }
 
-        public void NewOpeFunByOpe(string funnm, Typ left, Typ right, Typ ret)
-        {
+        public void NewOpeFunByOpe (string funnm, Typ left, Typ right, Typ ret)
+		{
+            if (null != left.FindOvld (funnm))
+            { return; }
             List<Variable> vs = new List<Variable>();
             vs.Add(new Variable("a", left, Variable.VariableKind.Param));
             if (null != right)
@@ -1294,7 +1296,7 @@ namespace Nana.Semantics
     }
 
     //  Return Determinacy State (It's doubtful to make sense in English.)
-    //  ‚±‚±‚Å•K‚¸ƒŠƒ^[ƒ“‚Í‚³‚ê‚Ä‚¢‚é‚±‚Æ‚ªŒˆ’è‚µ‚Ä‚¢‚é‚©‚Ìó‘Ô
+    //  ???????K?????^?[????????????????????????????????????????
     public interface IReturnDeterminacyState
     {
         bool RDS { get;}
