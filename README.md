@@ -1,45 +1,45 @@
-# Nana �v���O���~���O����
+# Nana プログラミング言語
 
-## �͂��߂�
+## はじめに
 
-Nana �v���O���~���O����� .NET Framework �œ����v���O���~���O����ł��B
-Nana �́u������E�ɑ���������I�v���]�ɊJ�����n�߂܂����B
-���̂���͂܂� **R����** �̑��݂�m��܂���ł����B
-�ق��ɖڎw���Ă���Ƃ����
-* �Ȃ�ׂ���l�Ń����e�i���X�ł���悤�ɁA�R���p�C���̎������P���ł��邱��
-* �Ȃ�ׂ��^�C�v���Ȃ��ł����悤�ɍςނ悤�ȕ��@�ł��邱��
+Nana プログラミング言語は .NET Framework で動くプログラミング言語です。
+Nana は「左から右に代入したい！」を野望に開発を始めました。
+そのころはまだ **R言語** の存在を知りませんでした。
+ほかに目指しているところは
+* なるべく一人でメンテナンスできるように、コンパイラの実装が単純であること
+* なるべくタイプしないでいいように済むような文法であること
 
-�ł��B
+です。
 
-�����x�͒Ⴍ�A�܂��ȒP�ȕ��@�����r���h�ł��܂���B
-�G���[�����Ȃǂ��A�܂��낭�Ɏ����ł��Ă��܂���B
-�Ƃ肠�������������悤�ɂȂ�܂����Ƃ��������ł��B
+完成度は低く、まだ簡単な文法しかビルドできません。
+エラー処理なども、まだろくに実装できていません。
+とりあえず少し動くようになりましたという感じです。
 
-## ���s��
+## 実行環境
 
-Nana ���g���ɂ�
+Nana を使うには
 * Windows XP 32bit
 * Microsoft.NET Framework v2.0
 
-���K�v�ł��B
-���� v2.0 �ȏ�� .NET �������Ă���΁AWidows Vsita �� 7 �ł������Ǝv���܂��B
+が必要です。
+多分 v2.0 以上の .NET が入っていれば、Widows Vsita や 7 でも動くと思います。
 
-## ��������
+## 動かし方
 
-�Ƃ肠������� c:\tmp �f�B���N�g��������Ƃ��āA
-�����Ɏ���3�̃t�@�C�����_�E�����[�h���܂��B
+とりあえず空の c:\tmp ディレクトリがあるとして、
+そこに次の3つのファイルをダウンロードします。
 
 https://github.com/quwahara/Nana/raw/master/Nana/bin/Release/Nana.exe
 https://github.com/quwahara/Nana/raw/master/Nana/bin/Release/NanaLib.dll
 https://github.com/quwahara/Nana/raw/master/Nana/bin/Release/HelloWorld.nana
 
-cmd.exe ���J���Ac:\tmp �̉��Ɉړ����A���̂悤�ɓ��́A���^�[�����܂��B
+cmd.exe を開き、c:\tmp の下に移動し、次のように入力、リターンします。
 
 ```
 C:\Tmp>Nana.exe HelloWorld.nana
 ```
 
-���܂������Ǝ��̂悤�ȃ��b�Z�[�W���o�܂��B
+うまくいくと次のようなメッセージが出ます。
 
 ```
 Microsoft (R) .NET Framework IL Assembler.  Version 2.0.50727.3053
@@ -67,29 +67,29 @@ C:\Tmp>
 
 ```
 
-�����ē����f�B���N�g����  HelloWorld.exe ���ł��Ă��܂��B
-��������s����Ɖ��̂悤�ɏo�܂��B
+そして同じディレクトリに  HelloWorld.exe ができています。
+それを実行すると下のように出ます。
 
 ```
 C:\Tmp>HelloWorld.exe
 Hello, world!
 
 ```
-���߂łƂ��������܂��I
-���Ȃ��̊��ŗ��h�ɓ����܂����B
+おめでとうございます！
+あなたの環境で立派に動きました。
 
 
-���܂������Ȃ��Ƃ��́A���̂��Ƃ������Ă݂ĉ������B
-Nana�ł� ilasm.exe �Ƃ����v���O���������s���Ă��܂��B
-����͒ʏ�A���̃f�B���N�g���ɔz�u����Ă��Ă܂��B
-Nana �ł͋K��ł����� ilasm.exe �����邱�Ƃ����҂��Ă��܂��B
+うまくいかないときは、次のことを試してみて下さい。
+Nanaでは ilasm.exe というプログラムを実行しています。
+これは通常、下のディレクトリに配置されていてます。
+Nana では規定でそこに ilasm.exe があることを期待しています。
 ```
 C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727\ilasm.exe
 ```
 
 
-���ϐ� NANA_ILASM_PATH �Ŏ��̂悤�ɒ��� ilasm.exe �̏ꏊ���w��ł��܂��B
-���g���̊��� ilasm.exe ������Ƃ�����m�F���Ďw�肵�ĉ������B
+環境変数 NANA_ILASM_PATH で次のように直接 ilasm.exe の場所を指定できます。
+お使いの環境で ilasm.exe があるところを確認して指定して下さい。
 
 ```
 c:\tmp> set NANA_ILASM_PATH=C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727\ilasm.exe
@@ -99,7 +99,7 @@ or
 c:\tmp> set NANA_ILASM_PATH=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\ilasm.exe
 ```
 
-### Mac �ł� mono ���C���X�g�[�����Ď��̂悤�ɂ��Ď����Ă݂ĉ����� 
+### Mac では mono をインストールして次のようにして試してみて下さい 
 ```
 $ export NANA_ILASM_PATH=/usr/bin/ilasm
 $ mono Nana.exe HelloWorld.nana
@@ -107,8 +107,8 @@ $ mono HelloWorld.exe
 ```
 
 
-## ����
-0 ���� 16 �܂ł̃t�B�{�i�b�`�����\�����܂�
+## 実例
+0 から 16 までのフィボナッチ数列を表示します
 ```
 //  Save as 'fibo.nana'
 //  build:
@@ -132,73 +132,73 @@ while   17 > num do
 end
 ```
 
-## ���@
+## 文法
 
-### �������e����
-
-```
-i1  = 1                 //  int�^��1�ɂȂ�܂��B
-l1  = 1L                //  long�^��1�ɂȂ�܂��B
-u1  = 1U                //  uint�^��1�ɂȂ�܂��B
-ul1 = 1UL               //  ulong�^��1�ɂȂ�܂��B
-
-//  #16�i���ɂ�鐮�����e����(�悭'0x'�Ŏn�܂�)�L�@�ɂ͂܂�*�Ή����Ă��܂���B*
-```
-
-### �������e����
+### 整数リテラル
 
 ```
-d1  = 0.1                       //  �������w�肷��� double�^�ɂȂ�܂�
-f1  = 0.1F                      //  suffix 'F' ���w�肷��� float�^�ɂȂ�܂�
-d2  = 314E-2                    //  'E' 10�̊K��̎w�����w��ł��܂��Bdouble�^�ɂȂ�܂��B
+i1  = 1                 //  int型の1になります。
+l1  = 1L                //  long型の1になります。
+u1  = 1U                //  uint型の1になります。
+ul1 = 1UL               //  ulong型の1になります。
+
+//  #16進数による整数リテラル(よく'0x'で始まる)記法にはまだ*対応していません。*
 ```
 
-### ���l�^�L���X�g
+### 実数リテラル
 
 ```
-//  "as" �̌�Ɏw�肳��Ă���^�ɃL���X�g���܂��B
-// �����ӂꂵ���Ƃ��͐؂�̂Ă��܂��B
-
-d1   = 1 as double      //  d1 �� double�^��1�ɂȂ�܂��B
-b1   = 1 as byte        //  b1 �� byte�^��1�ɂȂ�܂��B
-
-//  "as!" �̌�Ɏw�肳��Ă���^�ɃL���X�g���܂��B
-// �����ӂꂵ���Ƃ��� System.OverflowException ����������܂��B
-
-b2   = 200 as! byte     //  b2 �� byte�^��200�ɂȂ�܂��B
-b3   = 300 as! byte     //  System.OverflowException �����������
+d1  = 0.1                       //  小数を指定すると double型になります
+f1  = 0.1F                      //  suffix 'F' を指定すると float型になります
+d2  = 314E-2                    //  'E' 10の階乗の指数を指定できます。double型になります。
 ```
 
-### �Q�ƌ^�L���X�g
+### 数値型キャスト
 
 ```
-//  "as" �̌�Ɏw�肳��Ă���^�ɃL���X�g���܂��B
-//  �L���X�g�Ɏ��s�����Ƃ��� null �ɂȂ�܂��B
+//  "as" の後に指定されている型にキャストします。
+// 桁あふれしたときは切り捨てられます。
 
-o   = "hi" as object    // => o �� string�^ "hi" ������ object �^�̕ϐ��ɂȂ�
+d1   = 1 as double      //  d1 は double型の1になります。
+b1   = 1 as byte        //  b1 は byte型の1になります。
 
-p   = 1 as object       // => p �� null ������ object �^�̕ϐ��ɂȂ�
+//  "as!" の後に指定されている型にキャストします。
+// 桁あふれしたときは System.OverflowException が投入されます。
+
+b2   = 200 as! byte     //  b2 は byte型の200になります。
+b3   = 300 as! byte     //  System.OverflowException が投入される
+```
+
+### 参照型キャスト
+
+```
+//  "as" の後に指定されている型にキャストします。
+//  キャストに失敗したときは null になります。
+
+o   = "hi" as object    // => o は string型 "hi" を持つ object 型の変数になる
+
+p   = 1 as object       // => p は null を持つ object 型の変数になる
 
 
-//  "as!" �̌�Ɏw�肳��Ă���^�ɃL���X�g���܂��B
-//  �L���X�g�Ɏ��s�����Ƃ��� System.InvalidCastException ����������܂��B
+//  "as!" の後に指定されている型にキャストします。
+//  キャストに失敗したときは System.InvalidCastException が投入されます。
 
-q   = "hi" as! object   // => q �� string�^ "hi" ������ object �^�̕ϐ��ɂȂ�
+q   = "hi" as! object   // => q は string型 "hi" を持つ object 型の変数になる
 
-r   = 1 as! string      // => System.InvalidCastException �����������
+r   = 1 as! string      // => System.InvalidCastException が投入される
 ```
 
 ## TODO
 
-�����ȉ��Z�q���w�肵���Ƃ��̃��b�Z�[�W�𕪂���₷��
-���l�^�ϊ�
-����widening�ƃ��\�b�h�Ăяo���̉���
+無効な演算子を指定したときのメッセージを分かりやすく
+数値型変換
+自動wideningとメソッド呼び出しの解決
 
 
-## ���C�Z���X
+## ライセンス
 
-MIT ���C�Z���X�Ō��J���Ă��܂��B 
-���C�Z���X�̑S���͉��ŎQ�Ƃł��܂��B
+MIT ライセンスで公開しています。 
+ライセンスの全文は下で参照できます。
 
 https://raw.github.com/quwahara/Nana/master/LICENSE
 
