@@ -99,8 +99,11 @@ or
 c:\tmp> set NANA_ILASM_PATH=C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\ilasm.exe
 ```
 
-
-
+### Mac では mono をインストールして次のようにして試してみて下さい 
+```
+$ export NANA_ILASM_PATH=/usr/bin/ilasm
+$ mono Nana.exe HelloWorld.nana
+```
 
 
 ## 実例
