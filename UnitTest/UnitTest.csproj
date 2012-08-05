@@ -42,6 +42,7 @@
     <Compile Include="Generations\CodeGeneratorFxt.cs" />
     <Compile Include="CtrlFxt.cs" />
     <Compile Include="Experiment.cs" />
+    <Compile Include="ILASM\ILASMRunnerFxt.cs" />
     <Compile Include="Infr\DeliFxt.cs" />
     <Compile Include="Infr\NodeFxt.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

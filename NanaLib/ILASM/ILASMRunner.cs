@@ -17,6 +17,11 @@ namespace Nana.ILASM
 
         public void DetectILASM()
         {
+            DetectILASM(Environment.OSVersion);
+        }
+
+        public void DetectILASM(OperatingSystem os)
+        {
             if (ILASMpath == null)
             {
                 ILASMpath = Environment.GetEnvironmentVariable(@"NANA_ILASM_PATH");
@@ -24,10 +29,20 @@ namespace Nana.ILASM
 
             if (ILASMpath == null)
             {
-                string l = Path.DirectorySeparatorChar.ToString();
-                string systemRoot = Environment.GetEnvironmentVariable("SystemRoot");
-                string netfwdir = systemRoot + l + @"Microsoft.NET\Framework\v2.0.50727";
-                ILASMpath = netfwdir + l + @"ilasm.exe";
+                PlatformID pfm = os.Platform;
+                switch (pfm)
+                {
+                    case PlatformID.MacOSX:
+                    case PlatformID.Unix:
+                        ILASMpath = "/usr/bin/ilasm";
+                        break;
+                    default:
+                        string l = Path.DirectorySeparatorChar.ToString();
+                        string systemRoot = Environment.GetEnvironmentVariable("SystemRoot");
+                        string netfwdir = systemRoot + l + @"Microsoft.NET\Framework\v2.0.50727";
+                        ILASMpath = netfwdir + l + @"ilasm.exe";
+                        break;
+                }
             }
 
             if (false == File.Exists(ILASMpath))
