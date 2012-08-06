@@ -175,17 +175,33 @@ b3   = 300 as! byte     //  System.OverflowException が投入される
 //  "as" の後に指定されている型にキャストします。
 //  キャストに失敗したときは null になります。
 
-o   = "hi" as object    // => o は string型 "hi" を持つ object 型の変数になる
+o   = "hi" as object    // o は string型 "hi" を持つ object 型の変数になる
 
-p   = 1 as object       // => p は null を持つ object 型の変数になる
+p   = 1 as object       // p は null を持つ object 型の変数になる
 
 
 //  "as!" の後に指定されている型にキャストします。
 //  キャストに失敗したときは System.InvalidCastException が投入されます。
 
-q   = "hi" as! object   // => q は string型 "hi" を持つ object 型の変数になる
+q   = "hi" as! object   // q は string型 "hi" を持つ object 型の変数になる
 
-r   = 1 as! string      // => System.InvalidCastException が投入される
+r   = 1 as! string      // System.InvalidCastException が投入される
+```
+
+### if-elif-else文
+```
+//  条件分岐は「if (真偽値)」のあとに「then」を書き、
+//  「then」のあとに「(真偽値) 」が「true」だったときに実行する文を書きます。
+
+if false then
+    `p("if-then part")
+elif false then                 //  さらに条件分岐を続けるときは「elif (真偽値) then」と書きます。
+    `p("elif-then part 1")
+elif false then
+    `p("elif-then part 2")
+else                            //  「(真偽値)」が「false」だったときに実行する文を書きます。
+    `p("else")
+end                             //  最後のに「if文」の終わりを表す「end」を書きます。
 ```
 
 ## TODO
